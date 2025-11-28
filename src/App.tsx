@@ -1,33 +1,46 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   BrowserRouter as Router,
   Routes,
   Route,
   Navigate,
 } from "react-router-dom";
-import { apiFetch } from "./utils/apiClient.js";
-import useMessage from "./hooks/useMessage.jsx";
+import { apiFetch } from "./utils/apiClient";
+import useMessage from "./hooks/useMessage.js";
 
 //* Pages
-import Home from "./pages/Home/Home";
+import Home from "./pages/Home/Home.js";
 import Login from "./pages/Login/Login";
 import RoleSelect from "./pages/RoleSelect/RoleSelect";
-import Signup from "./pages/Signup/Signup";
-import ForgotPassword from "./pages/ForgotPassword/ForgotPassword";
-import Dashboard from "./pages/Dashboard/Dashboard";
-import NotFound from "./pages/NotFound/NotFound";
-import JoinClassroom from "./pages/classrooms/JoinClassroom";
-import CreateClassroom from "./pages/classrooms/CreateClassroom";
+import Signup from "./pages/Signup/Signup.js";
+import ForgotPassword from "./pages/ForgotPassword/ForgotPassword.js";
+import Dashboard from "./pages/Dashboard/Dashboard.js";
+import NotFound from "./pages/NotFound/NotFound.js";
+import JoinClassroom from "./pages/classrooms/JoinClassroom.js";
+import CreateClassroom from "./pages/classrooms/CreateClassroom.js";
 import QuizCreate from "./components/Quiz-component/QuizCreate";
 import QuizEditPage from "./components/Quiz-component/quiz-edit";
 import QuizTakePage from "./components/Quiz-component/quiz-take";
 import QuizReviewPage from "./components/Quiz-component/quiz-review";
 import QuizAttempt from "./components/Quiz-component/QuizAttempt";
-import ActivityView from "./components/Activity-components/ActivityView.jsx";
+import ActivityView from "./components/Activity-components/ActivityView";
 
-const ProtectedRoute = ({ children, showMessage }) => {
-  const [authorized, setAuthorized] = useState(null);
-  const showMsgRef = useRef(showMessage);
+type ShowMessageFn = (
+  text: string,
+  kind?: "info" | "success" | "error"
+) => void;
+
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+  showMessage: ShowMessageFn;
+}
+
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
+  children,
+  showMessage,
+}) => {
+  const [authorized, setAuthorized] = useState<boolean | null>(null);
+  const showMsgRef = useRef<ShowMessageFn>(showMessage);
 
   useEffect(() => {
     showMsgRef.current = showMessage;
@@ -36,13 +49,19 @@ const ProtectedRoute = ({ children, showMessage }) => {
   useEffect(() => {
     let mounted = true;
     (async () => {
-      const { unauthorized, data } = await apiFetch("/auth/session");
-      if (!mounted) return;
-      if (unauthorized || !data?.success) {
+      try {
+        const { unauthorized, data } = await apiFetch("/auth/session");
+        if (!mounted) return;
+        if (unauthorized || !data?.success) {
+          showMsgRef.current("Unauthorized access", "error");
+          setAuthorized(false);
+        } else {
+          setAuthorized(true);
+        }
+      } catch (err) {
+        // on error, deny access
         showMsgRef.current("Unauthorized access", "error");
-        setAuthorized(false);
-      } else {
-        setAuthorized(true);
+        if (mounted) setAuthorized(false);
       }
     })();
     return () => {
@@ -51,12 +70,11 @@ const ProtectedRoute = ({ children, showMessage }) => {
   }, []);
 
   if (authorized === null) return null;
-  return authorized ? children : <Navigate to="/login" replace />;
+  return authorized ? <>{children}</> : <Navigate to="/login" replace />;
 };
 
-function App() {
-  const { messageContainer, showMessage } = useMessage();
-
+function App(): React.ReactElement {
+  const { messageComponent, showMessage } = useMessage();
   useEffect(() => {
     const root = document.documentElement;
     const cachedRole = localStorage.getItem("role");
@@ -71,7 +89,7 @@ function App() {
   return (
     <Router>
       <main style={{ height: "94vh" }}>
-        {messageContainer}
+        {messageComponent}
         <Routes>
           <Route path="/" element={<RoleSelect />} />
           <Route path="/login" element={<Login />} />
@@ -118,7 +136,6 @@ function App() {
             }
           />
           <Route
-            //* Quizzes Page
             path="/quizzes/:code/create"
             element={
               <ProtectedRoute showMessage={showMessage}>
@@ -143,7 +160,6 @@ function App() {
             }
           />
           <Route
-            //* Activity Page
             path="/activity/:id/view"
             element={
               <ProtectedRoute showMessage={showMessage}>
