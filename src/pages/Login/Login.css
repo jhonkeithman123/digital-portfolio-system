@@ -1,0 +1,341 @@
+:root {
+  --login-accent: var(--accent-color, #2563eb);
+  --login-accent-2: #06b6d4;
+  --login-bg-overlay: rgba(255, 255, 255, 0.26);
+  --login-panel-bg: rgba(255, 255, 255, 0.84);
+  --login-panel-border: rgba(255, 255, 255, 0.6);
+  --login-text: #0f172a;
+  --login-muted: #475569;
+  --login-transition: 0.6s ease-in-out;
+}
+
+:root[data-theme="dark"] {
+  --login-bg-overlay: rgba(2, 6, 23, 0.56);
+  --login-panel-bg: rgba(6, 10, 20, 0.86);
+  --login-panel-border: rgba(148, 163, 184, 0.06);
+  --login-text: #e6eef8;
+  --login-muted: #94a3b8;
+}
+
+/** Full-bleed background image (uses inline style for image path) */
+.backgroundL {
+  position: fixed;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: blur(6px) saturate(105%);
+  transform: scale(1.03);
+  z-index: -3;
+  transition: opacity var(--login-transition), filter var(--login-transition);
+  opacity: 0.98;
+}
+
+/** gentle overlay to soften brightness */
+.overlayL {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.22),
+    rgba(245, 247, 250, 0.18)
+  );
+  z-index: -2;
+  transition: background var(--login-transition);
+}
+
+:root[data-theme="dark"] .overlayL {
+  background: radial-gradient(
+      circle at 10% -10%,
+      rgba(37, 99, 235, 0.32),
+      transparent 55%
+    ),
+    linear-gradient(180deg, rgba(3, 7, 18, 0.92), rgba(7, 12, 25, 0.96));
+}
+
+/** Form root */
+.containerL {
+  display: flex;
+  min-height: calc(100svh - 72px);
+  justify-content: center;
+  align-items: center;
+  padding: 28px 20px;
+  box-sizing: border-box;
+  z-index: 1;
+}
+
+/** the centered panel */
+.panelL {
+  width: 100%;
+  max-width: 720px;
+  background: var(--login-panel-bg);
+  border: 1px solid var(--login-panel-border);
+  border-radius: 14px;
+  padding: clamp(18px, 3.2vw, 28px);
+  box-shadow: 0 20px 50px rgba(2, 8, 23, 0.12);
+  backdrop-filter: blur(8px) saturate(120%);
+  -webkit-backdrop-filter: blur(8px) saturate(120%);
+  transition: background var(--login-transition),
+    box-shadow var(--login-transition), transform 0.25s ease;
+}
+
+/** header text */
+.panel-title {
+  margin: 0 0 6px 0;
+  font-size: clamp(20px, 3.4vw, 28px);
+  font-weight: 800;
+  color: var(--login-text);
+  letter-spacing: -0.01em;
+}
+
+.panel-sub {
+  margin: 0 0 16px 0;
+  color: var(--login-muted);
+  font-size: 0.98rem;
+}
+
+/** Input container */
+.input-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+/** Style inputs InputField (generic selectors to catch common markup) */
+.panelL input[type="email"],
+.panelL input[type="password"],
+.panelL input[type="text"],
+.panelL textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.96);
+  color: var(--login-text);
+  font-size: 1rem;
+  box-shadow: inset 0 1px 2px rgba(2, 8, 23, 0.04);
+  transition: box-shadow var(--login-transition), transform 0.18s ease,
+    border-color var(--login-transition);
+}
+:root[data-theme="dark"] .panelL input[type="email"],
+:root[data-theme="dark"] .panelL input[type="password"],
+:root[data-theme="dark"] .panelL input[type="text"],
+:root[data-theme="dark"] .panelL textarea {
+  background: rgba(12, 18, 33, 0.72);
+  border: 1px solid rgba(148, 163, 184, 0.06);
+  color: var(--login-text);
+}
+
+.panelL input:-webkit-autofill,
+.panelL input:-webkit-autofill:hover,
+.panelL input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #e6a459;
+  font-weight: bold;
+  transition: background-color 9999s ease-out, color 9999s ease-in-out;
+  box-shadow: 0 0 0px 1000px #020617 inset;
+}
+
+:root[data-theme="dark"] .panelL input:-webkit-autofill,
+:root[data-theme="dark"] .panelL input:-webkit-autofill:hover,
+:root[data-theme="dark"] .panelL input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #eb189a;
+  font-weight: bold;
+  box-shadow: 0 0 0px 1000px #ffffff inset;
+}
+
+.panelL input:focus,
+.panelL textarea:focus {
+  outline: none;
+  box-shadow: 0 8px 30px rgba(37, 99, 235, 0.08);
+  border-color: rgba(37, 99, 235, 0.6);
+  transform: translateY(-1px);
+}
+
+/* Buttons area */
+.buttonContainerL {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+
+/* Primary button */
+.buttonL {
+  padding: 12px 18px;
+  font-size: 1rem;
+  background: linear-gradient(
+    135deg,
+    var(--login-accent),
+    var(--login-accent-2)
+  );
+  color: white;
+  border: none;
+  border-radius: 10px;
+  width: 100%;
+  max-width: 340px;
+  cursor: pointer;
+  box-shadow: 0 14px 36px rgba(37, 99, 235, 0.15);
+  transition: transform 0.18s ease, box-shadow var(--login-transition),
+    filter 0.18s;
+  font-weight: 700;
+}
+.buttonL:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 24px 54px rgba(37, 99, 235, 0.22);
+}
+.buttonL:active {
+  transform: translateY(-1px);
+}
+
+/* secondary row */
+.secondary-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* ghost / link styles */
+.buttonGhost {
+  padding: 10px 16px;
+  border-radius: 10px;
+  background: transparent;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+  color: var(--login-text);
+  cursor: pointer;
+  font-weight: 700;
+}
+.buttonGhost:hover {
+  background: rgba(15, 23, 42, 0.03);
+  transform: translateY(-2px);
+}
+
+.buttonLink {
+  background: transparent;
+  border: none;
+  color: var(--login-accent);
+  font-weight: 700;
+  cursor: pointer;
+}
+.buttonLink:hover {
+  text-decoration: underline;
+}
+
+/* accessibility */
+.panelL input[aria-invalid="true"] {
+  border-color: #ef4444;
+}
+
+/* responsive */
+@media (max-width: 720px) {
+  .panelL {
+    padding: 16px;
+    border-radius: 12px;
+  }
+  .buttonL {
+    max-width: 100%;
+  }
+}
+
+/* reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .backgroundL,
+  .overlayL,
+  .panelL,
+  .buttonL,
+  .panelL input {
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+label {
+  font-size: 2rem;
+  color: black;
+  font-weight: bold;
+}
+
+.password-wrapper {
+  position: relative;
+}
+
+.inputL {
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  margin: 1rem;
+  font-size: 1rem;
+  width: 35svw;
+  height: 2.2svh;
+  border-radius: 5px;
+  cursor: text;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.toggle-icon {
+  position: absolute;
+  right: 2.5svw;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+
+.buttonNBG {
+  background: transparent;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  padding: 8px 16px;
+  color: var(--login-accent);
+  font-weight: 700;
+  font-size: 0.98rem;
+  margin-bottom: 4px;
+  cursor: pointer;
+  width: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.18);
+  background: radial-gradient(
+    circle at 30% 0%,
+    rgba(255, 255, 255, 0.9),
+    rgba(255, 255, 255, 0)
+  );
+  transition: transform 0.18s ease, box-shadow 0.22s ease, background 0.22s ease,
+    border-color 0.22s ease, color 0.22s ease;
+}
+
+:root[data-theme="dark"] .buttonNBG {
+  border-color: rgba(148, 163, 184, 0.4);
+  color: #bfdbfe;
+  background: radial-gradient(
+    circle at 30% 0%,
+    rgba(15, 23, 42, 0.9),
+    rgba(15, 23, 42, 0.2)
+  );
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.75);
+}
+
+.buttonNBG:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.25);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.96),
+    rgba(241, 245, 249, 0.96)
+  );
+}
+
+:root[data-theme="dark"] .buttonNBG:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(15, 23, 42, 1),
+    rgba(15, 23, 42, 0.94)
+  );
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.9);
+}
+
+.buttonNBG:active {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 12px rgba(15, 23, 42, 0.35);
+}

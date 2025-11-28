@@ -1,0 +1,485 @@
+/** For the light and dark mode*/
+.auth-layout {
+  min-height: 100vh;
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+/* icon styling inside the frame (svg elements) */
+.notification-icon svg,
+.svg svg,
+.notification-icon i {
+  width: 30px;
+  height: 30px;
+  color: var(--accent-color);
+  fill: currentColor;
+  stroke: none;
+  display: block;
+}
+
+/* Header */
+.dashboard-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(16px) saturate(170%);
+  -webkit-backdrop-filter: blur(16px) saturate(170%);
+  color: #fff;
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.35);
+  transition: var(--transition-standard);
+}
+
+/* Student dashboard header: blue / cyan aurora */
+.dashboard-header.student-role {
+  background: radial-gradient(
+      circle at -10% -10%,
+      rgba(248, 250, 252, 0.45),
+      transparent 55%
+    ),
+    linear-gradient(135deg, #2563eb, #38bdf8);
+}
+
+/* Teacher dashboard header: pink / coral aurora */
+.dashboard-header.teacher-role {
+  background: radial-gradient(
+      circle at -10% -10%,
+      rgba(248, 250, 252, 0.45),
+      transparent 55%
+    ),
+    linear-gradient(135deg, #ec4899, #fb7185);
+}
+
+/* Slightly softer in dark mode */
+:root[data-theme="dark"] .dashboard-header.student-role {
+  background: radial-gradient(
+      circle at -10% -10%,
+      rgba(15, 23, 42, 0.9),
+      transparent 55%
+    ),
+    linear-gradient(135deg, #3b82f6, #22d3ee);
+}
+:root[data-theme="dark"] .dashboard-header.teacher-role {
+  background: radial-gradient(
+      circle at -10% -10%,
+      rgba(15, 23, 42, 0.9),
+      transparent 55%
+    ),
+    linear-gradient(135deg, #f472b6, #fb7185);
+}
+
+/* Welcome pill */
+.dashboard-welcome {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  border-radius: 18px;
+  font-weight: 700;
+  text-transform: capitalize;
+  background: linear-gradient(180deg, #ffffff, #f1f5f9);
+  color: var(--accent-color);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.35),
+    0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Role‑aware welcome pill (same idea as Home) */
+.dashboard-welcome.student-role {
+  background: radial-gradient(
+        circle at 0% 0%,
+        rgba(255, 255, 255, 0.95),
+        transparent 70%
+      )
+      padding-box,
+    linear-gradient(180deg, #dbeafe, #eff6ff) border-box;
+  color: #1d4ed8;
+}
+
+.dashboard-welcome.teacher-role {
+  background: radial-gradient(
+        circle at 0% 0%,
+        rgba(255, 255, 255, 0.95),
+        transparent 70%
+      )
+      padding-box,
+    linear-gradient(180deg, #ffe4f1, #fee2e2) border-box;
+  color: #be123c;
+}
+
+/* Dark‑mode variants */
+:root[data-theme="dark"] .dashboard-welcome.student-role {
+  background: radial-gradient(
+        circle at 0% 0%,
+        rgba(15, 23, 42, 0.96),
+        transparent 70%
+      )
+      padding-box,
+    linear-gradient(180deg, #1d4ed8, #0f172a) border-box;
+  color: #e5e7eb;
+}
+
+:root[data-theme="dark"] .dashboard-welcome.teacher-role {
+  background: radial-gradient(
+        circle at 0% 0%,
+        rgba(15, 23, 42, 0.96),
+        transparent 70%
+      )
+      padding-box,
+    linear-gradient(180deg, #be185d, #0f172a) border-box;
+  color: #fee2e2;
+}
+
+/* Role chip */
+.role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  font-weight: 700;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.35),
+    0 0 0 1px rgba(255, 255, 255, 0.8) inset;
+}
+
+/* Student pill */
+.role-badge.student {
+  background: radial-gradient(
+        circle at 0% 0%,
+        rgba(255, 255, 255, 0.95),
+        transparent 70%
+      )
+      padding-box,
+    linear-gradient(135deg, #2563eb, #38bdf8) border-box;
+  color: #0f172a;
+}
+
+/* Teacher pill */
+.role-badge.teacher {
+  background: radial-gradient(
+        circle at 0% 0%,
+        rgba(255, 255, 255, 0.95),
+        transparent 70%
+      )
+      padding-box,
+    linear-gradient(135deg, #ec4899, #fb7185) border-box;
+  color: #0f172a;
+}
+
+.role-badge .role-sub {
+  opacity: 0.85;
+  font-weight: 600;
+}
+
+.role-badge .role-sub {
+  opacity: 0.85;
+  font-weight: 600;
+}
+
+/* Right-side actions (button aligns to bell area) */
+.header-actions {
+  position: absolute;
+  right: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  gap: 10px;
+}
+
+/* Pill button */
+.pill-btn {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  background: linear-gradient(180deg, #ffffffcc, #ffffff99);
+  color: #0f172a;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 999px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.28);
+  transition: background 0.15s ease, transform 0.12s ease,
+    border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.pill-btn:hover {
+  background: linear-gradient(180deg, #ffffff, #ffffffc0);
+  transform: translateY(-1px);
+}
+.pill-btn:active {
+  transform: translateY(1px);
+}
+.pill-btn.active {
+  background: linear-gradient(180deg, #22c55e, #16a34a);
+  color: #ecfdf5;
+}
+
+/* Page */
+.dashboard {
+  font-family: Arial, sans-serif;
+  background-color: var(--background-color);
+  min-height: 100svh;
+  flex-direction: column;
+  transition: var(--transition-standard);
+}
+
+/* Main content */
+.dashboard-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px;
+  gap: 24px;
+  color: var(--text-color);
+}
+
+/* Cards: wider, responsive */
+.dashboard-card {
+  background-color: var(--card-bg);
+  border-left: 6px solid var(--accent-color);
+  border: 1px solid var(--card-border);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.28);
+  border-radius: 18px;
+  padding: 18px;
+  width: min(960px, 92vw);
+  margin: 0 auto;
+}
+.dashboard-card h2 {
+  margin-bottom: 10px;
+  color: var(--accent-color);
+}
+
+/* Footer */
+.dashboard-footer {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  padding: 1rem;
+  font-size: 0.9rem;
+  color: var(--muted-text);
+  margin: 1rem;
+}
+.footer-button-container {
+  display: flex;
+  flex-direction: column;
+  width: min(640px, 80vw);
+  margin: 0 auto;
+}
+
+/* Buttons */
+.dashboard-button {
+  background: linear-gradient(135deg, var(--accent-color), #38bdf8);
+  color: white;
+  border: none;
+  padding: 0.55rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-bottom: 0.5rem;
+  transition: background 0.2s ease, transform 0.12s ease, box-shadow 0.2s ease;
+  box-shadow: 0 12px 28px rgba(37, 99, 235, 0.55);
+}
+.dashboard-button:hover {
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 18px 40px rgba(37, 99, 235, 0.75);
+}
+
+/* Section manager layout */
+.section-manager .section-list {
+  display: grid;
+  gap: 10px;
+}
+
+.section-manager .section-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px 110px;
+  align-items: center;
+  gap: 12px;
+}
+
+.section-manager .section-row.muted {
+  opacity: 0.6;
+}
+
+.section-manager .identity {
+  min-width: 0;
+}
+
+.section-manager .identity strong {
+  display: block;
+}
+
+.section-manager .section-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.section-manager .btn-small {
+  padding: 8px 12px;
+  border-radius: 8px;
+}
+
+/* Classroom section row */
+.classroom-section-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  margin: 10px 0 18px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 10px;
+  background: linear-gradient(180deg, #ffffff, #f8fafc);
+}
+
+.classroom-section-row .fixed-value {
+  font-weight: 600;
+  color: #0f172a;
+  background: #e2e8f0;
+  padding: 4px 10px;
+  border-radius: 8px;
+}
+
+.classroom-section-row .section-input {
+  flex: 1;
+}
+
+.showcase-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.showcase-item-card {
+  border: 1px solid var(--card-border);
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--card-bg);
+}
+
+/* header row inside each card */
+.showcase-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.showcase-meta-time {
+  font-size: 13px;
+  color: var(--muted-text);
+}
+
+/* info block (score / activity / view link) */
+.showcase-info {
+  margin-top: 6px;
+}
+
+.showcase-info-meta {
+  font-size: 13px;
+  color: var(--muted-text);
+}
+
+.showcase-view-link {
+  display: inline-block;
+  margin-top: 8px;
+  color: var(--accent-color);
+  text-decoration: none;
+}
+
+/* comments list */
+.showcase-comments {
+  margin-top: 10px;
+}
+
+.showcase-comment {
+  margin-bottom: 8px;
+}
+
+.showcase-comment-meta {
+  font-size: 13px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.showcase-comment-time {
+  color: var(--muted-text);
+  font-size: 12px;
+}
+
+/* comment body */
+.showcase-comment-body {
+  margin-top: 4px;
+}
+
+/* replies */
+.showcase-replies {
+  margin-left: 8px;
+  margin-top: 6px;
+}
+
+.showcase-reply {
+  font-size: 13px;
+  margin-top: 6px;
+}
+
+/* input row for posting comments */
+.showcase-comment-input-row {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+}
+
+.showcase-comment-input {
+  flex: 1;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid var(--card-border);
+  background: var(--input-bg, #fff);
+  color: var(--text-color);
+}
+
+/* Responsive tweaks */
+@media (max-width: 900px) {
+  .section-manager .section-row {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+  .section-manager .btn-small {
+    width: 100%;
+  }
+}
+
+/* small screens: move icons a little inwards to avoid overlap */
+@media (max-width: 720px) {
+  .dashboard-header {
+    padding: 10px 14px;
+  }
+  .notification-icon {
+    left: 12px;
+    top: 10px;
+    width: 36px;
+    height: 36px;
+  }
+  .showcase-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}

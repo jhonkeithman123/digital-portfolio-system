@@ -1,0 +1,148 @@
+.containerS {
+  display: flex;
+  flex: 1;
+  position: relative;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 0;
+  width: 100%;
+  height: 95%;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  overflow: hidden;
+  box-sizing: border-box;
+  z-index: 1;
+}
+
+/* Background (image supplied via JSX inline style) */
+.backgroundS {
+  position: fixed;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  filter: blur(10px) brightness(0.9);
+  transform: scale(1.02);
+  z-index: -2;
+}
+
+/* Dark mode background tint (same family as Login/ForgotPassword) */
+:root[data-theme="dark"] .backgroundS {
+  filter: blur(10px) brightness(0.4) contrast(1.05);
+}
+
+/* Overlay over background */
+.overlayS {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at 20% 0%,
+    rgba(255, 255, 255, 0.65),
+    rgba(148, 163, 184, 0.1)
+  );
+  z-index: -1;
+}
+
+/* Dark overlay (match Login / ForgotPassword / RoleSelect) */
+:root[data-theme="dark"] .overlayS {
+  background: radial-gradient(
+      circle at 10% -10%,
+      rgba(37, 99, 235, 0.32),
+      transparent 55%
+    ),
+    linear-gradient(180deg, rgba(3, 7, 18, 0.92), rgba(7, 12, 25, 0.96));
+}
+
+/* Glass card for form – match Login.panelL */
+.input-containerS {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: rgba(6, 10, 20, 0.94);
+  border-radius: 14px;
+  padding: clamp(18px, 3.2vw, 28px);
+  box-shadow: 0 20px 50px rgba(2, 8, 23, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  max-width: 720px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Light mode card (similar to Login but you’ll mostly see dark) */
+:root[data-theme="light"] .input-containerS {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 20px 50px rgba(2, 8, 23, 0.12);
+}
+
+/* Headline / sub text inside signup (optional if you add titles later) */
+.signup-title {
+  margin: 0 0 6px 0;
+  font-size: clamp(20px, 3.4vw, 28px);
+  font-weight: 800;
+  color: #e6eef8;
+  letter-spacing: -0.01em;
+}
+
+.signup-sub {
+  margin: 0 0 16px 0;
+  color: #94a3b8;
+  font-size: 0.98rem;
+}
+
+/* Button area – like .buttonContainerL */
+.button-containerS {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  margin-top: 18px;
+}
+
+/* Primary pill button – same gradient as Login.buttonL */
+.buttonS {
+  padding: 12px 18px;
+  font-size: 1rem;
+  background: linear-gradient(135deg, #ef4444, #22d3ee);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  width: 100%;
+  max-width: 340px;
+  cursor: pointer;
+  box-shadow: 0 14px 36px rgba(37, 99, 235, 0.3);
+  transition: transform 0.18s ease, box-shadow 0.3s ease, filter 0.18s;
+  font-weight: 700;
+}
+
+.buttonS:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 24px 54px rgba(37, 99, 235, 0.45);
+  filter: brightness(1.03);
+}
+
+.buttonS:active {
+  transform: translateY(-1px);
+}
+
+/* Secondary button for "Back to Log in" – ghost style like ForgotPassword link */
+.buttonS.buttonS-secondary {
+  background: transparent;
+  color: #e5e7eb;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  max-width: 220px;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.4);
+}
+
+.buttonS.buttonS-secondary:hover {
+  background: rgba(15, 23, 42, 0.9);
+  transform: translateY(-2px);
+}
+
+/* Dark mode emphasis for primary button */
+:root[data-theme="dark"] .buttonS {
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 1), 0 0 0 1px rgba(59, 130, 246, 0.6);
+}

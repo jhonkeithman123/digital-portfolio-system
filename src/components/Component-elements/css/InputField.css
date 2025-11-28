@@ -1,0 +1,261 @@
+:root {
+  --fi-bg: rgba(255, 255, 255, 0.32);
+  --fi-glass-border: rgba(255, 255, 255, 0.55);
+  --fi-outline: rgba(255, 255, 255, 0.25);
+  --fi-text: #0f172a;
+  --fi-muted: #64748b;
+  --fi-danger: #e11d48;
+  --fi-focus: #2d8cff;
+
+  /* eye button */
+  --fi-eye-bg: linear-gradient(180deg, #ffffffcc, #ffffff99);
+  --fi-eye-border: rgba(255, 255, 255, 0.65);
+  --fi-eye-color: #0f172a;
+
+  /* responsive tokens (md default) */
+  --fi-font: clamp(14px, 0.7vw + 10px, 18px);
+  --fi-pad-y: clamp(10px, 0.6vw + 6px, 14px);
+  --fi-pad-x: clamp(12px, 0.7vw + 8px, 18px);
+  --fi-radius: clamp(12px, 0.8vw + 8px, 16px);
+  --fi-eye: clamp(28px, 1.2vw + 18px, 36px);
+}
+
+/* dark mode overrides */
+:root[data-theme="dark"] {
+  --fi-bg: rgba(12, 18, 33, 0.72);
+  --fi-glass-border: rgba(148, 163, 184, 0.06);
+  --fi-outline: rgba(255, 255, 255, 0.06);
+  --fi-text: #e6eef8;
+  --fi-muted: #94a3b8;
+  --fi-danger: #fb7185;
+  --fi-focus: #60a5fa;
+
+  --fi-eye-bg: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.06),
+    rgba(255, 255, 255, 0.02)
+  );
+  --fi-eye-border: rgba(255, 255, 255, 0.06);
+  --fi-eye-color: #e6eef8;
+}
+
+/* new XXL */
+.fi--xxl {
+  --fi-font: clamp(18px, 1.4vw + 12px, 24px);
+  --fi-pad-y: clamp(16px, 1.2vw + 8px, 22px);
+  --fi-pad-x: clamp(18px, 1.3vw + 10px, 26px);
+  --fi-radius: clamp(18px, 1.6vw + 10px, 24px);
+  --fi-eye: clamp(40px, 2vw + 20px, 50px);
+}
+
+.fi--auto {
+  --fi-font: clamp(15px, 1.1vw + 10px, 22px);
+  --fi-pad-y: clamp(12px, 0.9vw + 6px, 18px);
+  --fi-pad-x: clamp(14px. 1vw + 8px, 24px);
+  --fi-radius: clamp(14px, 1.1vw + 8px, 22px);
+  --fi-eye: clamp(30px, 1.6vw + 18px, 46px);
+}
+
+.fi-field {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  position: relative;
+  animation: fiIn 220ms ease both;
+}
+
+.fi-label {
+  margin-top: 10px;
+  font-size: calc(var(--fi-font) * 0.85);
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  color: var(--fi-text); /* <- use theme-aware var */
+  opacity: 0.85;
+  padding-left: 6px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.fi-required {
+  color: var(--fi-danger);
+  margin-left: 2px;
+}
+
+.fi-control {
+  position: relative;
+  border-radius: var(--fi-radius);
+  border: 1px solid var(--fi-glass-border);
+  outline: 1px solid var(--fi-outline);
+  background: var(--fi-bg);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.12),
+    0 1px 0 rgba(255, 255, 255, 0.6) inset;
+  transition: box-shadow 0.18s ease, border-color 0.18s ease,
+    background 0.18s ease;
+  overflow: hidden;
+}
+
+.fi-input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--fi-pad-y) calc(var(--fi-eye) + 14px) var(--fi-pad-y)
+    var(--fi-pad-x);
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--fi-text);
+  font-size: var(--fi-font);
+  border-radius: calc(var(--fi-radius) - 2px);
+}
+
+.fi-input::placeholder {
+  color: var(--fi-muted);
+  opacity: 0.9;
+}
+
+.fi-control:focus-within {
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.16),
+    0 0 0 2px rgba(45, 140, 255, 0.15), 0 1px 0 rgba(255, 255, 255, 0.7) inset;
+  border-color: rgba(77, 169, 255, 0.75);
+}
+
+.fi-eye {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 1px solid var(--fi-eye-border);
+  background: var(--fi-eye-bg);
+  color: var(--fi-eye-color);
+  font-size: calc(var(--fi-font) * 0.9);
+  width: var(--fi-eye);
+  height: var(--fi-eye);
+  border-radius: calc(var(--fi-radius) - 6px);
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.18),
+    0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+  transition: background 0.15s ease, transform 0.12s ease, opacity 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.9;
+}
+.fi-eye:hover {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.98),
+    rgba(255, 255, 255, 0.8)
+  );
+  opacity: 1;
+}
+.fi-eye:active {
+  transform: translateY(calc(-50% + 1px));
+}
+.fi-eye.on {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.22),
+    0 0 0 1px rgba(255, 255, 255, 0.55) inset;
+}
+
+.fi-hint {
+  font-size: calc(var(--fi-font) * 0.8);
+  color: var(--fi-muted);
+  padding-left: 6px;
+}
+.fi-error {
+  font-size: calc(var(--fi-font) * 0.8);
+  color: var(--fi-danger);
+  padding-left: 6px;
+}
+
+.has-error .fi-control {
+  border-color: rgba(225, 29, 72, 0.9);
+  box-shadow: 0 8px 22px rgba(225, 29, 72, 0.1),
+    0 0 0 2px rgba(225, 29, 72, 0.12), 0 1px 0 rgba(255, 255, 255, 0.6) inset;
+}
+
+.fi-input:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+.fi-input:disabled + .fi-eye {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Tame Chrome/Safari autofill */
+input.fi-input:-webkit-autofill,
+input.fi-input:-webkit-autofill:hover,
+input.fi-input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--fi-text);
+  caret-color: var(--fi-text);
+  /* match the glass tone inside the input */
+  -webkit-box-shadow: 0 0 0 1000px rgba(255, 255, 255, 0.65) inset;
+  box-shadow: 0 0 0 1000px rgba(255, 255, 255, 0.65) inset;
+  transition: background-color 9999s ease-out 0s;
+}
+
+fi-container {
+  container-type: inline-size;
+}
+@container (max-width: 360px) {
+  .fi--auto {
+    --fi-font: 14px;
+    --fi-pad-y: 10px;
+    --fi-pad-x: 12px;
+    --fi-radius: 12px;
+    --fi-eye: 28px;
+  }
+}
+
+@container (min-width: 680px) {
+  .fi--auto {
+    --fi-font: 17px;
+    --fi-pad-y: 14px;
+    --fi-pad-x: 18px;
+    --fi-radius: 18px;
+    --fi-eye: 38px;
+  }
+}
+
+@container (min-width: 980px) {
+  .fi--auto {
+    --fi-font: 19px;
+    --fi-pad-y: 16px;
+    --fi-pad-x: 22px;
+    --fi-radius: 20px;
+    --fi-eye: 44px;
+  }
+}
+
+@keyframes fiIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+    filter: blur(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fi-field {
+    animation: none;
+  }
+  .fi-control,
+  .fi-eye {
+    transition: none;
+  }
+}
+
+@media (min-width: 1600px) {
+  .fi--auto {
+    --fi-font: clamp(18px, 0.7vw + 12px, 26px);
+    --fi-pad-y: clamp(16px, 0.6vw + 10px, 22px);
+    --fi-pad-x: clamp(18px, 0.7vw + 12px, 28px);
+    --fi-radius: clamp(18px, 0.8vw + 10px, 26px);
+    --fi-eye: clamp(40px, 1vw + 22px, 54px);
+  }
+}

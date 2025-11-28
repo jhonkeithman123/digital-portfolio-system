@@ -1,0 +1,33 @@
+@import "./ActivityBase.css";
+
+.teacher-instructions {
+  border-radius: 18px;
+  padding: 18px 20px;
+  margin-top: 18px;
+  background: var(--surface-elevated, #ffffff);
+  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.08);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+}
+
+.teacher-instructions h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.teacher-instructions h4::before {
+  content: "✏️";
+  font-size: 0.95rem;
+}
+
+.teacher-instructions textarea {
+  min-height: 120px;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+}
+
+.teacher-instructions .instr-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
