@@ -1,5 +1,4 @@
-const API_BASE: string | undefined =
-  import.meta.env.REACT_APP_API_URL ?? import.meta.env.VITE_API_URL;
+const API_BASE: string | undefined = (import.meta.env as any).VITE_API_URL;
 
 export const clearSession = (): void => {
   try {
