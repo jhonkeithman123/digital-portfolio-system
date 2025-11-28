@@ -1,4 +1,20 @@
-const API_BASE: string | undefined = (import.meta.env as any).VITE_API_URL;
+const API_BASE: string =
+  (import.meta.env.VITE_API_URL as string | undefined) ??
+  (typeof window !== "undefined" ? window.location.origin : "");
+
+function buildUrl(path: string): string {
+  if (path.startsWith("http")) return path;
+  const base = API_BASE || "";
+  try {
+    // new URL handles slashes cleanly
+    return new URL(path, base.endsWith("/") ? base : base + "/").toString();
+  } catch {
+    // fallback safe concat
+    if (!base) return path;
+    if (base.endsWith("/") || path.startsWith("/")) return `${base}${path}`;
+    return `${base}/${path}`;
+  }
+}
 
 export const clearSession = (): void => {
   try {
@@ -21,7 +37,7 @@ export async function apiFetch<T = any>(
   path: string,
   options: RequestInit = {}
 ): Promise<ApiResponse<T>> {
-  const url = path.startsWith("http") ? path : `${API_BASE ?? ""}${path}`;
+  const url = buildUrl(path);
   const headers = new Headers((options as any).headers || {});
   const bodyIsForm = (options as any).body instanceof FormData;
 
@@ -54,7 +70,7 @@ export async function apiFetchPublic<T = any>(
   options: RequestInit = {},
   { withCredentials = false } = {}
 ): Promise<ApiResponse<T>> {
-  const url = path.startsWith("http") ? path : `${API_BASE ?? ""}${path}`;
+  const url = buildUrl(path);
   const headers = new Headers((options as any).headers || {});
   const bodyIsForm = (options as any).body instanceof FormData;
 

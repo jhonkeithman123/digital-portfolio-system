@@ -1,70 +1,72 @@
-# Getting Started with Create React App
+# Digital Portfolio — Client (Vite)
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This is the Vite + React client for the Digital Portfolio project. It was built for my client and served as an experience for me to grow as a software and web developer.
 
-## Available Scripts
+## Summary
 
-In the project directory, you can run:
+- Project type: Vite + React + TypeScript
+- Purpose: Frontend for the Digital Portfolio system
+- Goal: Deliver a production-ready client and practice real-world full‑stack development
 
-### `npm start`
+## Features
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- Vite dev server and fast HMR
+- Typed code with TypeScript
+- Configured to communicate with a separate backend API server
+- Ready for deployment to GitHub Pages (builds go to `dist/`)
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Local development
 
-### `npm test`
+1. Install dependencies
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+```bash
+# from repo root
+npm install
+cd server
+npm install
+cd ..
+```
 
-### `npm run build`
+2. Start server (run in a separate terminal)
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```bash
+# if server is a separate repo/service, run it accordingly
+cd server
+npm run dev
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+3. Start client
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```bash
+# from repo root
+npm run dev
+```
 
-### `npm run eject`
+4. Open the client in a browser (Will be updated in the future):
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+```
+Will be updated in the future
+```
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Environment
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+- Client uses Vite env vars prefixed with `VITE_` (e.g. `VITE_API_URL`).
+- Server keeps runtime secrets in environment variables (do not commit `.env`).
+- Example server env keys:
+  - DB_HOST, DB_PORT, DB_USER, DB_PASS, DB_NAME
+  - JWT_SECRET
+  - CLIENT_ORIGIN
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## Deployment
 
-## Learn More
+- Client: build with `npm run build` and deploy to GitHub Pages or any static host. Ensure `base` is set in `vite.config.ts` for GH Pages.
+- Server: deploy to a Node host (Render, Railway, Heroku, Vercel serverless). Use a managed database reachable by the server (do not point to a local XAMPP instance from the host).
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## Notes
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+- The server is maintained as a separate repository / submodule.
+- The client and server communicate via REST; the server may serve a small landing page at `/` indicating it is an API service.
 
-### Code Splitting
+## Contact
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- This repository was created as a deliverable for a client and a learning project to level up skills in full‑stack web development.
