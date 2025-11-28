@@ -1,6 +1,14 @@
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState, useRef, useCallback } from "react";
 import { apiFetch } from "../../utils/apiClient";
+import type {
+  User,
+  ShowcaseItem,
+  Student,
+  Quiz,
+  ClassroomInfo,
+  ShowMessageFn,
+} from "../../types/models";
 import useTamperGuard from "../../security/useTamperGuard";
 import useMessage from "../../hooks/useMessage";
 import useLogout from "../../hooks/useLogout";
@@ -27,37 +35,40 @@ const Dashboard = () => {
   const { messageComponent, showMessage } = useMessage();
 
   // For safegurading the useEffects to prevent infinite loops
-  const didInit = useRef(false);
-  const enrollmentChecked = useRef(false);
-  const quizzesLoadChecked = useRef(false);
-  const teacherChecked = useRef(false);
-  const studentsLoadedRef = useRef(false);
+  const didInit = useRef<boolean>(false);
+  const enrollmentChecked = useRef<boolean>(false);
+  const quizzesLoadChecked = useRef<boolean>(false);
+  const teacherChecked = useRef<boolean>(false);
+  const studentsLoadedRef = useRef<boolean>(false);
 
-  const [user, setUser] = useState(null);
-  const [hasActivity, setHasActivity] = useState(false);
-  const [checkingEnrollment, setCheckingEnrollment] = useState(true);
-  const [classroomInfo, setClassroomInfo] = useState(null);
-  const [studentQuizzes, setStudentQuizzes] = useState([]);
-  const [loadingQuizzes, setLoadingQuizzes] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [inviteOpen, setInviteOpen] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [classroomSectionDraft, setClassroomSectionDraft] = useState("");
+  const [user, setUser] = useState<User | null>(null);
+  const [hasActivity, setHasActivity] = useState<boolean>(false);
+  const [checkingEnrollment, setCheckingEnrollment] = useState<boolean>(true);
+  const [classroomInfo, setClassroomInfo] = useState<ClassroomInfo | null>(
+    null
+  );
+  const [studentQuizzes, setStudentQuizzes] = useState<Quiz[]>([]);
+  const [loadingQuizzes, setLoadingQuizzes] = useState<boolean>(false);
+  const [menuOpen, setMenuOpen] = useState<boolean>(false);
+  const [inviteOpen, setInviteOpen] = useState<boolean>(false);
+  const [unreadCount, setUnreadCount] = useState<number>(0);
+  const [classroomSectionDraft, setClassroomSectionDraft] =
+    useState<string>("");
 
-  const [showSections, setShowSections] = useState(false);
-  const [students, setStudents] = useState([]);
-  const [loadingStudents, setLoadingStudents] = useState(false);
-  const [editSections, setEditSections] = useState({}); // id -> string
-  const [mySection, setMySection] = useState(null); // for students
-  const [mySectionDraft, setMySectionDraft] = useState(""); // for students
-  const [savingMySection, setSavingMySection] = useState(false); // for students
+  const [showSections, setShowSections] = useState<boolean>(false);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [loadingStudents, setLoadingStudents] = useState<boolean>(false);
+  const [editSections, setEditSections] = useState<Record<string, string>>({}); // id -> string
+  const [mySection, setMySection] = useState<string | null>(null); // for students
+  const [mySectionDraft, setMySectionDraft] = useState<string>(""); // for students
+  const [savingMySection, setSavingMySection] = useState<boolean>(false); // for students
 
-  const [showcaseItems, setShowcaseItems] = useState([]);
+  const [showcaseItems, setShowcaseItems] = useState<ShowcaseItem[]>([]);
   const { loading: loadingShowcase, wrap: wrapShowcase } =
     useLoadingState(false);
 
   // Make showMessage stable for effects
-  const showMsgRef = useRef(showMessage);
+  const showMsgRef = useRef<ShowMessageFn | undefined>(undefined);
   useEffect(() => {
     showMsgRef.current = showMessage;
   }, [showMessage]);
@@ -68,28 +79,32 @@ const Dashboard = () => {
         try {
           const { data } = await apiFetch("/showcase");
           if (data?.success && Array.isArray(data.items)) {
-            setShowcaseItems(data.items);
+            setShowcaseItems(data.items as ShowcaseItem[]);
           } else {
-            setShowcaseItems(data.items ?? []);
+            setShowcaseItems((data?.items as ShowcaseItem[]) ?? []);
           }
         } catch (e) {
           // use the direct showMessage (stable ref handled elsewhere)
-          showMessage.current?.("Failed to load showcase", "error");
+          showMsgRef.current?.("Failed to load showcase", "error");
         }
       }),
     [wrapShowcase]
   );
 
   // post a public comment on a showcased item
-  const postShowcaseComment = async (showcaseId, comment) => {
+  const postShowcaseComment = async (
+    showcaseId: string,
+    comment: string
+  ): Promise<void> => {
     if (!comment?.trim()) return;
     try {
       const { data } = await apiFetch(`/showcase/${showcaseId}/comments`, {
         method: "POST",
         body: JSON.stringify({ comment }),
       });
+
       if (data?.success && data.comment) {
-        setShowcaseItems((prev) =>
+        setShowcaseItems((prev: ShowcaseItem[]) =>
           prev.map((it) =>
             it.id === showcaseId
               ? { ...it, comments: [data.comment, ...(it.comments || [])] }
@@ -97,46 +112,51 @@ const Dashboard = () => {
           )
         );
       } else {
-        showMsgRef.current("Failed to post comment", "error");
+        showMsgRef.current?.("Failed to post comment", "error");
       }
     } catch {
-      showMsgRef.current("Server error", "error");
+      showMsgRef.current?.("Server error", "error");
     }
   };
 
-  // post a reply to a comment on a showcased item
-  const postShowcaseReply = async (showcaseId, commentId, reply) => {
-    if (!reply?.trim()) return;
-    try {
-      const { data } = await apiFetch(
-        `/showcase/${showcaseId}/comments/${commentId}/replies`,
-        {
-          method: "POST",
-          body: JSON.stringify({ reply }),
-        }
-      );
-      if (data?.success && data.reply) {
-        setShowcaseItems((prev) =>
-          prev.map((it) =>
-            it.id === showcaseId
-              ? {
-                  ...it,
-                  comments: (it.comments || []).map((c) =>
-                    c.id === commentId
-                      ? { ...c, replies: [...(c.replies || []), data.reply] }
-                      : c
-                  ),
-                }
-              : it
-          )
-        );
-      } else {
-        showMsgRef.current("Failed to post reply", "error");
-      }
-    } catch {
-      showMsgRef.current("Server error", "error");
-    }
-  };
+  //* post a reply to a comment on a showcased item (Will be enabled in the future)
+  // const postShowcaseReply = async (
+  //   showcaseId: string,
+  //   commentId: string,
+  //   reply: string
+  // ): Promise<void> => {
+  //   if (!reply?.trim()) return;
+  //   try {
+  //     const { data } = await apiFetch(
+  //       `/showcase/${showcaseId}/comments/${commentId}/replies`,
+  //       {
+  //         method: "POST",
+  //         body: JSON.stringify({ reply }),
+  //       }
+  //     );
+
+  //     if (data?.success && data.reply) {
+  //       setShowcaseItems((prev: ShowcaseItem[]) =>
+  //         prev.map((it) =>
+  //           it.id === showcaseId
+  //             ? {
+  //                 ...it,
+  //                 comments: (it.comments || []).map((c) =>
+  //                   c.id === commentId
+  //                     ? { ...c, replies: [...(c.replies || []), data.reply] }
+  //                     : c
+  //                 ),
+  //               }
+  //             : it
+  //         )
+  //       );
+  //     } else {
+  //       showMsgRef.current?.("Failed to post reply", "error");
+  //     }
+  //   } catch {
+  //     showMsgRef.current?.("Server error", "error");
+  //   }
+  // };
 
   useTamperGuard(user?.role, showMsgRef.current);
 
@@ -149,13 +169,12 @@ const Dashboard = () => {
       const cachedUser = localStorage.getItem("user");
       if (cachedUser) {
         try {
-          const parsed = JSON.parse(cachedUser);
+          const parsed = JSON.parse(cachedUser) as User;
           setUser(parsed);
           if (parsed.section) setMySection(parsed.section);
-          document.documentElement.style.setProperty(
-            "--accent-color",
-            roleColors[parsed.role] || "#6c757d"
-          );
+          const accent =
+            roleColors[parsed.role as keyof typeof roleColors] ?? "#6c757d";
+          document.documentElement.style.setProperty("--accent-color", accent);
         } catch {
           localStorage.removeItem("user");
         }
@@ -163,7 +182,7 @@ const Dashboard = () => {
 
       const { unauthorized, data } = await apiFetch("/auth/session");
       if (unauthorized || !data?.success) {
-        showMsgRef.current("Session invalid", "error");
+        showMsgRef.current?.("Session invalid", "error");
         localStorage.removeItem("user");
         navigate("/login", { replace: true });
         setCheckingEnrollment(false);
@@ -172,9 +191,10 @@ const Dashboard = () => {
 
       // If server returns canonical user, override cache
       if (data.user) {
-        setUser(data.user);
+        setUser(data.user as User);
         localStorage.setItem("user", JSON.stringify(data.user));
-        if (data.user.section) setMySection(data.user.section);
+        if ((data.user as User).section)
+          setMySection((data.user as User).section!);
       }
 
       // Allow enrollment effect to proceed
@@ -201,6 +221,7 @@ const Dashboard = () => {
       studentsLoadedRef.current = false;
       return;
     }
+
     if (studentsLoadedRef.current) return;
     studentsLoadedRef.current = true;
     setLoadingStudents(true);
@@ -209,26 +230,27 @@ const Dashboard = () => {
     apiFetch("/users/students", { signal: abort.signal })
       .then(({ data }) => {
         if (data?.success && Array.isArray(data.students)) {
-          setStudents(data.students);
-          const draft = {};
-          data.students.forEach((s) => {
+          const fetched = data.students as Student[];
+          setStudents(fetched);
+          const draft: Record<string, string> = {};
+          data.students.forEach((s: Record<string, string>) => {
             if (!s.section) draft[s.id] = "";
           });
           setEditSections(draft);
         } else {
-          showMsgRef.current("Failed to load students", "error");
+          showMsgRef.current?.("Failed to load students", "error");
         }
       })
       .catch((e) => {
         if (e.name !== "AbortError")
-          showMsgRef.current("Server error while loading students", "error");
+          showMsgRef.current?.("Server error while loading students", "error");
       })
       .finally(() => setLoadingStudents(false));
 
     return () => abort.abort();
   }, [user?.role, showSections]);
 
-  const saveSection = async (id) => {
+  const saveSection = async (id: string): Promise<void> => {
     const value = (editSections[id] ?? "").trim();
     if (!value) return;
     try {
@@ -237,13 +259,13 @@ const Dashboard = () => {
         body: JSON.stringify({ section: value }),
       });
       if (!data?.success) throw new Error();
-      setStudents((prev) =>
+      setStudents((prev: Student[]) =>
         prev.map((s) => (s.id === id ? { ...s, section: value } : s))
       );
       setEditSections((prev) => ({ ...prev, [id]: "" }));
-      showMsgRef.current("Section saved", "success");
+      showMsgRef.current?.("Section saved", "success");
     } catch {
-      showMsgRef.current("Failed to save section", "error");
+      showMsgRef.current?.("Failed to save section", "error");
     }
   };
 
@@ -258,9 +280,9 @@ const Dashboard = () => {
       apiFetch("/classrooms/student")
         .then(({ data }) => {
           if (!data?.success) {
-            showMsgRef.current("Failed to check enrollment", "error");
+            showMsgRef.current?.("Failed to check enrollment", "error");
           } else if (!data.enrolled || !data.classroomId) {
-            showMsgRef.current("Not enrolled. Join a classroom.", "info");
+            showMsgRef.current?.("Not enrolled. Join a classroom.", "info");
             navigate("/join");
           } else {
             setHasActivity(true);
@@ -272,7 +294,7 @@ const Dashboard = () => {
           }
         })
         .catch(() =>
-          showMsgRef.current("Server error while checking classroom", "error")
+          showMsgRef.current?.("Server error while checking classroom", "error")
         )
         .finally(() => setCheckingEnrollment(false));
     } else if (user.role === "teacher") {
@@ -282,26 +304,33 @@ const Dashboard = () => {
       apiFetch("/classrooms/teacher")
         .then(({ data }) => {
           if (!data?.success) {
-            showMsgRef.current("Failed to check classroom", "error");
-          } else if (!data.created) {
+            showMsgRef.current?.("Failed to check classroom", "error");
+          } else if (!(data as any).created) {
             navigate("/create");
           } else {
+            // Cast to a known shape so TypeScript recognizes `section`
+            const info = data as {
+              name?: string;
+              code?: string;
+              section?: string | null;
+            };
+
             setHasActivity(true);
             setClassroomInfo({
-              name: data.name,
-              code: data.code,
-              section: data.section ?? null,
+              name: info.name,
+              code: info.code,
+              section: info.section ?? null,
             });
           }
         })
         .catch(() =>
-          showMsgRef.current("Server error while checking classroom", "error")
+          showMsgRef.current?.("Server error while checking classroom", "error")
         )
         .finally(() => setCheckingEnrollment(false));
     }
   }, [user, navigate]);
 
-  const saveMySection = async () => {
+  const saveMySection = async (): Promise<void> => {
     const value = mySectionDraft.trim();
     if (!value) return;
     setSavingMySection(true);
@@ -317,20 +346,22 @@ const Dashboard = () => {
           const parsed = stored ? JSON.parse(stored) : {};
           const merged = { ...parsed, section: value };
           localStorage.setItem("user", JSON.stringify(merged));
-          setUser((u) => ({ ...(u || {}), section: value }));
-        } catch {}
-        showMsgRef.current("Section saved", "success");
+          setUser((u) => (u ? { ...u, section: value } : null));
+        } catch {
+          //* Ignore
+        }
+        showMsgRef.current?.("Section saved", "success");
       } else {
-        showMsgRef.current(data?.message || "Could not set section", "error");
+        showMsgRef.current?.(data?.message || "Could not set section", "error");
       }
     } catch {
-      showMsgRef.current("Server error", "error");
+      showMsgRef.current?.("Server error", "error");
     } finally {
       setSavingMySection(false);
     }
   };
 
-  const saveClassroomSection = async () => {
+  const saveClassroomSection = async (): Promise<void> => {
     const value = classroomSectionDraft.trim();
     const code = classroomInfo?.code || null;
 
@@ -343,14 +374,14 @@ const Dashboard = () => {
       if (!data?.success) throw new Error();
       setClassroomInfo((c) => ({ ...(c || {}), section: value }));
       setClassroomSectionDraft("");
-      showMsgRef.current("Classroom section set", "success");
+      showMsgRef.current?.("Classroom section set", "success");
     } catch (e) {
       console.log("Failed to set classroom section:", e);
-      showMsgRef.current("Failed to set classroom section", "error");
+      showMsgRef.current?.("Failed to set classroom section", "error");
     }
   };
 
-  const clearClassroomSection = async () => {
+  const clearClassroomSection = async (): Promise<void> => {
     const ok = await confirm({
       title: "Clear Section",
       message: "This will clear the section of the classroom",
@@ -361,7 +392,12 @@ const Dashboard = () => {
 
     try {
       const code = classroomInfo?.code || null;
-      const { data } = await apiFetch("/classrooms/teacher/section", {
+      const { data } = await apiFetch<{
+        success?: boolean;
+        message?: string | null;
+        error?: unknown | null;
+        section?: string | null;
+      }>("/classrooms/teacher/section", {
         method: "PATCH",
         body: JSON.stringify({ section: null, code }),
       });
@@ -370,13 +406,23 @@ const Dashboard = () => {
         ...(c || {}),
         section: data.section ?? null,
       }));
-      showMsgRef.current("Classroom section cleared", "success");
-    } catch (err) {
+      showMsgRef.current?.("Classroom section cleared", "success");
+    } catch (err: unknown) {
       console.error("Failed to clear classroom:", err);
-      showMsgRef.current(
-        err?.error || "Failed to clear classroom section",
-        "error"
-      );
+      // derive a safe error message from unknown
+      let errMsg = "Failed to clear classroom section";
+      if (err instanceof Error && err.message) {
+        errMsg = err.message;
+      } else if (err && typeof err === "object") {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const maybe = err as any;
+        if (typeof maybe.error === "string" && maybe.error.trim()) {
+          errMsg = maybe.error;
+        } else if (typeof maybe.message === "string" && maybe.message.trim()) {
+          errMsg = maybe.message;
+        }
+      }
+      showMsgRef.current?.(errMsg, "error");
     }
   };
 
@@ -395,7 +441,7 @@ const Dashboard = () => {
       .finally(() => setLoadingQuizzes(false));
   }, [user?.role, classroomInfo?.code]);
 
-  function openQuiz(q) {
+  function openQuiz(q: Quiz): void {
     if (!classroomInfo?.code) return;
     navigate(`/quizzes/${classroomInfo.code}/quizzes/${q.id}`);
   }
@@ -405,7 +451,7 @@ const Dashboard = () => {
     const handlePopState = async () => {
       const { unauthorized, data } = await apiFetch("/auth/session");
       if (unauthorized || !data?.success) {
-        showMsgRef.current("Unauthorized access", "error");
+        showMsgRef.current?.("Unauthorized access", "error");
         setTimeout(() => navigate("/login"), 1200);
       }
     };
@@ -418,7 +464,7 @@ const Dashboard = () => {
   }, [user]);
 
   const onExpire = useCallback(() => {
-    showMsgRef.current("Session expired. Please sign in again.", "error");
+    showMsgRef.current?.("Session expired. Please sign in again.", "error");
   }, []);
 
   if (!user || checkingEnrollment) {
@@ -437,10 +483,10 @@ const Dashboard = () => {
     <>
       {inviteOpen && (
         <StudentInvite
-          classroomCode={classroomInfo.code}
+          classroomCode={classroomInfo?.code ?? ""}
           onClose={() => setInviteOpen(false)}
           onInvite={(studentId) =>
-            showMsgRef.current(`Invited student ID ${studentId}`, "info")
+            showMsgRef.current?.(`Invited student ID ${studentId}`, "info")
           }
         />
       )}
@@ -577,9 +623,13 @@ const Dashboard = () => {
                         </div>
                         <input
                           className="section-input"
-                          placeholder={hasSection ? s.section : "Enter section"}
+                          placeholder={
+                            hasSection ? s.section ?? "" : "Enter section"
+                          }
                           value={
-                            hasSection ? s.section : editSections[s.id] ?? ""
+                            hasSection
+                              ? s.section ?? ""
+                              : editSections[s.id] ?? ""
                           }
                           onChange={(e) =>
                             setEditSections((prev) => ({
@@ -651,7 +701,11 @@ const Dashboard = () => {
             <h2>Showcase</h2>
             {loadingShowcase ? (
               <div className="showcase-loading">
-                <LoadingOverlay loading={true} text="Loading showcase…" />
+                <LoadingOverlay
+                  loading={true}
+                  text="Loading showcase…"
+                  fullPage={false}
+                />
               </div>
             ) : showcaseItems.length === 0 ? (
               <div>
@@ -680,7 +734,7 @@ const Dashboard = () => {
                       </div>
                       <a
                         className="showcase-view-link"
-                        href={s.fileUrl}
+                        href={s.fileUrl ?? ""}
                         target="_blank"
                         rel="noopener noreferrer"
                       >
@@ -730,12 +784,18 @@ const Dashboard = () => {
                         />
                         <button
                           className="dashboard-button"
-                          onClick={async (ev) => {
-                            const input = ev.currentTarget.previousSibling;
-                            const v = input?.value?.trim();
+                          onClick={async (
+                            e: React.MouseEvent<HTMLButtonElement>
+                          ): Promise<void> => {
+                            // Find the associated input in the same row and read its value
+                            const inputEl =
+                              e.currentTarget.parentElement?.querySelector(
+                                ".showcase-comment-input"
+                              ) as HTMLInputElement | null;
+                            const v = inputEl?.value.trim() ?? "";
                             if (!v) return;
                             await postShowcaseComment(s.id, v);
-                            input.value = "";
+                            if (inputEl) inputEl.value = "";
                           }}
                         >
                           Post

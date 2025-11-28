@@ -1,24 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-
-declare global {
-  interface Window {
-    hackedFunction?: unknown;
-    __injected__?: unknown;
-  }
-}
-
-type ShowMessageFn = (
-  text: string,
-  kind?: "info" | "success" | "error" | "warn"
-) => void;
-
-type TamperGuardOptions = {
-  intervalMs?: number;
-  enabled?: boolean;
-  redirect?: string;
-  logoutUrl?: string;
-};
+import type { ShowMessageFn, TamperGuardOptions } from "../types/models";
 
 /**
  * useTamperGuard
@@ -66,7 +48,7 @@ export default function useTamperGuard(
 
     const safeNotify = (
       text: string,
-      kind: "info" | "success" | "error" | "warn" = "error",
+      kind: "info" | "success" | "error" = "error",
       redirectTo = redirect
     ) => {
       if (triggeredRef.current) return;

@@ -4,12 +4,12 @@ import Header from "../../components/Component-elements/Header.js";
 import useMessage from "../../hooks/useMessage.js";
 import InputField from "../../components/Component-elements/InputField.js";
 import { apiFetchPublic } from "../../utils/apiClient.js";
+import type { Role } from "../../types/models";
 import "./Signup.css";
 
 const validRoles = ["student", "teacher"] as const;
-type Role = (typeof validRoles)[number];
 
-const Signup: React.FC = () => {
+const Signup: React.FC = (): React.ReactElement => {
   const navigate = useNavigate();
 
   const [username, setUsername] = useState<string>("");

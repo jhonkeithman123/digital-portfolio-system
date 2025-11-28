@@ -8,10 +8,9 @@ import {
 } from "../../utils/modifyFromLocalStorage";
 import "./RoleSelect.css";
 import { apiFetch } from "../../utils/apiClient";
+import type { Role } from "../../types/models";
 
-type Role = "student" | "teacher";
-
-const RoleSelect: React.FC = () => {
+const RoleSelect: React.FC = (): React.ReactElement => {
   const navigate = useNavigate();
 
   const handleSelect = (role: Role): void => {
