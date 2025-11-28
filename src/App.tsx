@@ -30,6 +30,11 @@ type ShowMessageFn = (
   kind?: "info" | "success" | "error"
 ) => void;
 
+const routerBase =
+  (import.meta.env.BASE_URL as string) ||
+  ((import.meta.env as any).VITE_BASE as string) ||
+  "/";
+
 interface ProtectedRouteProps {
   children: React.ReactNode;
   showMessage: ShowMessageFn;
@@ -87,7 +92,7 @@ function App(): React.ReactElement {
   }, []);
 
   return (
-    <Router>
+    <Router basename={routerBase}>
       <main style={{ height: "94vh" }}>
         {messageComponent}
         <Routes>
