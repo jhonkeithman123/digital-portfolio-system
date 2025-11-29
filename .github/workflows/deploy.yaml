@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  pages: write
 
 jobs:
   build-and-deploy:
@@ -14,14 +15,15 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
         with:
-          submodules: false
+          submodules: true
+          fetch-depth: 0
 
-      - name: Setup Node
-        uses: actions/setup-node@v6
+      - name: Setup Node (use Node LTS)
+        uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: lts/*
           cache: "npm"
 
       - name: Install dependencies
@@ -30,7 +32,7 @@ jobs:
       - name: Build
         env:
           VITE_BASE: /digital-portfolio-system-client/
-          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          VITE_API_URL: ${{ secrets.VITE_API_URL || '' }}
         run: npm run build
 
       - name: Deploy
