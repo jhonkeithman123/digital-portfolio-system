@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
-  BrowserRouter as Router,
+  HashRouter as Router,
   Routes,
   Route,
   Navigate,
@@ -30,10 +30,10 @@ type ShowMessageFn = (
   kind?: "info" | "success" | "error"
 ) => void;
 
-const routerBase =
-  (import.meta.env.BASE_URL as string) ||
-  ((import.meta.env as any).VITE_BASE as string) ||
-  "/";
+// const routerBase =
+//   (import.meta.env.BASE_URL as string) ||
+//   ((import.meta.env as any).VITE_BASE as string) ||
+//   "/";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -92,7 +92,7 @@ function App(): React.ReactElement {
   }, []);
 
   return (
-    <Router basename={routerBase}>
+    <Router>
       <main style={{ height: "94vh" }}>
         {messageComponent}
         <Routes>
