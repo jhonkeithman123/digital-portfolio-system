@@ -1,5 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import useMessage from "../../hooks/useMessage";
+import useLoadingState from "../../hooks/useLoading";
+import LoadingOverlay from "../Component-elements/loading_overlay";
 import { apiFetch } from "../../utils/apiClient";
 import "./css/TeacherInstructions.css";
 
@@ -19,11 +21,11 @@ const TeacherInstructions: React.FC<TeacherInstructionsProps> = ({
   onSaved,
 }): React.ReactElement => {
   const [text, setText] = useState<string>(currentInstructions || "");
-  const [saving, setSaving] = useState<boolean>(false);
+  const { loading, wrap } = useLoadingState(false);
 
   const { messageComponent, showMessage } = useMessage();
 
-  const showMsgRef = useRef(showMessage);
+  const showMsgRef = useRef<typeof showMessage>(showMessage);
 
   useEffect(() => {
     showMsgRef.current = showMessage;
@@ -35,42 +37,42 @@ const TeacherInstructions: React.FC<TeacherInstructionsProps> = ({
   }, [currentInstructions]);
 
   const save = async (): Promise<void> => {
-    if (!activityId) {
-      showMsgRef.current("Missing activity id", "error");
-      return;
-    }
-    setSaving(true);
-
-    try {
-      const { data, unauthorized } = await apiFetch(
-        `/activity/${encodeURIComponent(String(activityId))}/instructions`,
-        {
-          method: "PATCH",
-          body: JSON.stringify({ instructions: text }),
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-
-      if (unauthorized) {
-        showMsgRef.current("Session expired. Please sign in.", "error");
+    await wrap(async () => {
+      if (!activityId) {
+        showMsgRef.current("Missing activity id", "error");
         return;
       }
 
-      if (data?.success) {
-        showMsgRef.current("Instructions updated", "success");
-        if (onSaved) onSaved(text);
-      } else showMsgRef.current(data?.error || "Failed to save", "error");
-    } catch (e) {
-      console.error("Save instr err", e);
-      showMsgRef.current("Server error", "error");
-    } finally {
-      setSaving(false);
-    }
+      try {
+        const { data, unauthorized } = await apiFetch(
+          `/activity/${encodeURIComponent(String(activityId))}/instructions`,
+          {
+            method: "PATCH",
+            body: JSON.stringify({ instructions: text }),
+            headers: { "Content-Type": "application/json" },
+          }
+        );
+
+        if (unauthorized) {
+          showMsgRef.current("Session expired. Please sign in.", "error");
+          return;
+        }
+
+        if (data?.success) {
+          showMsgRef.current("Instructions updated", "success");
+          if (onSaved) onSaved(text);
+        } else showMsgRef.current(data?.error || "Failed to save", "error");
+      } catch (e) {
+        console.error("Save instr err", e);
+        showMsgRef.current("Server error", "error");
+      }
+    });
   };
 
   return (
     <>
       {messageComponent}
+      <LoadingOverlay loading={loading} text="Processing..." fullPage={false} />
       <section className="activity-section teacher-instructions">
         <h4>Teacher: Edit instructions</h4>
         <textarea
@@ -82,9 +84,9 @@ const TeacherInstructions: React.FC<TeacherInstructionsProps> = ({
         <div className="instr-actions">
           <button
             onClick={save}
-            disabled={saving || text === (currentInstructions ?? "")}
+            disabled={loading || text === (currentInstructions ?? "")}
           >
-            {saving ? "Saving..." : "Save"}
+            Save
           </button>
         </div>
       </section>

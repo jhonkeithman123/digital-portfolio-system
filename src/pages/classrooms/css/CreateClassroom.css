@@ -12,7 +12,7 @@
   padding: 2rem;
   background: #fff;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   text-align: center;
   align-items: center;
   display: flex;
@@ -20,12 +20,12 @@
 }
 
 .create-input {
-    width: 95%;
-    padding: 0.75rem;
-    font-size: 1rem;
-    margin-top: 1rem;
-    border-radius: 6px;
-    border: 1px solid #ccc;
+  width: 95%;
+  padding: 0.75rem;
+  font-size: 1rem;
+  margin-top: 1rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
 }
 
 .create-button {
@@ -37,4 +37,26 @@
   border: none;
   border-radius: 6px;
   cursor: pointer;
+  min-width: 180px;
+}
+
+.create-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  align-items: center;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.create-button-secondary {
+  background: transparent;
+  color: var(--accent-color);
+  border: 1px solid var(--accent-color);
+}
+
+.create-button:disabled,
+.create-button.is-disabled {
+  opacity: 0.6;
+  pointer-events: none;
 }

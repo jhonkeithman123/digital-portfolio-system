@@ -4,19 +4,22 @@ import { apiFetch } from "../../utils/apiClient";
 import useMessage from "../../hooks/useMessage";
 import useLogout from "../../hooks/useLogout";
 import TokenGuard from "../../components/auth/tokenGuard";
+import LoadingOverlay from "../../components/Component-elements/loading_overlay";
+import useLoadingState from "../../hooks/useLoading";
+import Header from "../../components/Component-elements/Header";
 import "./css/CreateClassroom.css";
 
 const CreateClassroom: React.FC = (): React.ReactElement => {
   const navigate = useNavigate();
   const [logout, LogoutModal] = useLogout();
   const { messageComponent, showMessage } = useMessage();
+  const { loading, wrap } = useLoadingState(false);
 
-  const showMsgRef = useRef(showMessage);
+  const showMsgRef = useRef<typeof showMessage>(showMessage);
 
   const [name, setName] = useState<string>("");
   const [schoolYear, setSchoolYear] = useState<string>("");
   const [section, setSection] = useState<string>("");
-  const [creating, setCreating] = useState<boolean>(false);
 
   useEffect(() => {
     showMsgRef.current = showMessage;
@@ -25,22 +28,25 @@ const CreateClassroom: React.FC = (): React.ReactElement => {
   const handleCreate = useCallback(
     async (e?: React.FormEvent) => {
       if (e && typeof e.preventDefault === "function") e.preventDefault();
-      const trimmedName = name.trim();
-      const trimmedYear = schoolYear.trim();
-      const trimmedSection = section.trim();
 
-      if (!trimmedName || !trimmedYear) {
-        return showMsgRef.current("Please fill all required fields.", "error");
-      }
+      await wrap(async () => {
+        const trimmedName = name.trim();
+        const trimmedYear = schoolYear.trim();
+        const trimmedSection = section.trim();
 
-      const payload: Record<string, unknown> = {
-        name: trimmedName,
-        schoolYear: trimmedYear,
-      };
-      if (trimmedSection) payload.section = trimmedSection;
+        if (!trimmedName || !trimmedYear) {
+          return showMsgRef.current(
+            "Please fill all required fields.",
+            "error"
+          );
+        }
 
-      setCreating(true);
-      try {
+        const payload: Record<string, unknown> = {
+          name: trimmedName,
+          schoolYear: trimmedYear,
+        };
+        if (trimmedSection) payload.section = trimmedSection;
+
         const { data, unauthorized } = await apiFetch(`/classrooms/create`, {
           method: "POST",
           body: JSON.stringify(payload),
@@ -54,7 +60,6 @@ const CreateClassroom: React.FC = (): React.ReactElement => {
 
         if (data?.success) {
           showMsgRef.current("Classroom created", "success");
-          // prefer server-provided classroom path when available
           if (data.classroom?.id) {
             navigate(
               `/classrooms/${encodeURIComponent(String(data.classroom.id))}`
@@ -72,15 +77,9 @@ const CreateClassroom: React.FC = (): React.ReactElement => {
             "error"
           );
         }
-      } catch (err) {
-        // eslint-disable-next-line no-console
-        console.error("Create classroom error:", err);
-        showMsgRef.current("Server error. Try again later.", "error");
-      } finally {
-        setCreating(false);
-      }
+      });
     },
-    [name, schoolYear, section, navigate]
+    [name, schoolYear, section, navigate, wrap]
   );
 
   return (
@@ -90,7 +89,24 @@ const CreateClassroom: React.FC = (): React.ReactElement => {
         showMsgRef.current("Session expired. Please sign in again.", "error")
       }
     >
+      <Header
+        title="Advisory"
+        subtitle="Create Classroom"
+        leftActions={
+          <button
+            onClick={() => navigate(-1)}
+            className="header-link"
+            aria-label="Go back"
+            disabled={loading}
+            type="button"
+          >
+            ← Back
+          </button>
+        }
+      />
+
       {messageComponent}
+      <LoadingOverlay loading={loading} text="" fullPage={false} />
 
       <div className="create-classroom-wrapper">
         <div className="create-classroom-container">
@@ -126,15 +142,15 @@ const CreateClassroom: React.FC = (): React.ReactElement => {
               <button
                 className="create-button"
                 type="submit"
-                disabled={creating}
+                disabled={loading}
               >
-                {creating ? "Creating…" : "Create Classroom"}
+                Create Classroom
               </button>
               <button
                 className="create-button"
                 type="button"
                 onClick={() => logout()}
-                disabled={creating}
+                disabled={loading}
               >
                 Logout
               </button>

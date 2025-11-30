@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from "react";
 import { apiFetch } from "../../utils/apiClient";
 import useMessage from "../../hooks/useMessage";
 import useLoadingState from "../../hooks/useLoading";
+import LoadingOverlay from "../Component-elements/loading_overlay";
 import "./css/ActivityComments.css";
 
 type Reply = {
@@ -94,7 +95,7 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
   const submit = useCallback(async () => {
     if (!text.trim()) return;
     const comment = text.trim();
-    try {
+    await wrap(async () => {
       const { data } = await apiFetch<{
         success?: boolean;
         comments?: Comment;
@@ -123,12 +124,8 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
       } else {
         showMsgRef.current(data?.error ?? "Failed to post comment", "error");
       }
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error("Submit comment error:", err);
-      showMsgRef.current("Server error", "error");
-    }
-  }, [activityId, text, load]);
+    });
+  }, [activityId, text, load, wrap]);
 
   const toggleReply = useCallback((id: string | number) => {
     setReplyDrafts((prev) => {
@@ -145,7 +142,7 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
     const draft = (replyDrafts[id] ?? "").trim();
     if (!draft) return;
 
-    try {
+    await wrap(async () => {
       const { data } = await apiFetch(
         `/activity/${encodeURIComponent(
           activityId
@@ -174,15 +171,13 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
       } else {
         showMsgRef.current(data?.error || "Failed to add reply", "error");
       }
-    } catch (e) {
-      console.error("Reply error:", e);
-      showMsgRef.current("Server error", "error");
-    }
+    });
   };
 
   return (
     <>
       {messageComponent}
+      <LoadingOverlay loading={loading} text="Processing..." fullPage={false} />
       <section className="activity-section activity-comments">
         <h4>Comments</h4>
 
@@ -200,86 +195,82 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
 
         <hr className="comments-divider" />
 
-        {loading ? (
-          <p>Loading Comments...</p>
-        ) : (
-          <ul className="comments-list">
-            {comments.length === 0 ? (
-              <li className="empty">No comments yet.</li>
-            ) : (
-              comments.map((c) => (
-                <li key={String(c.id)} className="comment">
-                  <div className="meta">
-                    <strong>{c.username ?? c.authorName ?? "User"}</strong>
-                    <time dateTime={c.created_at ?? c.createdAt ?? undefined}>
-                      {new Date(
-                        c.created_at ?? c.createdAt ?? ""
-                      ).toLocaleString()}
-                    </time>
-                  </div>
+        <ul className="comments-list">
+          {comments.length === 0 && !loading ? (
+            <li className="empty">No comments yet.</li>
+          ) : (
+            comments.map((c) => (
+              <li key={String(c.id)} className="comment">
+                <div className="meta">
+                  <strong>{c.username ?? c.authorName ?? "User"}</strong>
+                  <time dateTime={c.created_at ?? c.createdAt ?? undefined}>
+                    {new Date(
+                      c.created_at ?? c.createdAt ?? ""
+                    ).toLocaleString()}
+                  </time>
+                </div>
 
-                  <div className="body">{c.comment ?? c.text}</div>
+                <div className="body">{c.comment ?? c.text}</div>
 
-                  <div className="comment-footer">
+                <div className="comment-footer">
+                  <button
+                    className="reply-toggle"
+                    type="button"
+                    onClick={() => toggleReply(c.id)}
+                    disabled={loading}
+                  >
+                    {Object.prototype.hasOwnProperty.call(replyDrafts, c.id)
+                      ? "Cancel reply"
+                      : "Reply"}
+                  </button>
+                </div>
+
+                {c.replies && c.replies.length > 0 && (
+                  <ul className="comment-replies">
+                    {c.replies.map((r) => (
+                      <li className="comment-reply" key={String(r.id)}>
+                        <div className="meta">
+                          <strong>{r.username ?? "User"}</strong>
+                          <time
+                            dateTime={r.created_at ?? r.createdAt ?? undefined}
+                          >
+                            {new Date(
+                              r.created_at ?? r.createdAt ?? ""
+                            ).toLocaleString()}
+                          </time>
+                        </div>
+                        <div className="body">{r.reply}</div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                {Object.prototype.hasOwnProperty.call(replyDrafts, c.id) && (
+                  <div className="reply-form">
+                    <textarea
+                      value={replyDrafts[c.id] ?? ""}
+                      onChange={(e) =>
+                        setReplyDrafts((prev) => ({
+                          ...prev,
+                          [c.id]: e.target.value,
+                        }))
+                      }
+                      placeholder="Write a reply..."
+                      disabled={loading}
+                    />
                     <button
-                      className="reply-toggle"
                       type="button"
-                      onClick={() => toggleReply(c.id)}
+                      onClick={() => submitReply(c.id)}
+                      disabled={!replyDrafts[c.id]?.trim() || loading}
                     >
-                      {Object.prototype.hasOwnProperty.call(replyDrafts, c.id)
-                        ? "Cancel reply"
-                        : "Reply"}
+                      Post a reply
                     </button>
                   </div>
-
-                  {c.replies && c.replies.length > 0 && (
-                    <ul className="comment-replies">
-                      {c.replies.map((r) => (
-                        <li className="comment-reply" key={String(r.id)}>
-                          <div className="meta">
-                            <strong>{r.username ?? "User"}</strong>
-                            <time
-                              dateTime={
-                                r.created_at ?? r.createdAt ?? undefined
-                              }
-                            >
-                              {new Date(
-                                r.created_at ?? r.createdAt ?? ""
-                              ).toLocaleString()}
-                            </time>
-                          </div>
-                          <div className="body">{r.reply}</div>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-
-                  {Object.prototype.hasOwnProperty.call(replyDrafts, c.id) && (
-                    <div className="reply-form">
-                      <textarea
-                        value={replyDrafts[c.id] ?? ""}
-                        onChange={(e) =>
-                          setReplyDrafts((prev) => ({
-                            ...prev,
-                            [c.id]: e.target.value,
-                          }))
-                        }
-                        placeholder="Write a reply..."
-                      />
-                      <button
-                        type="button"
-                        onClick={() => submitReply(c.id)}
-                        disabled={!replyDrafts[c.id]?.trim()}
-                      >
-                        Post a reply
-                      </button>
-                    </div>
-                  )}
-                </li>
-              ))
-            )}
-          </ul>
-        )}
+                )}
+              </li>
+            ))
+          )}
+        </ul>
       </section>
     </>
   );

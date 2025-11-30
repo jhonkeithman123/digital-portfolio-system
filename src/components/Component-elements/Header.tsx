@@ -95,28 +95,42 @@ interface ThemeSwitchProps {
   toggleTheme: () => void;
 }
 
-const ThemeSwitch: React.FC<ThemeSwitchProps> = ({ theme, toggleTheme }) => {
-  const isDark = theme === "dark";
+const ThemeSwitch: React.FC<ThemeSwitchProps> = React.memo(
+  ({ theme, toggleTheme }) => {
+    const isDark = theme === "dark";
+    const srText = isDark ? "Switch to light mode" : "Switch to dark mode";
 
-  return (
-    <button
-      type="button"
-      className={`theme-switch ${isDark ? "is-dark" : "is-light"}`}
-      onClick={toggleTheme}
-      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-    >
-      <span className="theme-switch-track" aria-hidden="true">
-        <span className="theme-switch-thumb" aria-hidden="true">
-          <span className="theme-switch-icon thumb-sun" aria-hidden="true">
-            <span className="icon-inner">☀</span>
-          </span>
-          <span className="theme-switch-icon thumb-moon" aria-hidden="true">
-            <span className="icon-inner">☾</span>
+    return (
+      <button
+        type="button"
+        className={`theme-switch ${isDark ? "is-dark" : "is-light"}`}
+        onClick={toggleTheme}
+        aria-label={srText}
+        aria-pressed={isDark}
+        title={srText}
+      >
+        <span className="sr-only">{srText}</span>
+        <span className="theme-switch-track" aria-hidden="true">
+          <span className="theme-switch-thumb" aria-hidden="true">
+            <span
+              className="theme-switch-icon thumb-sun"
+              aria-hidden="true"
+              role="img"
+            >
+              <span className="icon-inner">☀</span>
+            </span>
+            <span
+              className="theme-switch-icon thumb-moon"
+              aria-hidden="true"
+              role="img"
+            >
+              <span className="icon-inner">☾</span>
+            </span>
           </span>
         </span>
-      </span>
-    </button>
-  );
-};
+      </button>
+    );
+  }
+);
 
 export default Header;
