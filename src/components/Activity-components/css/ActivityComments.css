@@ -159,6 +159,38 @@
   color: var(--text-primary, #0f172a);
 }
 
+/* Edit area */
+.edit-area {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.edit-textarea {
+  min-height: 90px;
+  resize: vertical;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: var(--edit-bg, #fff);
+  color: var(--text-primary, #0f172a);
+  box-sizing: border-box;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.edited-label {
+  font-size: 0.78rem;
+  opacity: 0.75;
+  margin-left: 6px;
+  color: var(--text-muted, #64748b);
+}
+
 /* dark tweaks */
 :root[data-theme="dark"] .comment {
   background: rgba(15, 23, 42, 0.85);
@@ -173,4 +205,14 @@
 :root[data-theme="dark"] .reply-form textarea {
   background: rgba(15, 23, 42, 0.9);
   border-color: rgba(75, 85, 99, 0.7);
+}
+
+:root[data-theme="dark"] .edit-textarea {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #e6eef8;
+}
+
+:root[data-theme="dark"] .edited-label {
+  color: rgba(230, 238, 248, 0.7);
 }

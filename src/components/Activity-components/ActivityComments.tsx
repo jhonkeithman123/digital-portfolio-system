@@ -16,6 +16,7 @@ type Reply = {
 
 type Comment = {
   id: string | number;
+  user_id?: string | number;
   username?: string | null;
   authorName?: string | null;
   comment?: string;
@@ -41,8 +42,22 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
   const [replyDrafts, setReplyDrafts] = useState<
     Record<string | number, string>
   >({});
+  const [editDrafts, setEditDrafts] = useState<Record<string | number, string>>(
+    {}
+  );
+  const [editingId, setEditingId] = useState<string | number | null>(null);
 
-  const showMsgRef = useRef(showMessage);
+  const showMsgRef = useRef<typeof showMessage>(showMessage);
+
+  //* current user id from localStorage "user" (fallback null)
+  const currentUserId = (() => {
+    try {
+      const u = JSON.parse(localStorage.getItem("user") || "null");
+      return u?.id ?? null;
+    } catch {
+      return null;
+    }
+  })() as string | number | null;
 
   useEffect(() => {
     showMsgRef.current = showMessage;
@@ -138,6 +153,23 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
     });
   }, []);
 
+  const startEdit = useCallback((c: Comment) => {
+    setEditDrafts((prev) => ({
+      ...prev,
+      [c.id]: String(c.comment ?? c.text ?? ""),
+    }));
+    setEditingId(c.id);
+  }, []);
+
+  const cancelEdit = useCallback((id: string | number) => {
+    setEditDrafts((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+    setEditingId((cur) => (cur === id ? null : cur));
+  }, []);
+
   const submitReply = async (id: string | number): Promise<void> => {
     const draft = (replyDrafts[id] ?? "").trim();
     if (!draft) return;
@@ -174,6 +206,85 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
     });
   };
 
+  const submitEdit = useCallback(
+    async (id: string | number) => {
+      const draft = (editDrafts[id] ?? "").trim();
+      if (!draft)
+        return showMsgRef.current?.("Comment cannot be empty", "error");
+
+      await wrap(async () => {
+        try {
+          const { data, unauthorized } = await apiFetch(
+            `/activity/${encodeURIComponent(
+              String(activityId)
+            )}/comments/${encodeURIComponent(String(id))}`,
+            {
+              method: "PATCH",
+              body: JSON.stringify({ comment: draft }),
+              headers: { "Content-Type": "application/json" },
+            }
+          );
+
+          if (unauthorized) {
+            showMsgRef.current?.(
+              "Session expired. Please login again",
+              "error"
+            );
+            return;
+          }
+
+          if (data?.success && data?.comment) {
+            //* Check if the comment is a comment or a reply to a comment
+            if (data.type === "comment" && data.comment) {
+              const updated = data.comment;
+              setComments((prev) =>
+                prev.map((c) => (c.id === id ? { ...c, ...updated } : c))
+              );
+            } else if (data.type === "reply" && data.reply) {
+              const updatedReply = data.reply;
+              setComments((prev) =>
+                prev.map((c) => ({
+                  ...c,
+                  replies: (c.replies ?? []).map((r) =>
+                    String((r as any).id) === String(updatedReply.id)
+                      ? updatedReply
+                      : r
+                  ),
+                }))
+              );
+            }
+
+            showMsgRef.current?.(
+              data.type === "comment"
+                ? "Comment updated"
+                : data.type === "reply"
+                ? "Reply updated"
+                : "Updated",
+              "success"
+            );
+            // clear edit state
+            setEditDrafts((prev) => {
+              const next = { ...prev };
+              delete next[id];
+              return next;
+            });
+            setEditingId((cur) => (cur === id ? null : cur));
+          } else {
+            showMsgRef.current?.(
+              data?.error ?? "Failed to updated comment",
+              "error"
+            );
+          }
+        } catch (e: unknown | undefined) {
+          // eslint-disable-next-line no-console
+          console.error("Edit comment error:", e);
+          showMsgRef.current?.("Server error", "error");
+        }
+      });
+    },
+    [activityId, editDrafts, wrap]
+  );
+
   return (
     <>
       {messageComponent}
@@ -187,6 +298,7 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="Add a comment..."
+            disabled={loading}
           />
           <button onClick={submit} disabled={!text.trim() || loading}>
             Post
@@ -199,76 +311,214 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
           {comments.length === 0 && !loading ? (
             <li className="empty">No comments yet.</li>
           ) : (
-            comments.map((c) => (
-              <li key={String(c.id)} className="comment">
-                <div className="meta">
-                  <strong>{c.username ?? c.authorName ?? "User"}</strong>
-                  <time dateTime={c.created_at ?? c.createdAt ?? undefined}>
-                    {new Date(
-                      c.created_at ?? c.createdAt ?? ""
-                    ).toLocaleString()}
-                  </time>
-                </div>
+            comments.map((c) => {
+              const isAuthor =
+                currentUserId !== null &&
+                String(currentUserId) === String(c.user_id);
+              const edited =
+                !!(c.updated_at ?? c.updatedAt) &&
+                (c.updated_at ?? c.updatedAt) !== (c.created_at ?? c.createdAt);
 
-                <div className="body">{c.comment ?? c.text}</div>
-
-                <div className="comment-footer">
-                  <button
-                    className="reply-toggle"
-                    type="button"
-                    onClick={() => toggleReply(c.id)}
-                    disabled={loading}
-                  >
-                    {Object.prototype.hasOwnProperty.call(replyDrafts, c.id)
-                      ? "Cancel reply"
-                      : "Reply"}
-                  </button>
-                </div>
-
-                {c.replies && c.replies.length > 0 && (
-                  <ul className="comment-replies">
-                    {c.replies.map((r) => (
-                      <li className="comment-reply" key={String(r.id)}>
-                        <div className="meta">
-                          <strong>{r.username ?? "User"}</strong>
-                          <time
-                            dateTime={r.created_at ?? r.createdAt ?? undefined}
-                          >
-                            {new Date(
-                              r.created_at ?? r.createdAt ?? ""
-                            ).toLocaleString()}
-                          </time>
-                        </div>
-                        <div className="body">{r.reply}</div>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-
-                {Object.prototype.hasOwnProperty.call(replyDrafts, c.id) && (
-                  <div className="reply-form">
-                    <textarea
-                      value={replyDrafts[c.id] ?? ""}
-                      onChange={(e) =>
-                        setReplyDrafts((prev) => ({
-                          ...prev,
-                          [c.id]: e.target.value,
-                        }))
-                      }
-                      placeholder="Write a reply..."
-                      disabled={loading}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => submitReply(c.id)}
-                      disabled={!replyDrafts[c.id]?.trim() || loading}
-                    >
-                      Post a reply
-                    </button>
+              return (
+                <li key={String(c.id)} className="comment">
+                  <div className="meta">
+                    <strong>{c.username ?? c.authorName ?? "User"}</strong>
+                    <time dateTime={c.created_at ?? c.createdAt ?? undefined}>
+                      {new Date(
+                        c.created_at ?? c.createdAt ?? ""
+                      ).toLocaleString()}
+                    </time>
                   </div>
-                )}
-              </li>
-            ))
+
+                  {editingId === c.id ? (
+                    <div className="edit-area">
+                      <textarea
+                        disabled={loading}
+                        value={editDrafts[c.id] ?? ""}
+                        onChange={(e) =>
+                          setEditDrafts((prev) => ({
+                            ...prev,
+                            [c.id]: e.target.value,
+                          }))
+                        }
+                        className="activity-textarea edit-textarea"
+                      />
+                      <div className="edit-actions">
+                        <button
+                          type="button"
+                          onClick={() => void submitEdit(c.id)}
+                          disabled={loading || !(editDrafts[c.id] ?? "").trim()}
+                        >
+                          Save
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => cancelEdit(c.id)}
+                          disabled={loading}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="body">
+                      {c.comment ?? c.text}{" "}
+                      {edited && <span className="edited-label">• edited</span>}
+                    </div>
+                  )}
+
+                  <div className="comment-footer">
+                    <button
+                      className="reply-toggle"
+                      type="button"
+                      onClick={() => toggleReply(c.id)}
+                      disabled={loading}
+                    >
+                      {Object.prototype.hasOwnProperty.call(replyDrafts, c.id)
+                        ? "Cancel reply"
+                        : "Reply"}
+                    </button>
+                    {isAuthor && editingId !== c.id && (
+                      <button
+                        className="reply-toggle"
+                        type="button"
+                        onClick={() => startEdit(c)}
+                        disabled={loading}
+                      >
+                        Edit
+                      </button>
+                    )}
+                  </div>
+
+                  {c.replies && c.replies.length > 0 && (
+                    <ul className="comment-replies">
+                      {c.replies.map((r) => {
+                        const isReplyAuthor =
+                          currentUserId !== null &&
+                          String(currentUserId) === String((r as any).user_id);
+                        const replyEdited =
+                          !!(r.updated_at ?? r.createdAt) &&
+                          (r.updated_at ?? r.createdAt) !==
+                            (r.created_at ?? r.createdAt);
+
+                        return (
+                          <li
+                            className="comment-reply"
+                            key={String((r as any).id)}
+                          >
+                            <div className="meta">
+                              <strong>{(r as any).username ?? "User"}</strong>
+                              <time
+                                dateTime={
+                                  (r as any).created_at ??
+                                  (r as any).createdAt ??
+                                  undefined
+                                }
+                              >
+                                {new Date(
+                                  (r as any).created_at ??
+                                    (r as any).createdAt ??
+                                    ""
+                                ).toLocaleString()}
+                              </time>
+                            </div>
+
+                            {editingId === (r as any).id ? (
+                              <div className="edit-area">
+                                <textarea
+                                  disabled={loading}
+                                  value={editDrafts[(r as any).id] ?? ""}
+                                  onChange={(e) =>
+                                    setEditDrafts((prev) => ({
+                                      ...prev,
+                                      [(r as any).id]: e.target.value,
+                                    }))
+                                  }
+                                  className="activity-textarea edit-textarea"
+                                />
+                                <div className="edit-actions">
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      void submitEdit((r as any).id)
+                                    }
+                                    disabled={
+                                      loading ||
+                                      !(editDrafts[(r as any).id] ?? "").trim()
+                                    }
+                                  >
+                                    Save
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => cancelEdit((r as any).id)}
+                                    disabled={loading}
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="body">
+                                {(r as any).reply}{" "}
+                                {replyEdited && (
+                                  <span className="edited-label">• edited</span>
+                                )}
+                              </div>
+                            )}
+
+                            <div className="comment-footer">
+                              {isReplyAuthor && editingId !== (r as any).id && (
+                                <button
+                                  className="reply-toggle"
+                                  type="button"
+                                  onClick={() => {
+                                    // start edit for reply
+                                    setEditDrafts((prev) => ({
+                                      ...prev,
+                                      [(r as any).id]: String(
+                                        (r as any).reply ?? ""
+                                      ),
+                                    }));
+                                    setEditingId((r as any).id);
+                                  }}
+                                  disabled={loading}
+                                >
+                                  Edit
+                                </button>
+                              )}
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+
+                  {Object.prototype.hasOwnProperty.call(replyDrafts, c.id) && (
+                    <div className="reply-form">
+                      <textarea
+                        value={replyDrafts[c.id] ?? ""}
+                        onChange={(e) =>
+                          setReplyDrafts((prev) => ({
+                            ...prev,
+                            [c.id]: e.target.value,
+                          }))
+                        }
+                        placeholder="Write a reply..."
+                        disabled={loading}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => submitReply(c.id)}
+                        disabled={!replyDrafts[c.id]?.trim() || loading}
+                      >
+                        Post a reply
+                      </button>
+                    </div>
+                  )}
+                </li>
+              );
+            })
           )}
         </ul>
       </section>
