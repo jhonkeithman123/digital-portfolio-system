@@ -8,6 +8,8 @@ import React, {
 import { useNavigate } from "react-router-dom";
 import useMessage from "../../hooks/useMessage";
 import Header from "../../components/Component-elements/Header";
+import useLoadingState from "../../hooks/useLoading";
+import LoadingOverlay from "../../components/Component-elements/loading_overlay";
 import {
   localStorageRemove,
   localStorageGet,
@@ -29,8 +31,9 @@ const Login: React.FC = (): React.ReactElement => {
   const navigate = useNavigate();
   const { messageComponent, showMessage } = useMessage();
   const valid_roles = useMemo(() => ["student", "teacher"], []);
+  const { loading, wrap } = useLoadingState(false);
 
-  const showMsgRef = useRef(showMessage);
+  const showMsgRef = useRef<typeof showMessage>(showMessage);
   const role = localStorageGet({ keys: ["role"] })[0] as Role | null;
 
   useEffect(() => {
@@ -73,44 +76,46 @@ const Login: React.FC = (): React.ReactElement => {
   }, [email, password]);
 
   const handleLogin = useCallback(async (): Promise<void> => {
-    const validationErrors = validation();
+    await wrap(async () => {
+      const validationErrors = validation();
 
-    if (Object.keys(validationErrors).length > 0) {
-      const firstError = Object.values(validationErrors)[0];
-      showMsgRef.current(firstError, "error");
-      return;
-    }
-
-    try {
-      const { ok, data } = await apiFetchPublic(
-        `/auth/login`,
-        {
-          method: "POST",
-          body: JSON.stringify({ email, password, role }),
-        },
-        { withCredentials: true }
-      );
-
-      if (!ok || !data?.success) {
-        const msg = data?.error || "Login failed";
-        showMsgRef.current(msg, "error");
+      if (Object.keys(validationErrors).length > 0) {
+        const firstError = Object.values(validationErrors)[0];
+        showMsgRef.current(firstError, "error");
         return;
       }
 
-      showMsgRef.current("Login successful", "success");
-      setUser(data.user ?? null);
-      localStorageSet({
-        keys: ["user", "role"],
-        values: [JSON.stringify(data.user ?? {}), data.user?.role],
-      });
-      navigate(`/dash`);
-    } catch (err) {
-      // keep console for debugging; surface friendly message to user
-      // eslint-disable-next-line no-console
-      console.error("Login error:", err);
-      showMsgRef.current("Server Error", "error");
-    }
-  }, [email, password, role, navigate, validation]);
+      try {
+        const { ok, data } = await apiFetchPublic(
+          `/auth/login`,
+          {
+            method: "POST",
+            body: JSON.stringify({ email, password, role }),
+          },
+          { withCredentials: true }
+        );
+
+        if (!ok || !data?.success) {
+          const msg = data?.error || "Login failed";
+          showMsgRef.current(msg, "error");
+          return;
+        }
+
+        showMsgRef.current("Login successful", "success");
+        setUser(data.user ?? null);
+        localStorageSet({
+          keys: ["user", "role"],
+          values: [JSON.stringify(data.user ?? {}), data.user?.role],
+        });
+        navigate(`/dash`);
+      } catch (err) {
+        // keep console for debugging; surface friendly message to user
+        // eslint-disable-next-line no-console
+        console.error("Login error:", err);
+        showMsgRef.current("Server Error", "error");
+      }
+    });
+  }, [wrap, email, password, role, navigate, validation]);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -123,7 +128,11 @@ const Login: React.FC = (): React.ReactElement => {
     <>
       <Header
         leftActions={
-          <button onClick={() => navigate("/")} className="header-link">
+          <button
+            onClick={() => navigate("/")}
+            className="header-link"
+            disabled={loading}
+          >
             ← Back
           </button>
         }
@@ -136,6 +145,8 @@ const Login: React.FC = (): React.ReactElement => {
       <div className="overlayL" />
 
       {messageComponent}
+
+      <LoadingOverlay loading={loading} text="Logging in..." fullPage={false} />
 
       <form className="containerL" onSubmit={handleSubmit} noValidate>
         <div className="panelL" role="region" aria-labelledby="login-heading">
@@ -172,13 +183,14 @@ const Login: React.FC = (): React.ReactElement => {
             />
           </div>
           <div className="buttonContainerL">
-            <button type="submit" className="buttonL">
+            <button type="submit" className="buttonL" disabled={loading}>
               Log in
             </button>
             <button
               onClick={() => handleSelect("signup")}
               type="button"
               className="buttonL"
+              disabled={loading}
             >
               Sign up
             </button>
@@ -186,6 +198,7 @@ const Login: React.FC = (): React.ReactElement => {
               onClick={() => handleSelect("forgot")}
               type="button"
               className="buttonNBG"
+              disabled={loading}
             >
               Forgot Password?
             </button>

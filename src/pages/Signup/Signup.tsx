@@ -1,8 +1,10 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../../components/Component-elements/Header.js";
 import useMessage from "../../hooks/useMessage.js";
 import InputField from "../../components/Component-elements/InputField.js";
+import LoadingOverlay from "../../components/Component-elements/loading_overlay.js";
+import useLoadingState from "../../hooks/useLoading.js";
 import { apiFetchPublic } from "../../utils/apiClient.js";
 import type { Role } from "../../types/models";
 import "./Signup.css";
@@ -11,15 +13,15 @@ const validRoles = ["student", "teacher"] as const;
 
 const Signup: React.FC = (): React.ReactElement => {
   const navigate = useNavigate();
+  const { messageComponent, showMessage } = useMessage();
+  const showMsgRef = useRef<typeof showMessage>(showMessage);
+  const { loading, wrap } = useLoadingState(false);
 
   const [username, setUsername] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [section, setSection] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
-
-  const { messageComponent, showMessage } = useMessage();
-  const showMsgRef = useRef<typeof showMessage>(showMessage);
 
   const roleRaw = localStorage.getItem("role");
   const role = (roleRaw as Role | null) ?? null;
@@ -71,38 +73,40 @@ const Signup: React.FC = (): React.ReactElement => {
     return true;
   };
 
-  const handleSignup = async (): Promise<void> => {
-    if (!validate()) return;
+  const handleSignup = useCallback(async (): Promise<void> => {
+    await wrap(async () => {
+      if (!validate()) return;
 
-    try {
-      const { ok, data } = await apiFetchPublic(
-        `/auth/signup`,
-        {
-          method: "POST",
-          body: JSON.stringify({
-            username: username.trim(),
-            email: email.trim(),
-            password,
-            role,
-            section: role === "student" ? section.trim() || null : null,
-          }),
-          headers: { "Content-Type": "application/json" },
-        },
-        { withCredentials: false }
-      );
+      try {
+        const { ok, data } = await apiFetchPublic(
+          `/auth/signup`,
+          {
+            method: "POST",
+            body: JSON.stringify({
+              username: username.trim(),
+              email: email.trim(),
+              password,
+              role,
+              section: role === "student" ? section.trim() || null : null,
+            }),
+            headers: { "Content-Type": "application/json" },
+          },
+          { withCredentials: false }
+        );
 
-      if (ok && data?.success) {
-        showMsgRef.current?.("Signup successful! Redirecting...", "success");
-        setTimeout(() => navigate(`/login?role=${role}`), 1500);
-      } else {
-        showMsgRef.current?.(data?.error || "Signup failed", "error");
+        if (ok && data?.success) {
+          showMsgRef.current?.("Signup successful! Redirecting...", "success");
+          setTimeout(() => navigate(`/login?role=${role}`), 1500);
+        } else {
+          showMsgRef.current?.(data?.error || "Signup failed", "error");
+        }
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error("Signup error:", err);
+        showMsgRef.current?.("Server error", "error");
       }
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error("Signup error:", err);
-      showMsgRef.current?.("Server error", "error");
-    }
-  };
+    });
+  }, [wrap, email, password, role, section || null, navigate, validate]);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
@@ -114,7 +118,11 @@ const Signup: React.FC = (): React.ReactElement => {
       <Header
         subtitle={role ? `Sign Up as ${String(role).toUpperCase()}` : "Sign Up"}
         leftActions={
-          <button onClick={() => navigate("/")} className="header-link">
+          <button
+            onClick={() => navigate("/")}
+            className="header-link"
+            disabled={loading}
+          >
             ← Back
           </button>
         }
@@ -127,6 +135,8 @@ const Signup: React.FC = (): React.ReactElement => {
       <div className="overlayS" />
 
       {messageComponent}
+
+      <LoadingOverlay loading={loading} text="Signing up..." fullPage={false} />
 
       <form className="containerS" onSubmit={handleSubmit}>
         <div className="input-containerS">
@@ -196,13 +206,14 @@ const Signup: React.FC = (): React.ReactElement => {
           />
         </div>
         <div className="button-containerS">
-          <button type="submit" className="buttonS">
+          <button type="submit" className="buttonS" disabled={loading}>
             Sign up
           </button>
           <button
             type="button"
             onClick={() => handleSelect()}
             className="buttonS buttonS-secondary"
+            disabled={loading}
           >
             Back to Log in
           </button>

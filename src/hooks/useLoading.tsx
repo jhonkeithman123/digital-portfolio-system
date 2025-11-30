@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from "react";
 
 type UseLoadingReturn = {
-  loading?: boolean;
+  loading: boolean;
   error: unknown | null;
   setLoading: React.Dispatch<React.SetStateAction<boolean>>;
   setError: React.Dispatch<React.SetStateAction<unknown | null>>;

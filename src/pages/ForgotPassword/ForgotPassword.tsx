@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import Header from "../../components/Component-elements/Header";
 import useMessage from "../../hooks/useMessage";
 import InputField from "../../components/Component-elements/InputField";
+import LoadingOverlay from "../../components/Component-elements/loading_overlay";
+import useLoadingState from "../../hooks/useLoading";
 import { apiFetchPublic } from "../../utils/apiClient";
 import "./ForgotPassword.css";
 
@@ -20,7 +22,8 @@ export default function ForgotPassword(): React.ReactElement {
   const [email, setEmail] = useState<string>("");
   const [newPassword, setNewPassword] = useState<string>("");
   const [retryPassword, setRetryPassword] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
+
+  const { loading, wrap } = useLoadingState(false);
 
   const roleRaw = localStorage.getItem("role");
   const role = (roleRaw as Role | null) ?? null;
@@ -54,122 +57,119 @@ export default function ForgotPassword(): React.ReactElement {
   };
 
   const handleCodeVerify = async (): Promise<void> => {
-    setLoading(true);
-    if (!code.trim()) {
-      showMsgRef.current("Please enter the verification code.", "error");
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const { ok, data } = await apiFetchPublic(`/auth/verify-code`, {
-        method: "POST",
-        body: JSON.stringify({ email, code }),
-        headers: { "Content-Type": "application/json" },
-      } as RequestInit);
-
-      if (ok && data?.success) {
-        showMsgRef.current(data.message || "Email verified!", "success");
-        setStep("reset");
-      } else {
-        showMsgRef.current(data?.message || "Invalid or expired code", "error");
+    await wrap(async () => {
+      if (!code.trim()) {
+        showMsgRef.current("Please enter the verification code.", "error");
+        return;
       }
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error(err);
-      showMsgRef.current("Server error. Try again later.", "error");
-    } finally {
-      setLoading(false);
-    }
+
+      try {
+        const { ok, data } = await apiFetchPublic(`/auth/verify-code`, {
+          method: "POST",
+          body: JSON.stringify({ email, code }),
+          headers: { "Content-Type": "application/json" },
+        } as RequestInit);
+
+        if (ok && data?.success) {
+          showMsgRef.current(data.message || "Email verified!", "success");
+          setStep("reset");
+        } else {
+          showMsgRef.current(
+            data?.message || "Invalid or expired code",
+            "error"
+          );
+        }
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error(err);
+        showMsgRef.current("Server error. Try again later.", "error");
+      }
+    });
   };
 
   const handleForgot = async (): Promise<void> => {
-    setLoading(true);
-    if (!email.trim()) {
-      showMsgRef.current("Email is required.", "error");
-      setLoading(false);
-      return;
-    }
-
-    if (!isValidEmail(email)) {
-      showMsgRef.current("Please enter a valid email address.", "error");
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const { ok, data } = await apiFetchPublic(`/auth/request-verification`, {
-        method: "POST",
-        body: JSON.stringify({ email, role }),
-        headers: { "Content-Type": "application/json" },
-      } as RequestInit);
-
-      if (ok && data?.success) {
-        showMsgRef.current(
-          data.message || "Verification code sent!",
-          "success"
-        );
-        setStep("code");
-      } else {
-        // eslint-disable-next-line no-console
-        console.error(data);
-        showMsgRef.current(
-          data?.error || "Failed to send verification code.",
-          "error"
-        );
+    await wrap(async () => {
+      if (!email.trim()) {
+        showMsgRef.current("Email is required.", "error");
+        return;
       }
-    } catch (error) {
-      showMsgRef.current("Server error. Please try again later.", "error");
-    } finally {
-      setLoading(false);
-    }
+
+      if (!isValidEmail(email)) {
+        showMsgRef.current("Please enter a valid email address.", "error");
+        return;
+      }
+
+      try {
+        const { ok, data } = await apiFetchPublic(
+          `/auth/request-verification`,
+          {
+            method: "POST",
+            body: JSON.stringify({ email, role }),
+            headers: { "Content-Type": "application/json" },
+          } as RequestInit
+        );
+
+        if (ok && data?.success) {
+          showMsgRef.current(
+            data.message || "Verification code sent!",
+            "success"
+          );
+          setStep("code");
+        } else {
+          // eslint-disable-next-line no-console
+          console.error(data);
+          showMsgRef.current(
+            data?.error || "Failed to send verification code.",
+            "error"
+          );
+        }
+      } catch (error) {
+        showMsgRef.current("Server error. Please try again later.", "error");
+      }
+    });
   };
 
   const handleReset = async (): Promise<void> => {
-    setLoading(true);
-    if (!newPassword || !retryPassword) {
-      showMsgRef.current("Please fill in both password fields.", "error");
-      setLoading(false);
-      return;
-    }
-
-    if (newPassword !== retryPassword) {
-      showMsgRef.current("Passwords do not match.", "error");
-      setLoading(false);
-      return;
-    }
-
-    if (newPassword.length < 6) {
-      showMsgRef.current("Password must be at least 6 characters.", "error");
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const { ok, data } = await apiFetchPublic(`/auth/reset-password`, {
-        method: "PATCH",
-        body: JSON.stringify({ email, newPassword }),
-        headers: { "Content-Type": "application/json" },
-      } as RequestInit);
-
-      if (ok && data?.success) {
-        showMsgRef.current(
-          data.message || "Password reset successful!",
-          "success"
-        );
-        setTimeout(() => navigate("/login"), 1500);
-      } else {
-        // eslint-disable-next-line no-console
-        console.error(data || "Failed to reset password.");
-        showMsgRef.current("Failed to reset password.", "error");
+    await wrap(async () => {
+      if (!newPassword || !retryPassword) {
+        showMsgRef.current("Please fill in both password fields.", "error");
+        return;
       }
-    } catch (err) {
-      // eslint-disable-next-line no-console
-      console.error("Server error", err);
-      showMsgRef.current("Server error", "error");
-    } finally {
-      setLoading(false);
-    }
+
+      if (newPassword !== retryPassword) {
+        showMsgRef.current("Passwords do not match.", "error");
+        return;
+      }
+
+      if (newPassword.length < 6) {
+        showMsgRef.current("Password must be at least 6 characters.", "error");
+        return;
+      }
+
+      try {
+        const { ok, data } = await apiFetchPublic(`/auth/reset-password`, {
+          method: "PATCH",
+          body: JSON.stringify({ email, newPassword }),
+          headers: { "Content-Type": "application/json" },
+        } as RequestInit);
+
+        if (ok && data?.success) {
+          showMsgRef.current(
+            data.message || "Password reset successful!",
+            "success"
+          );
+          setTimeout(() => navigate("/login"), 1500);
+        } else {
+          // eslint-disable-next-line no-console
+          console.error(data || "Failed to reset password.");
+          showMsgRef.current("Failed to reset password.", "error");
+        }
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error("Server error", err);
+        showMsgRef.current("Server error", "error");
+      }
+    });
   };
 
   const handleForgotSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
@@ -193,13 +193,29 @@ export default function ForgotPassword(): React.ReactElement {
           role ? `Forgot Password as ${role.toUpperCase()}` : "Forgot Password"
         }
         leftActions={
-          <button onClick={() => navigate("/")} className="header-link">
+          <button
+            onClick={() => navigate("/")}
+            className="header-link"
+            disabled={loading}
+          >
             ← Back
           </button>
         }
       />
 
       {messageComponent}
+
+      <LoadingOverlay
+        loading={loading}
+        text={
+          step === "verify"
+            ? "Submitting..."
+            : step === "code"
+            ? "Verifying..."
+            : "Resetting..."
+        }
+        fullPage={false}
+      />
 
       <div
         className="fp-background"
@@ -292,16 +308,12 @@ export default function ForgotPassword(): React.ReactElement {
           </form>
         )}
 
-        {loading && (
-          <div className="fp-overlay-spinner">
-            <div className="fp-spinner" />
-          </div>
-        )}
         <div className="fp-button-row">
           <button
             onClick={() => handleSelect()}
             className="fp-button fp-button-secondary"
             type="button"
+            disabled={loading}
           >
             Back to Log in
           </button>
