@@ -1,6 +1,6 @@
 /** For the light and dark mode*/
 .auth-layout {
-  min-height: calc(100svh - var(--header-height, 64px));
+  min-height: 100vh;
   background-color: var(--background-color);
   color: var(--text-color);
 }

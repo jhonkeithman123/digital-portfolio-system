@@ -2,7 +2,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  height: calc(100svh - var(--header-height, 64px));
+  height: 100svh;
   background-color: #f5f5f5;
 }
 

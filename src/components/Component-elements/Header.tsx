@@ -50,16 +50,27 @@ const Header: React.FC<HeaderProps> = ({
           typeof h === "number" ? h : headerRef.current?.offsetHeight ?? 0;
         document.documentElement.style.setProperty(
           "--header-height",
-          `${height}px`
+          `${Math.round(height)}px`
         );
       } catch {}
     };
 
-    // set initially after paint
-    setTimeout(() => setHeaderHeight(), 0);
+    const setVh = () => {
+      try {
+        const vh = window.innerHeight;
+        document.documentElement.style.setProperty("--vh", `${vh}px`);
+      } catch {}
+    };
+
+    // initial set after paint
+    setTimeout(() => {
+      setVh();
+      setHeaderHeight();
+    }, 0);
 
     let ro: ResizeObserver | null = null;
-    const onResize = () => setHeaderHeight();
+    // fallback handler that matches EventListener signature (no args)
+    const fallbackResizeHandler = () => setHeaderHeight();
 
     if (typeof ResizeObserver !== "undefined" && headerRef.current) {
       ro = new ResizeObserver((entries) => {
@@ -69,15 +80,19 @@ const Header: React.FC<HeaderProps> = ({
       });
       ro.observe(headerRef.current);
     } else {
-      window.addEventListener("resize", onResize);
+      // fallback
+      window.addEventListener("resize", fallbackResizeHandler);
     }
 
+    // update viewport height on resize/orientation changes
+    window.addEventListener("resize", setVh);
+    window.addEventListener("orientationchange", setVh);
+
     return () => {
-      if (ro) {
-        ro.disconnect();
-      } else {
-        window.removeEventListener("resize", onResize);
-      }
+      if (ro) ro.disconnect();
+      window.removeEventListener("resize", fallbackResizeHandler);
+      window.removeEventListener("resize", setVh);
+      window.removeEventListener("orientationchange", setVh);
     };
   }, []);
 

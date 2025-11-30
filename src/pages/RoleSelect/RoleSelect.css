@@ -28,7 +28,7 @@
 
 /* page root */
 .rs-root {
-  min-height: calc(100svh - var(--header-height, 64px));
+  min-height: calc(100svh - 72px);
   position: relative;
   display: flex;
   align-items: center;
