@@ -7,7 +7,10 @@ const NotFound: React.FC = (): React.ReactElement => {
   const navigate = useNavigate();
   return (
     <>
-      <Header subtitle="Can't find the page you are looking for" />
+      <Header
+        title="Not Found"
+        subtitle="Can't find the page you are looking for"
+      />
       <main className="nf-root" role="main">
         <section className="nf-card" aria-labelledby="nf-title">
           <div className="nf-illustration" aria-hidden="true">

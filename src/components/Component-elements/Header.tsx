@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import useTheme from "../../hooks/useTheme";
 import "./css/Header.css";
 
@@ -39,6 +39,21 @@ const Header: React.FC<HeaderProps> = ({
 }) => {
   const stickyClass = sticky ? "is-sticky" : "";
   const { theme, toggleTheme } = useTheme();
+
+  const headerRef = useRef<HTMLElement | null>(null);
+
+  // publish header height so pages can adjust layout (prevents extra scroll)
+  useEffect(() => {
+    const setHeaderHeight = () => {
+      try {
+        const h = headerRef.current?.offsetHeight ?? 0;
+        document.documentElement.style.setProperty("--header-height", `${h}px`);
+      } catch {}
+    };
+    setHeaderHeight();
+    window.addEventListener("resize", setHeaderHeight);
+    return () => window.removeEventListener("resize", setHeaderHeight);
+  }, []);
 
   // Public/non-auth header (keeps existing look)
   if (variant === "public" || !user) {

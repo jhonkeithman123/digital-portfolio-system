@@ -1,6 +1,6 @@
 /* Root layout for not-found (keeps header visible) */
 .nf-root {
-  min-height: calc(100svh - 88px);
+  min-height: calc(100svh - var(--header-height, 64px));
   display: flex;
   align-items: center;
   justify-content: center;
