@@ -44,15 +44,41 @@ const Header: React.FC<HeaderProps> = ({
 
   // publish header height so pages can adjust layout (prevents extra scroll)
   useEffect(() => {
-    const setHeaderHeight = () => {
+    const setHeaderHeight = (h?: number) => {
       try {
-        const h = headerRef.current?.offsetHeight ?? 0;
-        document.documentElement.style.setProperty("--header-height", `${h}px`);
+        const height =
+          typeof h === "number" ? h : headerRef.current?.offsetHeight ?? 0;
+        document.documentElement.style.setProperty(
+          "--header-height",
+          `${height}px`
+        );
       } catch {}
     };
-    setHeaderHeight();
-    window.addEventListener("resize", setHeaderHeight);
-    return () => window.removeEventListener("resize", setHeaderHeight);
+
+    // set initially after paint
+    setTimeout(() => setHeaderHeight(), 0);
+
+    let ro: ResizeObserver | null = null;
+    const onResize = () => setHeaderHeight();
+
+    if (typeof ResizeObserver !== "undefined" && headerRef.current) {
+      ro = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          setHeaderHeight(entry.contentRect.height);
+        }
+      });
+      ro.observe(headerRef.current);
+    } else {
+      window.addEventListener("resize", onResize);
+    }
+
+    return () => {
+      if (ro) {
+        ro.disconnect();
+      } else {
+        window.removeEventListener("resize", onResize);
+      }
+    };
   }, []);
 
   // Public/non-auth header (keeps existing look)
