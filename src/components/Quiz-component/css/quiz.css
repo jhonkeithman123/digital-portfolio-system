@@ -180,7 +180,6 @@
   color: white;
   padding: 14px 24px;
   display: flex;
-  justify-content: center;
   align-items: center;
   box-shadow: 0 14px 30px rgba(15, 23, 42, 0.35);
 }
@@ -220,6 +219,8 @@
   display: inline-flex;
   align-items: center;
   gap: 12px;
+  margin: 0 auto;
+  pointer-events: none;
   padding: 12px 20px;
   border-radius: 18px;
   font-weight: 700;
@@ -230,6 +231,10 @@
     0 0 0 1px rgba(255, 255, 255, 0.8) inset;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
+}
+
+.quiz-welcome > * {
+  pointer-events: auto;
 }
 
 :root[data-theme="dark"] .quiz-welcome {
