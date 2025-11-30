@@ -295,7 +295,7 @@ const Submissions: React.FC<SubmissionsProps> = ({
         <div className="showcase-section">
           <h3>Showcase</h3>
           {showcaseItems.length === 0 ? (
-            <p className="empty-state">No showcased submissions yet.</p>
+            <p className="empty-state">Under Construction Please stay tuned.</p>
           ) : (
             <ul className="showcase-list">
               {showcaseItems.map((s) => (
