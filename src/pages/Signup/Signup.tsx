@@ -8,6 +8,7 @@ import useLoadingState from "../../hooks/useLoading.js";
 import { apiFetchPublic } from "../../utils/apiClient.js";
 import type { Role } from "../../types/models";
 import "./Signup.css";
+import { installLoginPageGuard } from "../../utils/tabAuth.js";
 
 const validRoles = ["student", "teacher"] as const;
 
@@ -31,6 +32,11 @@ const Signup: React.FC = (): React.ReactElement => {
   useEffect(() => {
     showMsgRef.current = showMessage;
   }, [showMessage]);
+
+  useEffect(() => {
+    const cleanup = installLoginPageGuard();
+    return cleanup;
+  }, []);
 
   useEffect(() => {
     if (!role || !validRoles.includes(role as Role)) {

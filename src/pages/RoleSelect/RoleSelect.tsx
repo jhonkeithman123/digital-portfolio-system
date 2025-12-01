@@ -9,9 +9,15 @@ import {
 import "./RoleSelect.css";
 import { apiFetch } from "../../utils/apiClient";
 import type { Role } from "../../types/models";
+import { installLoginPageGuard } from "../../utils/tabAuth";
 
 const RoleSelect: React.FC = (): React.ReactElement => {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const cleanup = installLoginPageGuard();
+    return cleanup;
+  }, []);
 
   const handleSelect = (role: Role): void => {
     try {

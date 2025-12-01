@@ -7,6 +7,7 @@ import LoadingOverlay from "../../components/Component-elements/loading_overlay"
 import useLoadingState from "../../hooks/useLoading";
 import { apiFetchPublic } from "../../utils/apiClient";
 import "./ForgotPassword.css";
+import { installLoginPageGuard } from "../../utils/tabAuth";
 
 const validRoles = ["student", "teacher"] as const;
 type Role = (typeof validRoles)[number];
@@ -33,6 +34,11 @@ export default function ForgotPassword(): React.ReactElement {
   useEffect(() => {
     showMsgRef.current = showMessage;
   }, [showMessage]);
+
+  useEffect(() => {
+    const cleanup = installLoginPageGuard();
+    return cleanup;
+  }, []);
 
   useEffect(() => {
     if (!role || !validRoles.includes(role as Role)) {
