@@ -173,28 +173,6 @@ const JoinClassroom: React.FC = (): React.ReactElement => {
       {messageComponent}
       <LoadingOverlay loading={loading} text="Processing..." fullPage={false} />
 
-      <div className="invite-bell-wrapper" ref={bellRef}>
-        <button
-          type="button"
-          className="invite-bell"
-          aria-label="Invites"
-          aria-expanded={inviteOpen}
-          onClick={(e) => {
-            e.stopPropagation();
-            setInviteOpen((v) => !v);
-          }}
-        >
-          <svg className="invite-bell-icon" viewBox="0 0 24 24" aria-hidden>
-            <path d="M12 2a7 7 0 0 0-7 7v4.5L3.3 16.1A1 1 0 0 0 4 18h16a1 1 0 0 0 .7-1.6L19 13.5V9a7 7 0 0 0-7-7zM12 22a2.5 2.5 0 0 0 2.5-2.5h-5A2.5 2.5 0 0 0 12 22z" />
-          </svg>
-          {visibleInvitesCount > 0 && (
-            <span className="invite-badge" aria-hidden>
-              {visibleInvitesCount}
-            </span>
-          )}
-        </button>
-      </div>
-
       {inviteOpen && (
         <InvNotificationMenu
           invites={invites as any}

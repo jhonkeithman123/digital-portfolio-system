@@ -43,11 +43,32 @@ const InvNotificationMenu: React.FC<InvNotificationMenuProps> = ({
     const computePos = () => {
       const anchorEl = anchorRef?.current;
       const overlayEl = overlayRef.current;
-      if (!anchorEl || !overlayEl) return;
+      if (!overlayEl) return;
 
-      const anchor = anchorEl.getBoundingClientRect();
       const overlayW = Math.max(overlayEl.offsetWidth, 240);
       const overlayH = overlayEl.offsetHeight || 200;
+
+      // If anchor provided, position relative to it; otherwise center in viewport
+      if (!anchorEl) {
+        const left = Math.max(
+          8 + window.scrollX,
+          Math.min(
+            Math.round(window.scrollX + (window.innerWidth - overlayW) / 2),
+            window.scrollX + window.innerWidth - overlayW - 8
+          )
+        );
+        const top = Math.max(
+          8 + window.scrollY,
+          Math.min(
+            Math.round(window.scrollY + (window.innerHeight - overlayH) / 2),
+            window.scrollY + window.innerHeight - overlayH - 8
+          )
+        );
+        setPos({ top, left, transformOrigin: "center" });
+        return;
+      }
+
+      const anchor = anchorEl.getBoundingClientRect();
 
       // preferred position: align right edge of overlay with right of anchor, above anchor
       let left = window.scrollX + anchor.right - overlayW;

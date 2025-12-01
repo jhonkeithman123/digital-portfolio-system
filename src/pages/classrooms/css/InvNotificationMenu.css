@@ -1,97 +1,143 @@
 .inv-notification-overlay {
-    position: fixed;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-    pointer-events: auto;
-    background: rgba(0, 0, 0, 0.3);
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  pointer-events: auto;
+  background: rgba(0, 0, 0, 0.36);
+  backdrop-filter: blur(4px);
 }
 
 .inv-notification-wrapper {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  margin: 1.5rem auto;
+  width: 100%;
+  max-width: 100%;
+  padding: 1.5rem;
+  box-sizing: border-box;
+  max-height: calc(var(--vh, 100svh) - var(--header-height, 64px));
+  overflow: auto;
 }
 
 .inv-notification {
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-    padding: 1rem;
-    width: min(420px, 90vw);
-    animation: slideIn 0.3s ease;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  padding: 1rem;
+  width: min(640px, 96vw);
+  margin: 0 auto;
+  animation: slideIn 0.3s ease;
+  box-sizing: border-box;
 }
 
 .inv-content h3 {
-    margin: 0 0 0.5rem 0;
-    color: #2c3e50;
+  margin: 0 0 0.5rem 0;
+  color: #2c3e50;
 }
 
 .inv-content p {
-    margin: 0.5rem 0;
-    color: #555;
+  margin: 0.5rem 0;
+  color: #555;
 }
 
 .inv-details {
-    font-size: 0.9rem;
-    color: #666;
+  font-size: 0.9rem;
+  color: #666;
 }
 
 .inv-actions {
-    display: flex;
-    gap: 0.8rem;
-    margin: 1rem 0;
+  display: flex;
+  gap: 0.8rem;
+  margin: 1rem 0;
 }
 
 .inv-join {
-    background: var(--accent-color);
-    color: white;
-    border: none;
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 500;
-    transition: all 0.2s ease;
+  background: var(--accent-color);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
 }
 
 .inv-join:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .inv-dismiss {
-    background: transparent;
-    border: 1px solid #ddd;
-    padding: 0.5rem 1rem;
-    border-radius: 6px;
-    cursor: pointer;
-    color: #666;
-    transition: all 0.2s ease;
+  background: transparent;
+  border: 1px solid #ddd;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #666;
+  transition: all 0.2s ease;
 }
 
 .inv-dismiss:hover {
-    background: #f5f5f5;
+  background: #f5f5f5;
 }
 
 .inv-hide-label {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.85rem;
-    color: #666;
-    margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #666;
+  margin-top: 0.5rem;
+}
+
+/* Dark theme overrides */
+:root[data-theme="dark"] .inv-notification {
+  background: #071424;
+  color: #e6eef8;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+:root[data-theme="dark"] .inv-content h3 {
+  color: #e6eef8;
+}
+
+:root[data-theme="dark"] .inv-content p,
+:root[data-theme="dark"] .inv-details {
+  color: rgba(230, 238, 248, 0.8);
+}
+
+:root[data-theme="dark"] .inv-join {
+  background: var(--accent-color, #0ea5a4);
+  color: #041422;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.4);
+}
+
+:root[data-theme="dark"] .inv-dismiss {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: rgba(230, 238, 248, 0.7);
+}
+
+@media (max-width: 540px) {
+  .inv-notification {
+    width: 92vw;
+  }
 }
 
 @keyframes slideIn {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
 }
