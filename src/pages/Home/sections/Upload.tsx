@@ -51,8 +51,21 @@ const FileUpload: React.FC<FileUploadProps> = ({
     showMsgRef.current = showMessage;
   }, [showMessage]);
 
-  const fmtDate = (d?: string | null) =>
-    d ? new Date(d).toLocaleDateString() : "";
+  // return a compact "digital clock" time + short date for display
+  const fmtClock = (d?: string | null) => {
+    if (!d) return { time: "", date: "" };
+    const dt = new Date(d);
+    const time = dt.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    const date = dt.toLocaleDateString([], {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    });
+    return { time, date };
+  };
   const dbg = (...args: unknown[]) => {
     // mark args as used to avoid "declared but its value is never read"
     void args;
@@ -144,6 +157,36 @@ const FileUpload: React.FC<FileUploadProps> = ({
 
   const handleOpenActivity = (id: string | number) => {
     navigate(`/activity/${encodeURIComponent(String(id))}/view`);
+  };
+
+  const handleDeleteActivity = async (id: string | number) => {
+    if (!window.confirm("Delete this activity? This cannot be undone.")) return;
+    try {
+      showMsgRef.current?.("Deleting...", "info");
+      const { data, unauthorized } = await apiFetch(
+        `/activity/${encodeURIComponent(String(id))}`,
+        {
+          method: "DELETE",
+        }
+      );
+      if (unauthorized) {
+        showMsgRef.current?.("Session expired. Please sign in again.", "error");
+        return;
+      }
+      if (!data?.success) {
+        showMsgRef.current?.(
+          data?.error || "Failed to delete activity",
+          "error"
+        );
+        return;
+      }
+      setActivities((prev) => prev.filter((a) => String(a.id) !== String(id)));
+      showMsgRef.current?.("Activity deleted.", "success");
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error("Delete activity error:", e);
+      showMsgRef.current?.("Server error while deleting activity.", "error");
+    }
   };
 
   const handleDrag = (e: React.DragEvent<HTMLDivElement>) => {
@@ -402,17 +445,46 @@ const FileUpload: React.FC<FileUploadProps> = ({
                       )}
 
                       <div>
-                        <span className="activity-date">
-                          {fmtDate(a.created_at)}
-                        </span>
-
-                        <button
-                          className="activity-open-btn"
-                          type="button"
-                          onClick={() => handleOpenActivity(a.id)}
+                        <div
+                          style={{
+                            display: "flex",
+                            gap: 8,
+                            alignItems: "center",
+                          }}
                         >
-                          View Activity
-                        </button>
+                          {(() => {
+                            const { time, date } = fmtClock(a.created_at);
+                            return (
+                              <div
+                                className="activity-clock"
+                                title={a.created_at ?? ""}
+                                aria-hidden={false}
+                              >
+                                <span className="activity-time">{time}</span>
+                                <span className="activity-day">{date}</span>
+                              </div>
+                            );
+                          })()}
+
+                          <button
+                            className="activity-open-btn"
+                            type="button"
+                            onClick={() => handleOpenActivity(a.id)}
+                          >
+                            View
+                          </button>
+
+                          {role === "teacher" && (
+                            <button
+                              className="activity-delete-btn"
+                              type="button"
+                              onClick={() => void handleDeleteActivity(a.id)}
+                              title="Delete activity"
+                            >
+                              Delete
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </li>

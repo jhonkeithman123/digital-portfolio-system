@@ -40,6 +40,57 @@ const Login: React.FC = (): React.ReactElement => {
     showMsgRef.current = showMessage;
   }, [showMessage]);
 
+  // On first access to the login page in this tab, clear server auth cookie
+  // then perform a single reload so the page state is consistent (prevents stale session).
+  // Uses sessionStorage to avoid an infinite reload loop.
+  useEffect(() => {
+    const FLAG = "loginRefreshDone";
+    if (typeof window === "undefined") return;
+    try {
+      // avoid repeated work per-tab
+      if (sessionStorage.getItem(FLAG)) return;
+
+      // detect likely auth cookie presence before calling logout
+      const hasAuthCookie = (() => {
+        try {
+          if (!("cookie" in document)) return false;
+          const c = document.cookie || "";
+          // common auth cookie names: token, _HOST-token, session, sid
+          return /(?:^|;\s*)(?:_HOST-token|token|session|sid)=/i.test(c);
+        } catch {
+          return false;
+        }
+      })();
+
+      // mark so we don't loop
+      sessionStorage.setItem(FLAG, "1");
+
+      // only ask server to clear cookie when a auth-like cookie exists
+      if (!hasAuthCookie) return;
+
+      (async () => {
+        try {
+          // request logout/clear cookie on server; ensure cookie is sent/cleared
+          await apiFetchPublic(
+            "/auth/logout",
+            { method: "POST" },
+            { withCredentials: true }
+          );
+        } catch {
+          // ignore errors — still attempt reload
+        }
+        // replace avoids adding another history entry
+        try {
+          window.location.replace(window.location.href);
+        } catch {
+          window.location.reload();
+        }
+      })();
+    } catch {
+      // ignore storage errors
+    }
+  }, []);
+
   useEffect(() => {
     localStorageRemove({ keys: ["token", "user", "currentClassroom"] });
 
@@ -108,6 +159,27 @@ const Login: React.FC = (): React.ReactElement => {
           keys: ["user", "role"],
           values: [JSON.stringify(data.user ?? {}), data.user?.role],
         });
+
+        // mark that we just performed a login so Dashboard can clear cookie if user navigates back
+        try {
+          sessionStorage.setItem("justLoggedIn", "1");
+        } catch {
+          // ignore storage errors
+        }
+
+        // mark using history state so back/forward behavior works per-tab
+        try {
+          if (window.history && window.history.replaceState) {
+            window.history.replaceState(
+              { justLoggedIn: true },
+              "",
+              window.location.href
+            );
+          }
+        } catch {
+          // ignore
+        }
+
         navigate(`/dash`);
       } catch (err) {
         // keep console for debugging; surface friendly message to user

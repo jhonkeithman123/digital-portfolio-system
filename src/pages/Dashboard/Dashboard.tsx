@@ -73,6 +73,35 @@ const Dashboard = () => {
     showMsgRef.current = showMessage;
   }, [showMessage]);
 
+  // If user navigated back to the login page immediately after a login,
+  // clear server session/cookie so forwarding to /dash requires re-auth.
+  useEffect(() => {
+    try {
+      const hs = (window.history && (window.history.state as any)) || null;
+      const just = hs?.justLoggedIn || sessionStorage.getItem("justLoggedIn");
+      if (!just) return;
+      (async () => {
+        try {
+          await logout({ confirm: false });
+        } catch {
+          // ignore errors
+        } finally {
+          try {
+            // clear both indicators
+            sessionStorage.removeItem("justLoggedIn");
+            if (window.history && window.history.replaceState) {
+              window.history.replaceState(null, "", window.location.href);
+            }
+          } catch {
+            // ignore
+          }
+        }
+      })();
+    } catch {
+      // ignore
+    }
+  }, [logout]);
+
   const loadShowcase = useCallback(
     () =>
       wrapShowcase(async () => {

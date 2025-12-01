@@ -389,6 +389,151 @@
   box-shadow: 0 2px 6px rgba(15, 23, 42, 0.4);
 }
 
+/* Digital clock style for activity timestamp */
+.activity-clock {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: linear-gradient(
+    180deg,
+    rgba(245, 247, 250, 0.9),
+    rgba(235, 245, 255, 0.6)
+  );
+  color: #071422;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.09),
+    inset 0 -2px 8px rgba(255, 255, 255, 0.6);
+  min-width: 88px;
+  text-align: center;
+  font-family: "Roboto Mono", "SFMono-Regular", ui-monospace, "Segoe UI Mono",
+    monospace;
+}
+
+/* improved activity date pill */
+.activity-date {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.06);
+  color: var(--muted-text);
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04);
+}
+
+/* time larger, strong digital feel */
+.activity-time {
+  font-size: 0.99rem;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  text-transform: none;
+  line-height: 1;
+  display: block;
+  padding: 0 4px;
+  color: #05203a;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+
+/* short date under the time */
+.activity-day {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: rgba(10, 25, 42, 0.56);
+  opacity: 0.95;
+}
+
+/* make date pill slightly brighter on hover for affordance */
+.activity-item:hover .activity-date {
+  background: rgba(15, 23, 42, 0.08);
+}
+
+/* hover affordance */
+.activity-item:hover .activity-clock {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.12),
+    inset 0 -2px 8px rgba(255, 255, 255, 0.6);
+}
+
+/* delete button for teacher */
+.activity-delete-btn {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: transparent;
+  color: #dc2626;
+  border: 1px solid rgba(220, 53, 69, 0.12);
+  cursor: pointer;
+  font-weight: 700;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+}
+
+.activity-delete-btn:hover {
+  background: rgba(220, 53, 69, 0.06);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(220, 53, 69, 0.06);
+}
+
+:root[data-theme="dark"] .activity-date {
+  background: rgba(255, 255, 255, 0.02);
+  color: rgba(230, 238, 248, 0.78);
+}
+
+:root[data-theme="dark"] .activity-delete-btn {
+  border: 1px solid rgba(220, 53, 69, 0.12);
+  color: #ffb4b4;
+}
+
+:root[data-theme="dark"] .activity-delete-btn:hover {
+  background: rgba(220, 53, 69, 0.06);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.6);
+}
+
+:root[data-theme="dark"] .activity-clock {
+  background: linear-gradient(
+    180deg,
+    rgba(8, 16, 28, 0.85),
+    rgba(8, 20, 36, 0.75)
+  );
+  color: #e6eef8;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+:root[data-theme="dark"] .activity-time {
+  color: #e6eef8;
+  text-shadow: 0 2px 8px rgba(56, 189, 248, 0.06);
+}
+
+:root[data-theme="dark"] .activity-day {
+  color: rgba(230, 238, 248, 0.72);
+}
+
+/* compact on very small screens */
+@media (max-width: 420px) {
+  .activity-clock {
+    min-width: 72px;
+    padding: 6px 8px;
+  }
+  .activity-time {
+    font-size: 0.9rem;
+  }
+  .activity-day {
+    font-size: 0.62rem;
+  }
+}
+
+/* ensure action buttons sit nicely on narrow screens */
+@media (max-width: 640px) {
+  .activity-item .activity-open-btn,
+  .activity-item .activity-delete-btn {
+    padding: 6px 10px;
+    font-size: 0.9rem;
+  }
+}
+
 /** File Preview Component */
 .file-preview {
   align-items: center;
