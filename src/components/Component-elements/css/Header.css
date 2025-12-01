@@ -552,6 +552,20 @@
   .public-subtitle {
     display: none;
   }
+
+  /* center title/brand on small screens */
+  .public-brand,
+  .app-welcome {
+    justify-self: center;
+    text-align: center;
+    align-items: center;
+  }
+  .app-welcome h1,
+  .public-title {
+    text-align: center;
+    margin-left: 0;
+    margin-right: 0;
+  }
 }
 
 /* RESPONSIVE COLLAPSE */
@@ -584,10 +598,12 @@
   .public-subtitle {
     display: none;
   }
+  /* override previous left-alignment to keep title centered on narrow viewports */
   .app-welcome {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
+    text-align: center;
   }
   .role-badge {
     margin-left: 0;

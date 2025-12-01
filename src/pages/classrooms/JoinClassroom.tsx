@@ -98,9 +98,7 @@ const JoinClassroom: React.FC = (): React.ReactElement => {
         if (data?.success) {
           showMsgRef.current?.("Successfully enrolled", "success");
           if (data.classroom?.id) {
-            navigate(
-              `/classrooms/${encodeURIComponent(String(data.classroom.id))}`
-            );
+            navigate("/dash");
           } else {
             navigate("/dash");
           }

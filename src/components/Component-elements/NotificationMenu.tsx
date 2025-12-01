@@ -1,4 +1,6 @@
-import React, { useEffect, useState, type SetStateAction } from "react";
+import React, { useEffect, useRef, useState, type SetStateAction } from "react";
+import { useNavigate } from "react-router-dom";
+import useMessage from "../../hooks/useMessage";
 import { apiFetch } from "../../utils/apiClient";
 import "./css/NotificationMenu.css";
 
@@ -24,6 +26,15 @@ const NotificationMenu: React.FC<NotificationMenuProps> = ({
   const [selectionMode, setSelectionMode] = useState<boolean>(false);
   const [selected, setSelected] = useState<Set<number>>(new Set());
 
+  const navigate = useNavigate();
+  const { showMessage } = useMessage();
+
+  const showMsgRef = useRef<typeof showMessage>(showMessage);
+
+  useEffect(() => {
+    showMsgRef.current = showMessage;
+  }, [showMessage]);
+
   const markAsRead = async (id: number) => {
     try {
       const { unauthorized } = await apiFetch(`/notifications/${id}/read`, {
@@ -38,6 +49,60 @@ const NotificationMenu: React.FC<NotificationMenuProps> = ({
         return next;
       });
     } catch {}
+  };
+
+  //* single entrypoint for notification actions (only navigates to /dash for now)
+  const handleAction = async (n: Notification) => {
+    //* selection mode handled elsewhere
+    if (selectionMode) {
+      toggleSelect(n.id);
+      return;
+    }
+
+    //* mark notification read locally + server
+    await markAsRead(n.id);
+
+    const txt = String(n.message ?? "").toLocaleLowerCase();
+    const isInvite =
+      txt.includes("invite") || txt.includes("invited") || txt.includes("join");
+
+    if (isInvite) {
+      //* attempt to find classroom code from notification payload
+      const code =
+        (n as any).code ||
+        (n as any).classroom_code ||
+        (n as any).classroomCode ||
+        (() => {
+          try {
+            const link = String(n.link || "");
+            const m = link.match(/\/classrooms\/([^\/?#]+)/);
+            return m ? decodeURIComponent(m[1]) : null;
+          } catch {
+            return null;
+          }
+        })();
+
+      if (code) {
+        try {
+          const { unauthorized, data } = await apiFetch(
+            `/classrooms/${encodeURIComponent(String(code))}/is-member`
+          );
+          if (unauthorized) return;
+          if (data?.isMember) {
+            showMsgRef.current?.(
+              "You are already enrolled in that classroom.",
+              "info"
+            );
+            return;
+          }
+        } catch (err: unknown | undefined) {
+          // If backend check fails, fall back to navigating to dash
+        }
+      }
+    }
+
+    // default/fallback navigation for now — only to /dash
+    navigate("/dash");
   };
 
   const toggleSelectionMode = () => {
@@ -187,18 +252,16 @@ const NotificationMenu: React.FC<NotificationMenuProps> = ({
               {!n.is_read && !selectionMode && (
                 <span className="nm-dot" aria-hidden="true" />
               )}
-              <a
+              <button
+                type="button"
                 className="nm-link"
-                href={n.link || "#"}
                 onClick={(e) => {
-                  if (selectionMode) {
-                    e.preventDefault();
-                    toggleSelect(n.id);
-                  } else if (!n.link) e.preventDefault();
+                  e.preventDefault();
+                  handleAction(n);
                 }}
               >
                 {n.message}
-              </a>
+              </button>
               <span className="nm-time">
                 {n.created_at ? new Date(n.created_at).toLocaleString() : ""}
               </span>

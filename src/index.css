@@ -72,6 +72,12 @@
   --role-teacher-main: #f472b6;
   --role-teacher-soft: #fb7185;
   --role-teacher-glow: rgba(244, 114, 182, 0.6);
+
+  /* Scrollbar variables for dark theme */
+  --scroll-track: rgba(0, 0, 0, 0.02);
+  --scroll-thumb: rgba(56, 100, 153, 0.16);
+  --scroll-outline: rgba(96, 165, 250, 0.28);
+  --scroll-thumb-hover: rgba(65, 110, 165, 0.32);
 }
 
 body,
@@ -116,6 +122,33 @@ html {
 *::-webkit-scrollbar-thumb:hover {
   background: transparent !important;
   box-shadow: inset 0 0 0 3px var(--scroll-outline-hover);
+}
+
+/* Dark theme scrollbar styling overrides */
+:root[data-theme="dark"] * {
+  /* Firefox */
+  scrollbar-color: var(--scroll-thumb) var(--scroll-track);
+  scrollbar-width: thin;
+}
+
+/* enable and style scrollbars in WebKit when dark theme is active */
+:root[data-theme="dark"] *::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+  display: block; /* ensure visible in dark mode */
+}
+:root[data-theme="dark"] *::-webkit-scrollbar-track {
+  background: var(--scroll-track);
+}
+:root[data-theme="dark"] *::-webkit-scrollbar-thumb {
+  background: var(--scroll-thumb);
+  border-radius: 9999px;
+  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0); /* subtle inset */
+  border: 3px solid transparent; /* preserves padding feel */
+}
+:root[data-theme="dark"] *::-webkit-scrollbar-thumb:hover {
+  background: var(--scroll-thumb-hover);
+  box-shadow: inset 0 0 0 2px var(--scroll-outline);
 }
 
 code {
