@@ -135,7 +135,12 @@ export async function apiFetch<T = any>(
   } catch {
     //* ignore non-JSON responses
   }
-  return { ok: res.ok, status: res.status, data };
+  return {
+    ok: res.ok,
+    status: res.status,
+    data,
+    unauthorized: res.status === 401,
+  };
 }
 
 //* Public fetch: no auth header, opt-in credentials (use withCredentials: true for login to receive cookie)
@@ -160,9 +165,14 @@ export async function apiFetchPublic<T = any>(
 
   let data: T | null = null;
   try {
-    data = await res.json();
+    data = (await res.json()) as T;
   } catch {
-    //* Ignore
+    //* Ignore non-json
   }
-  return { ok: res.ok, status: res.status, data };
+  return {
+    ok: res.ok,
+    status: res.status,
+    data,
+    unauthorized: res.status === 401,
+  };
 }

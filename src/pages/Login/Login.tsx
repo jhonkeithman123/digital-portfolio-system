@@ -91,6 +91,7 @@ const Login: React.FC = (): React.ReactElement => {
           {
             method: "POST",
             body: JSON.stringify({ email, password, role }),
+            headers: { "Content-Type": "application/json" },
           },
           { withCredentials: true }
         );
