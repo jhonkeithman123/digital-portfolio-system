@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { apiFetch } from "../utils/apiClient";
 
 type SessionData = {
   success?: boolean;
-  expiredMs?: number;
+  expiresInMs?: number;
   [k: string]: any;
 };
 
@@ -34,16 +33,60 @@ export default function useTokenStatus(): {
 
   // keep checkNow declaration hoisted so schedule can call it
   const checkNow = useCallback(async (): Promise<void> => {
-    try {
-      const { unauthorized, data } = await apiFetch<SessionData>(
-        "/auth/session"
-      );
+    // Build backend URL from env (fallback to same-origin). Ensure credentials are sent.
+    const API_BASE = (
+      import.meta.env.VITE_API_BASE_URL ||
+      import.meta.env.VITE_API_URL ||
+      import.meta.env.PUBLIC_API ||
+      ""
+    )
+      .toString()
+      .trim();
+    const url =
+      API_BASE.length > 0
+        ? `${API_BASE.replace(/\/$/, "")}/auth/session`
+        : "/auth/session";
 
-      if (unauthorized || data?.success === false) {
+    // Use fetch directly with credentials to ensure cookie is sent/checked by server.
+    // Treat non-200 / 401 responses or explicit success:false as expired.
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 8000);
+
+    try {
+      const resp = await fetch(url, {
+        method: "GET",
+        credentials: "include",
+        signal: controller.signal,
+        headers: {
+          Accept: "application/json",
+        },
+      });
+      clearTimeout(timeout);
+
+      if (!resp.ok) {
+        // 401/403/other errors -> treat as expired
         setExpired(true);
         setReady(true);
         setRemainingMs(0);
-        // notify app that token/session expired
+        try {
+          window.dispatchEvent(
+            new CustomEvent("app:tokenExpired", {
+              detail: { reason: `http:${resp.status}` },
+            })
+          );
+        } catch {
+          // ignore
+        }
+        return;
+      }
+
+      const data = (await resp.json()) as SessionData;
+
+      // server can indicate success:false or missing success -> treat as unauthorized
+      if (data?.success === false || data == null) {
+        setExpired(true);
+        setReady(true);
+        setRemainingMs(0);
         try {
           window.dispatchEvent(
             new CustomEvent("app:tokenExpired", {
@@ -56,6 +99,7 @@ export default function useTokenStatus(): {
         return;
       }
 
+      // valid session
       setExpired(false);
       setReady(true);
 
@@ -66,7 +110,8 @@ export default function useTokenStatus(): {
       setRemainingMs(next);
       schedule(next);
     } catch (err) {
-      // network / server error -> treat as expired for UX safety, but allow retries
+      clearTimeout(timeout);
+      // network error or fetch aborted -> treat as expired for UX safety
       setExpired(true);
       setReady(true);
       setRemainingMs(0);

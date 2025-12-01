@@ -73,35 +73,6 @@ const Dashboard = () => {
     showMsgRef.current = showMessage;
   }, [showMessage]);
 
-  // If user navigated back to the login page immediately after a login,
-  // clear server session/cookie so forwarding to /dash requires re-auth.
-  useEffect(() => {
-    try {
-      const hs = (window.history && (window.history.state as any)) || null;
-      const just = hs?.justLoggedIn || sessionStorage.getItem("justLoggedIn");
-      if (!just) return;
-      (async () => {
-        try {
-          await logout({ confirm: false });
-        } catch {
-          // ignore errors
-        } finally {
-          try {
-            // clear both indicators
-            sessionStorage.removeItem("justLoggedIn");
-            if (window.history && window.history.replaceState) {
-              window.history.replaceState(null, "", window.location.href);
-            }
-          } catch {
-            // ignore
-          }
-        }
-      })();
-    } catch {
-      // ignore
-    }
-  }, [logout]);
-
   const loadShowcase = useCallback(
     () =>
       wrapShowcase(async () => {
@@ -474,19 +445,6 @@ const Dashboard = () => {
     if (!classroomInfo?.code) return;
     navigate(`/quizzes/${classroomInfo.code}/quizzes/${q.id}`);
   }
-
-  //* History pop state check (revalidate session)
-  useEffect(() => {
-    const handlePopState = async () => {
-      const { unauthorized, data } = await apiFetch("/auth/session");
-      if (unauthorized || !data?.success) {
-        showMsgRef.current?.("Unauthorized access", "error");
-        setTimeout(() => navigate("/login"), 1200);
-      }
-    };
-    window.addEventListener("popstate", handlePopState);
-    return () => window.removeEventListener("popstate", handlePopState);
-  }, [navigate]);
 
   useEffect(() => {
     if (user?.role === "student") setHasActivity(true);
