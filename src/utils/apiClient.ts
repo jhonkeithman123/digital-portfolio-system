@@ -5,6 +5,9 @@ const REMOTE_API_BASE: string =
 const LOCAL_API_BASE: string | undefined = import.meta.env
   .VITE_API_URL_LOCAL as string | undefined;
 
+//* hard fallback when remote is marked unavailable
+const FALLBACK_LOCALHOST = "http://localhost:5000";
+
 const DEV_MODE = (import.meta.env.MODE as string | undefined) !== "production";
 
 // cache local probe result for a short TTL to avoid repeated probes
@@ -68,8 +71,75 @@ async function isLocalServerAvailable(
   return probe;
 }
 
+/** Check remote API root for "unavailable" signals (500 status, x-db-status header, or body text) */
+async function isRemoteUnavailable(timeoutMs = 1200): Promise<boolean> {
+  try {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeoutMs);
+    const root = REMOTE_API_BASE.endsWith("/")
+      ? REMOTE_API_BASE
+      : REMOTE_API_BASE + "/";
+    const res = await fetch(root, {
+      method: "GET",
+      mode: "cors",
+      cache: "no-store",
+      signal: controller.signal,
+    });
+    clearTimeout(id);
+
+    // server-side signals that we consider "unavailable"
+    if (res.status >= 500) return true;
+    const dbHeader = res.headers.get("x-db-status");
+    if (dbHeader && /down|unavailable|false/i.test(dbHeader)) return true;
+
+    // try to read lightweight text/json to find an "unavailable" marker
+    let txt = "";
+    try {
+      // prefer JSON but fall back to text
+      const ct = res.headers.get("content-type") || "";
+      if (/application\/json/i.test(ct)) {
+        const json = await res.json();
+        txt = JSON.stringify(json);
+      } else {
+        txt = await res.text();
+      }
+    } catch {
+      txt = "";
+    }
+    if (/unavailable|service unavailable|db not available|down/i.test(txt))
+      return true;
+    return false;
+  } catch {
+    // network failure / timeout — do not mark as "unavailable" here (treat as unreachable)
+    return false;
+  }
+}
+
 /** Resolve API base: prefer local dev server when in dev mode and reachable */
 async function resolveApiBase(): Promise<string> {
+  // If remote explicitly says it's unavailable, prefer a local fallback immediately.
+  if (REMOTE_API_BASE) {
+    try {
+      const remoteUnavailable = await isRemoteUnavailable();
+      if (remoteUnavailable) {
+        // prefer configured local API base if present, otherwise fallback to localhost:5000
+        if (LOCAL_API_BASE) {
+          console.warn(
+            "[apiClient] remote reports unavailable — using LOCAL_API_BASE:",
+            LOCAL_API_BASE
+          );
+          return LOCAL_API_BASE;
+        }
+        console.warn(
+          "[apiClient] remote reports unavailable — using fallback localhost:5000"
+        );
+        return FALLBACK_LOCALHOST;
+      }
+    } catch (e) {
+      // ignore and continue with normal resolution
+    }
+  }
+
   // priority: local (if dev + reachable) -> remote -> fallback to empty
   if (DEV_MODE && LOCAL_API_BASE) {
     const ok = await isLocalServerAvailable();
