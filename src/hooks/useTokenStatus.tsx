@@ -34,18 +34,8 @@ export default function useTokenStatus(): {
   // keep checkNow declaration hoisted so schedule can call it
   const checkNow = useCallback(async (): Promise<void> => {
     // Build backend URL from env (fallback to same-origin). Ensure credentials are sent.
-    const API_BASE = (
-      import.meta.env.VITE_API_BASE_URL ||
-      import.meta.env.VITE_API_URL ||
-      import.meta.env.PUBLIC_API ||
-      ""
-    )
-      .toString()
-      .trim();
-    const url =
-      API_BASE.length > 0
-        ? `${API_BASE.replace(/\/$/, "")}/auth/session`
-        : "/auth/session";
+    const API_BASE = "http://localhost:5000";
+    const url = `${API_BASE}/auth/session`;
 
     // Use fetch directly with credentials to ensure cookie is sent/checked by server.
     // Treat non-200 / 401 responses or explicit success:false as expired.
@@ -84,6 +74,7 @@ export default function useTokenStatus(): {
 
       // server can indicate success:false or missing success -> treat as unauthorized
       if (data?.success === false || data == null) {
+        console.warn("[useTokenStatus] Session invalid:", data);
         setExpired(true);
         setReady(true);
         setRemainingMs(0);
@@ -100,13 +91,11 @@ export default function useTokenStatus(): {
       }
 
       // valid session
+      console.log("[useTokenStatus] Session valid:", data.user);
       setExpired(false);
       setReady(true);
 
-      const next =
-        typeof data?.expiresInMs === "number"
-          ? data.expiresInMs
-          : 5 * 60 * 1000;
+      const next = 5 * 50 * 1000;
       setRemainingMs(next);
       schedule(next);
     } catch (err) {

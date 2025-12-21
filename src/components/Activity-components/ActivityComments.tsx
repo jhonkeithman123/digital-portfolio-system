@@ -52,12 +52,30 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
   //* current user id from localStorage "user" (fallback null)
   const currentUserId = (() => {
     try {
-      const u = JSON.parse(localStorage.getItem("user") || "null");
-      return u?.id ?? null;
-    } catch {
+      // Try "user" first
+      const userStr = localStorage.getItem("user");
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        console.log("[ActivityComments] User from localStorage:", user);
+        return user?.ID ?? user?.id ?? user?.userId ?? null;
+      }
+
+      // Try decoding token as fallback
+      const token = localStorage.getItem("token");
+      if (token) {
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        console.log("[ActivityComments] User from token:", payload);
+        return payload?.ID ?? payload?.userId ?? payload?.id ?? null;
+      }
+
+      return null;
+    } catch (e) {
+      console.error("[ActivityComments] Failed to get user ID:", e);
       return null;
     }
   })() as string | number | null;
+
+  console.log("[ActivityComments] Current user ID:", currentUserId);
 
   useEffect(() => {
     showMsgRef.current = showMessage;
@@ -67,7 +85,7 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
     (signal?: AbortSignal) => {
       return wrap(async () => {
         try {
-          const { data } = await apiFetch<{
+          const response = await apiFetch<{
             success?: boolean;
             comments?: Comment[];
             error?: string;
@@ -75,7 +93,17 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
             signal,
           });
 
-          if (data?.success) {
+          const { data, ok, status } = response;
+
+          if (!ok || status !== 200) {
+            console.warn("[ActivityComments] Request failed:", { ok, status });
+            if (data?.error) {
+              showMsgRef.current(data.error, "error");
+            }
+            return;
+          }
+
+          if (data?.success && Array.isArray(data.comments)) {
             const unique = Array.from(
               new Map(
                 (data.comments ?? []).map((item) => [
@@ -84,14 +112,25 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
                 ])
               )
             ).map(([, value]) => value as Comment);
+
+            console.log("[ActivityComments] Loaded comments:", unique.length);
             setComments(unique);
           } else {
-            showMsgRef.current(
-              data?.error ?? "Failed to load comments",
-              "error"
+            console.warn(
+              "[ActivityComments] No success or invalid data:",
+              data
             );
+            if (data?.error) {
+              showMsgRef.current(data.error, "error");
+            }
           }
         } catch (e) {
+          // FIX: Ignore AbortError - it's expected when component unmounts
+          if (e instanceof Error && e.name === "AbortError") {
+            console.log("[ActivityComments] Request aborted (cleanup)");
+            return;
+          }
+
           console.error("Comments load err:", e);
           showMsgRef.current("Failed to load comments.", "error");
         }
@@ -233,13 +272,14 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
             return;
           }
 
-          if (data?.success && data?.comment) {
+          if (data?.success) {
             //* Check if the comment is a comment or a reply to a comment
-            if (data.type === "comment" && data.comment) {
+            if (data?.type === "comment" && data?.comment) {
               const updated = data.comment;
               setComments((prev) =>
                 prev.map((c) => (c.id === id ? { ...c, ...updated } : c))
               );
+              showMsgRef.current?.("Comment updated", "success");
             } else if (data.type === "reply" && data.reply) {
               const updatedReply = data.reply;
               setComments((prev) =>
@@ -252,16 +292,15 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
                   ),
                 }))
               );
+              showMsgRef.current?.("Reply updated", "success");
+            } else {
+              console.warn(
+                "[ActivityComments] Unexpected response structure:",
+                data
+              );
+              showMsgRef.current?.("Updated successfuly", "success");
             }
 
-            showMsgRef.current?.(
-              data.type === "comment"
-                ? "Comment updated"
-                : data.type === "reply"
-                ? "Reply updated"
-                : "Updated",
-              "success"
-            );
             // clear edit state
             setEditDrafts((prev) => {
               const next = { ...prev };
@@ -270,6 +309,7 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
             });
             setEditingId((cur) => (cur === id ? null : cur));
           } else {
+            console.warn("[ActivityComments] update failed:", data);
             showMsgRef.current?.(
               data?.error ?? "Failed to updated comment",
               "error"
@@ -315,6 +355,14 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
               const isAuthor =
                 currentUserId !== null &&
                 String(currentUserId) === String(c.user_id);
+
+              console.log("[ActivityComments] Comment check:", {
+                commentId: c.id,
+                commentUserId: c.user_id,
+                currentUserId,
+                isAuthor,
+              });
+
               const edited =
                 !!(c.updated_at ?? c.updatedAt) &&
                 (c.updated_at ?? c.updatedAt) !== (c.created_at ?? c.createdAt);
@@ -363,7 +411,7 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
                   ) : (
                     <div className="body">
                       {c.comment ?? c.text}{" "}
-                      {edited && <span className="edited-label">• edited</span>}
+                      {edited && <span className="edited-label">(edited)</span>}
                     </div>
                   )}
 
@@ -396,10 +444,7 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
                         const isReplyAuthor =
                           currentUserId !== null &&
                           String(currentUserId) === String((r as any).user_id);
-                        const replyEdited =
-                          !!(r.updated_at ?? r.createdAt) &&
-                          (r.updated_at ?? r.createdAt) !==
-                            (r.created_at ?? r.createdAt);
+                        const replyEdited = (r as any).edited === 1;
 
                         return (
                           <li
@@ -462,7 +507,7 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
                               <div className="body">
                                 {(r as any).reply}{" "}
                                 {replyEdited && (
-                                  <span className="edited-label">• edited</span>
+                                  <span className="edited-label">(edited)</span>
                                 )}
                               </div>
                             )}
