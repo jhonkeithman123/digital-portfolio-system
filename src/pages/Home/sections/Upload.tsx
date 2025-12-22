@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import "../Home.css";
 import { apiFetch } from "../../../utils/apiClient";
 import { useNavigate } from "react-router-dom";
+import useConfirm from "../../../hooks/useConfirm";
 
 type Role = "teacher" | "student" | string;
 
@@ -37,6 +38,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
   loadingOuter = false,
 }) => {
   const navigate = useNavigate();
+  const [confirm, ConfirmModal] = useConfirm();
 
   const [title, setTitle] = useState<string>("");
   const [instructions, setInstructions] = useState<string>("");
@@ -160,13 +162,21 @@ const FileUpload: React.FC<FileUploadProps> = ({
   };
 
   const handleDeleteActivity = async (id: string | number) => {
-    if (!window.confirm("Delete this activity? This cannot be undone.")) return;
+    const ok = await confirm({
+      title: "Delete activity",
+      message: "Are you sure you want to delete this activity?",
+      confirmText: "Delete",
+      cancelText: "Cancel",
+    });
+    if (!ok) return;
+
     try {
       showMsgRef.current?.("Deleting...", "info");
       const { data, unauthorized } = await apiFetch(
         `/activity/${encodeURIComponent(String(id))}`,
         {
           method: "DELETE",
+          headers: { "Content-Type": "application/json" },
         }
       );
       if (unauthorized) {
@@ -297,6 +307,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
 
   return (
     <>
+      <ConfirmModal />
       <section className="home-card">
         <h2>{role === "teacher" ? "Upload Activity" : "Activities"}</h2>
         {loadingOuter && <p>Loading classroom...</p>}

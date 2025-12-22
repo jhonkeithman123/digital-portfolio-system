@@ -15,6 +15,7 @@ import ActivityComments from "./ActivityComments";
 import AnswerSubmission from "./AnswerSubmission";
 import TeacherInstructions from "./TeacherInstructions";
 import "./css/Activity.css";
+import type { Instruction } from "./TeacherInstructions";
 
 const ActivityView: React.FC = (): React.ReactElement => {
   const { id } = useParams<{ id?: string }>();
@@ -145,12 +146,25 @@ const ActivityView: React.FC = (): React.ReactElement => {
                 <span>Created {new Date(createdAt).toLocaleString()}</span>
               </p>
 
-              {activity.instructions && (
-                <p className="activity-body">{activity.instructions}</p>
+              {Array.isArray(activity.instructions) ? (
+                activity.instructions.map((instr: Instruction, idx: number) => (
+                  <p key={instr.id ?? idx}>{instr.instruction_text}</p>
+                ))
+              ) : (
+                <p>No instructions</p>
               )}
 
               {user?.role === "teacher" ? (
-                <TeacherInstructions activityId={activity.id} />
+                <TeacherInstructions
+                  activityId={activity.id}
+                  currentInstructions={activity.instructions}
+                  onSaved={(newInstructions) => {
+                    setActivity((prev: any) => ({
+                      ...prev,
+                      instructions: newInstructions,
+                    }));
+                  }}
+                />
               ) : (
                 <AnswerSubmission activityId={activity.id} />
               )}
