@@ -142,7 +142,7 @@ export default function QuizTakePage(): React.ReactElement {
         setLastChecked(Date.now());
       } catch (err: any) {
         if (err?.name !== "AbortError") {
-          // eslint-disable-next-line no-console
+           
           console.error("Load quiz error", err);
           showMsgRef.current("Server error while loading quiz", "error");
         }
@@ -181,7 +181,7 @@ export default function QuizTakePage(): React.ReactElement {
       );
       setLastChecked(Date.now());
     } catch (err) {
-      // eslint-disable-next-line no-console
+       
       console.error("Load quiz error", err);
       showMsgRef.current("Server error while loading quiz", "error");
     } finally {
@@ -243,7 +243,7 @@ export default function QuizTakePage(): React.ReactElement {
       setShowWarning(false);
       setCurrentPage(0);
     } catch (err) {
-      // eslint-disable-next-line no-console
+       
       console.error("Start attempt error", err);
       showMsgRef.current("Server error while starting attempt", "error");
     } finally {
@@ -290,7 +290,7 @@ export default function QuizTakePage(): React.ReactElement {
         if (timerRef.current) window.clearInterval(timerRef.current);
       }
     } catch (err) {
-      // eslint-disable-next-line no-console
+       
       console.error("Submit attempt error", err);
       showMsgRef.current("Server error while submitting attempt", "error");
     } finally {

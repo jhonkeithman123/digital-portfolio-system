@@ -47,6 +47,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
   const [creating, setCreating] = useState<boolean>(false);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loadingActivities, setLoadingActivities] = useState<boolean>(false);
+  const [maxScore, setMaxScore] = useState<number>(100);
 
   const showMsgRef = useRef<typeof showMessage>(showMessage);
   useEffect(() => {
@@ -143,7 +144,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
       } catch (e) {
         if (!ignore)
           showMsgRef.current("Server error loading activities.", "error");
-        // eslint-disable-next-line no-console
+         
         console.error("[Upload] fetch error:", e);
       } finally {
         if (!ignore) setLoadingActivities(false);
@@ -193,7 +194,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
       setActivities((prev) => prev.filter((a) => String(a.id) !== String(id)));
       showMsgRef.current?.("Activity deleted.", "success");
     } catch (e) {
-      // eslint-disable-next-line no-console
+       
       console.error("Delete activity error:", e);
       showMsgRef.current?.("Server error while deleting activity.", "error");
     }
@@ -248,6 +249,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
       fd.append("title", title.trim());
       fd.append("instructions", instructions.trim());
       fd.append("classroomCode", String(classroomCode));
+      fd.append("maxScore", String(maxScore));
       if (file) fd.append("file", file);
 
       const { data } = await apiFetch("/activity/create", {
@@ -296,12 +298,13 @@ const FileUpload: React.FC<FileUploadProps> = ({
       }
     } catch (e) {
       dbg("Submit exception:", e);
-      // eslint-disable-next-line no-console
+       
       console.error("Submit exception:", e);
       showMsgRef.current("Server error.", "error");
     } finally {
       dbg("Submit finished");
       setCreating(false);
+      setMaxScore(100);
     }
   };
 
@@ -326,6 +329,22 @@ const FileUpload: React.FC<FileUploadProps> = ({
                   onChange={(e) => setTitle(e.target.value)}
                   maxLength={120}
                   placeholder="e.g., Reflection Essay #1"
+                />
+              </div>
+              <div className="form-row">
+                <label className="up-label" htmlFor="activity-max-score">
+                  Max Score
+                </label>
+                <input
+                  type="number"
+                  id="activity-max-score"
+                  value={maxScore}
+                  onChange={(e) =>
+                    setMaxScore(Math.max(1, parseInt(e.target.value) || 100))
+                  }
+                  min={1}
+                  max={1000}
+                  placeholder="100"
                 />
               </div>
               <div className="form-row">

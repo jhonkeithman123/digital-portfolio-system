@@ -141,7 +141,7 @@ const Login: React.FC = (): React.ReactElement => {
         navigate(`/dash`);
       } catch (err) {
         // keep console for debugging; surface friendly message to user
-        // eslint-disable-next-line no-console
+         
         console.error("Login error:", err);
         showMsgRef.current("Server Error", "error");
       }

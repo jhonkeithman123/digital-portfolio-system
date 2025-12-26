@@ -120,7 +120,7 @@ const InvNotificationMenu: React.FC<InvNotificationMenuProps> = ({
         return next;
       });
     } catch (err) {
-      // eslint-disable-next-line no-console
+       
       console.error("Failed to hide invite:", err);
     }
   };

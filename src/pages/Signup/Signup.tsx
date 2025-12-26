@@ -107,7 +107,7 @@ const Signup: React.FC = (): React.ReactElement => {
           showMsgRef.current?.(data?.error || "Signup failed", "error");
         }
       } catch (err) {
-        // eslint-disable-next-line no-console
+         
         console.error("Signup error:", err);
         showMsgRef.current?.("Server error", "error");
       }

@@ -86,7 +86,7 @@ export default function ForgotPassword(): React.ReactElement {
           );
         }
       } catch (err) {
-        // eslint-disable-next-line no-console
+         
         console.error(err);
         showMsgRef.current("Server error. Try again later.", "error");
       }
@@ -122,7 +122,7 @@ export default function ForgotPassword(): React.ReactElement {
           );
           setStep("code");
         } else {
-          // eslint-disable-next-line no-console
+           
           console.error(data);
           showMsgRef.current(
             data?.error || "Failed to send verification code.",
@@ -166,12 +166,12 @@ export default function ForgotPassword(): React.ReactElement {
           );
           setTimeout(() => navigate("/login"), 1500);
         } else {
-          // eslint-disable-next-line no-console
+           
           console.error(data || "Failed to reset password.");
           showMsgRef.current("Failed to reset password.", "error");
         }
       } catch (err) {
-        // eslint-disable-next-line no-console
+         
         console.error("Server error", err);
         showMsgRef.current("Server error", "error");
       }

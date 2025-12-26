@@ -65,7 +65,7 @@ const StudentInvite: React.FC<StudentInviteProps> = ({
         }
       } catch (err: unknown) {
         if ((err as any)?.name === "AbortError") return;
-        // eslint-disable-next-line no-console
+         
         console.error("StudentInvite fetch error:", err);
         showMsgRef.current("Failed to fetch students", "error");
       }
@@ -124,7 +124,7 @@ const StudentInvite: React.FC<StudentInviteProps> = ({
           showMsgRef.current(data?.error || "Invite failed", "error");
         }
       } catch (error) {
-        // eslint-disable-next-line no-console
+         
         console.error("Invite error:", error);
         showMsgRef.current("Invite error", "error");
       }

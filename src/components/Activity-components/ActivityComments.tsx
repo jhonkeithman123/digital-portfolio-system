@@ -4,6 +4,7 @@ import useMessage from "../../hooks/useMessage";
 import useLoadingState from "../../hooks/useLoading";
 import LoadingOverlay from "../Component-elements/loading_overlay";
 import "./css/ActivityComments.css";
+import useConfirm from "../../hooks/useConfirm";
 
 type Reply = {
   id: string | number;
@@ -36,6 +37,7 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
 }): React.ReactElement => {
   const { messageComponent, showMessage } = useMessage();
   const { loading, wrap } = useLoadingState();
+  const [confirm, ConfirmModal] = useConfirm();
 
   const [comments, setComments] = useState<Comment[]>([]);
   const [text, setText] = useState<string>("");
@@ -46,7 +48,6 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
     {}
   );
   const [editingId, setEditingId] = useState<string | number | null>(null);
-
   const showMsgRef = useRef<typeof showMessage>(showMessage);
 
   //* current user id from localStorage "user" (fallback null)
@@ -316,7 +317,7 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
             );
           }
         } catch (e: unknown | undefined) {
-          // eslint-disable-next-line no-console
+           
           console.error("Edit comment error:", e);
           showMsgRef.current?.("Server error", "error");
         }
@@ -325,9 +326,121 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
     [activityId, editDrafts, wrap]
   );
 
+  const deleteComment = useCallback(
+    async (id: string | number) => {
+      await wrap(async () => {
+        const ok = await confirm({
+          title: "Delete comment?",
+          message: "Are you sure you want to delete this comment?",
+          confirmText: "Delete",
+          cancelText: "Cancel",
+        });
+
+        if (!ok) return;
+
+        try {
+          const { data, unauthorized } = await apiFetch(
+            `/activity/${encodeURIComponent(
+              String(activityId)
+            )}/comments/${encodeURIComponent(String(id))}`,
+            {
+              method: "DELETE",
+              headers: { "Content-Type": "application/json" },
+            }
+          );
+
+          if (unauthorized) {
+            showMsgRef.current?.(
+              data?.error || "Session expired. Please login again",
+              "error"
+            );
+            return;
+          }
+
+          if (data?.success) {
+            setComments((prev) => prev.filter((c) => c.id !== id));
+            showMsgRef.current?.(data?.message || "Comment deleted", "success");
+          } else {
+            showMsgRef.current?.(
+              data?.error ?? "Failed to delete comment",
+              "error"
+            );
+          }
+        } catch (e) {
+          console.error("Delete comment error:", e);
+          showMsgRef.current?.("Server error", "error");
+        }
+      });
+    },
+    [activityId, wrap]
+  );
+
+  const deleteReply = useCallback(
+    async (commentId: string | number, replyId: string | number) => {
+      await wrap(async () => {
+        const ok = await confirm({
+          title: "Delete this comment?",
+          message: "Are you sure you want to delete this comment",
+          confirmText: "Delete",
+          cancelText: "Cancel",
+        });
+
+        if (!ok) return;
+
+        try {
+          const { data, unauthorized } = await apiFetch(
+            `/activity/${encodeURIComponent(
+              String(activityId)
+            )}/comments/${encodeURIComponent(
+              String(commentId)
+            )}/replies/${encodeURIComponent(String(replyId))}`,
+            {
+              method: "DELETE",
+              headers: { "Content-Type": "application/json" },
+            }
+          );
+
+          if (unauthorized) {
+            showMsgRef.current?.(
+              data?.error || "Session expired. Please login again.",
+              "error"
+            );
+            return;
+          }
+
+          if (data?.success) {
+            setComments((prev) =>
+              prev.map((c) =>
+                c.id === commentId
+                  ? {
+                      ...c,
+                      replies: (c.replies ?? []).filter(
+                        (r) => String((r as any).id) !== String(replyId)
+                      ),
+                    }
+                  : c
+              )
+            );
+            showMsgRef.current?.("Reply delete", "success");
+          } else {
+            showMsgRef.current?.(
+              data?.error ?? "Failed to delete reply",
+              "error"
+            );
+          }
+        } catch (e) {
+          console.error("Delete reply error:", e);
+          showMsgRef.current?.("Server error", "error");
+        }
+      });
+    },
+    [activityId, wrap]
+  );
+
   return (
     <>
       {messageComponent}
+      <ConfirmModal />
       <LoadingOverlay loading={loading} text="Processing..." fullPage={false} />
       <section className="activity-section activity-comments">
         <h4>Comments</h4>
@@ -436,6 +549,14 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
                         Edit
                       </button>
                     )}
+                    <button
+                      className="delete-btn"
+                      type="button"
+                      onClick={() => void deleteComment(c.id)}
+                      disabled={loading}
+                    >
+                      Delete
+                    </button>
                   </div>
 
                   {c.replies && c.replies.length > 0 && (
@@ -514,23 +635,35 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
 
                             <div className="comment-footer">
                               {isReplyAuthor && editingId !== (r as any).id && (
-                                <button
-                                  className="reply-toggle"
-                                  type="button"
-                                  onClick={() => {
-                                    // start edit for reply
-                                    setEditDrafts((prev) => ({
-                                      ...prev,
-                                      [(r as any).id]: String(
-                                        (r as any).reply ?? ""
-                                      ),
-                                    }));
-                                    setEditingId((r as any).id);
-                                  }}
-                                  disabled={loading}
-                                >
-                                  Edit
-                                </button>
+                                <>
+                                  <button
+                                    className="reply-toggle"
+                                    type="button"
+                                    onClick={() => {
+                                      // start edit for reply
+                                      setEditDrafts((prev) => ({
+                                        ...prev,
+                                        [(r as any).id]: String(
+                                          (r as any).reply ?? ""
+                                        ),
+                                      }));
+                                      setEditingId((r as any).id);
+                                    }}
+                                    disabled={loading}
+                                  >
+                                    Edit
+                                  </button>
+                                  <button
+                                    className="delete-btn"
+                                    type="button"
+                                    onClick={() =>
+                                      void deleteReply(c.id, (r as any).id)
+                                    }
+                                    disabled={loading}
+                                  >
+                                    Delete
+                                  </button>
+                                </>
                               )}
                             </div>
                           </li>

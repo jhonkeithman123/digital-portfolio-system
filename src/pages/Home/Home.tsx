@@ -99,7 +99,7 @@ const Home: React.FC = (): React.ReactElement => {
           }
         }
       } catch (err) {
-        // eslint-disable-next-line no-console
+         
         console.error("Session validation error:", err);
       }
     })();
@@ -126,7 +126,7 @@ const Home: React.FC = (): React.ReactElement => {
           showMsgRef.current("No classroom created yet.", "info");
         }
       } catch (e) {
-        // eslint-disable-next-line no-console
+         
         console.error("Error loading classroom:", e);
         if (!ignore) showMsgRef.current("Failed to load classroom", "error");
       } finally {

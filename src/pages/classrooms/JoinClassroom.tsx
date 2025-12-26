@@ -58,7 +58,7 @@ const JoinClassroom: React.FC = (): React.ReactElement => {
       .catch((err) => {
         if (!mounted) return;
         showMsgRef.current?.("Failed to fetch invites", "error");
-        // eslint-disable-next-line no-console
+         
         console.error("JoinClassroom invites fetch:", err);
       });
 
@@ -110,7 +110,7 @@ const JoinClassroom: React.FC = (): React.ReactElement => {
         }
       } catch (err) {
         showMsgRef.current?.("Server error. Try again later.", "error");
-        // eslint-disable-next-line no-console
+         
         console.error("Join classroom error:", err);
       }
     });

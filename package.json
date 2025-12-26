@@ -7,8 +7,9 @@
     "dev": "bunx --bun vite",
     "build": "bunx --bun vite build",
     "clean": "rm -rf dist/",
-    "lint": "eslint .",
-    "preview": "vite preview",
+    "lint": "bunx eslint .",
+    "lint-fix": "bunx eslint --fix .",
+    "preview": "bunx --bun vite preview",
     "deploy": "npx gh-pages -d dist"
   },
   "dependencies": {
