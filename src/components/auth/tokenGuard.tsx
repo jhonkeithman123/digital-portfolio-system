@@ -7,6 +7,7 @@ interface TokenGuardProps {
   children: React.ReactNode;
   redirectInfo?: string;
   onExpire?: (() => void) | null;
+  onForbidden?: (() => void) | null;
   loadingFallback?: React.ReactNode | null;
 }
 ("");
@@ -15,6 +16,7 @@ export default function TokenGuard({
   children,
   redirectInfo = "/login",
   onExpire = null,
+  onForbidden = null,
   loadingFallback = null,
 }: TokenGuardProps): React.ReactNode {
   const { expired, ready, refresh } = useTokenStatus();
@@ -36,6 +38,38 @@ export default function TokenGuard({
       });
     }
   }, [ready, expired, navigate, redirectInfo, location.pathname, onExpire]);
+
+  // Install global 403 forbidden handler
+  useEffect(() => {
+    const handleForbidden = (event: CustomEvent<{ message?: string }>) => {
+      console.log("[TokenGuard] 403 Forbidden detected, redirecting to login");
+
+      // Clear auth data
+      try {
+        localStorage.removeItem("user");
+        sessionStorage.removeItem(TAB_AUTH_KEY);
+      } catch {}
+
+      // Call forbidden callback
+      onForbidden?.();
+
+      // Redirect to login
+      navigate(redirectInfo, {
+        replace: true,
+        state: {
+          from: location.pathname,
+          forbidden: true,
+          message: event.detail?.message || "Access forbidden",
+        },
+      });
+    };
+
+    window.addEventListener("auth:forbidden" as any, handleForbidden);
+
+    return () => {
+      window.removeEventListener("auth:forbidden" as any, handleForbidden);
+    };
+  }, [navigate, redirectInfo, location.pathname, onForbidden]);
 
   // Install global restore guard for all protected pages:
   // - fast-fail when tabAuth is missing (user visited login/unauthed page)

@@ -135,8 +135,28 @@ export async function apiFetch<T = any>(
     headers,
   });
 
+  if (res.status === 403) {
+    console.log("[apiFetch] 403 Forbidden response detected");
+
+    window.dispatchEvent(
+      new CustomEvent("auth:forbidden", {
+        detail: {
+          message: "You don't have permission to access this resource",
+          endpoint: path,
+        },
+      })
+    );
+
+    return { ok: false, status: 403, data: null, unauthorized: true };
+  }
+
   if (res.status === 401) {
-    return { ok: false, status: 401, unauthorized: true, data: null };
+    console.log("[apiFetch] 401 unauthorized => clearing token + returning");
+    try {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+    } catch {}
+    return { ok: false, status: 401, data: null, unauthorized: true };
   }
 
   let data: T | null = null;

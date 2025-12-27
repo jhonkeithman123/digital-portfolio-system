@@ -506,6 +506,7 @@ const Dashboard = () => {
                 unreadCount={unreadCount}
                 setUnreadCount={setUnreadCount}
               />
+
               {user.role === "teacher" && (
                 <button
                   className={`pill-btn ${showSections ? "active" : ""}`}
