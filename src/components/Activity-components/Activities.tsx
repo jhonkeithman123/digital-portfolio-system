@@ -127,7 +127,10 @@ const ActivitySubmissions: React.FC<Props> = ({
               <div className="submission-body">
                 {s.original_name ? (
                   <a
-                    href={`/uploads/activities/${s.file_path}`}
+                    href={`${
+                      import.meta.env.VITE_API_BASE_URL ||
+                      "http://localhost:5000"
+                    }/uploads/activities/${s.file_path}`}
                     target="_blank"
                     rel="noopener noreference"
                     className="submission-link"

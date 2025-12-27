@@ -12,6 +12,7 @@ export interface InputFieldProps
   onEnter?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   size?: Size;
   className?: string;
+  helperText?: string;
 }
 
 export default function InputField({
@@ -21,6 +22,7 @@ export default function InputField({
   value,
   onChange,
   placeholder,
+  helperText,
   autoComplete,
   required = false,
   disabled = false,
@@ -85,6 +87,7 @@ export default function InputField({
       </div>
       {hint && !error && <div className="fi-hint">{hint}</div>}
       {error && <div className="fi-error">{error}</div>}
+      {helperText && <span className="helper-text">{helperText}</span>}
     </div>
   );
 }

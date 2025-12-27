@@ -243,7 +243,10 @@ export default function AnswerSubmission({
               {existingSubmission.original_name && (
                 <div className="submitted-file">
                   <a
-                    href={`/uploads/activities/${existingSubmission.file_path}`}
+                    href={`${
+                      import.meta.env.VITE_API_BASE_URL ||
+                      "http://localhost:5000"
+                    }/uploads/activities/${existingSubmission.file_path}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="file-link"

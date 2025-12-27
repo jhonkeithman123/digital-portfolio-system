@@ -349,3 +349,61 @@
   background: rgba(148, 163, 184, 0.15);
   color: #64748b;
 }
+
+.activity-attachment {
+  margin: 20px 0;
+  padding: 16px;
+  background: rgba(37, 99, 235, 0.2);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  border-radius: 12px;
+}
+
+[data-theme="light"] .activity-attachment {
+  background: rgba(37, 99, 235, 0.08);
+  border-color: rgba(37, 99, 235, 0.25);
+}
+
+.activity-attachment h3 {
+  margin: 0 0 12px 0;
+  font-size: 0.95rem;
+  color: var(--text-primary, #0f172a);
+  font-weight: 600;
+}
+
+.activity-file-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: rgba(37, 99, 235, 0.1);
+  border: 1px solid rgba(37, 99, 235, 0.25);
+  border-radius: 8px;
+  color: #3b82f6;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+
+.activity-file-link:hover {
+  background: rgba(37, 99, 235, 0.15);
+  border-color: rgba(37, 99, 235, 0.35);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+}
+
+[data-theme="dark"] .activity-file-link {
+  color: #93c5fd;
+}
+
+[data-theme="dark"] .activity-file-link:hover {
+  color: #bfdbfe;
+}
+
+/* Instructions heading */
+.activity-card h3 {
+  margin: 24px 0 12px 0;
+  font-size: 1rem;
+  color: var(--text-primary, #0f172a);
+  font-weight: 600;
+}

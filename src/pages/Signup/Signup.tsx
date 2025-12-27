@@ -55,6 +55,15 @@ const Signup: React.FC = (): React.ReactElement => {
     navigate(`/${page}`);
   };
 
+  const validateSectionFormat = (sectionInput: string): boolean => {
+    const trimmed = sectionInput.trim().toUpperCase();
+
+    // Pattern: Letters/numbers, dash, letters/numbers
+    // Example: STEM-1, ABM-2A, ICT-12, HUMMS-3, GAS-11A
+    const sectionPattern = /^[A-Z0-9]+-[A-Z0-9]+$/; // Letters/Numbers-letters/numbers
+    return sectionPattern.test(trimmed);
+  };
+
   const validate = (): boolean => {
     if (!username.trim() || !email.trim() || !password) {
       showMsgRef.current?.("All fields are required", "error");
@@ -76,6 +85,16 @@ const Signup: React.FC = (): React.ReactElement => {
       return false;
     }
 
+    if (role === "student" && section.trim()) {
+      if (!validateSectionFormat(section)) {
+        showMsgRef.current?.(
+          "Section must follow format: STRAND-SECTION (e.g., STEM-1, ABM-2A, ICT-12",
+          "error"
+        );
+        return false;
+      }
+    }
+
     return true;
   };
 
@@ -84,6 +103,8 @@ const Signup: React.FC = (): React.ReactElement => {
       if (!validate()) return;
 
       try {
+        const normalizedSection = section.trim().toUpperCase() || null;
+
         const { ok, data } = await apiFetchPublic(
           `/auth/signup`,
           {
@@ -93,7 +114,7 @@ const Signup: React.FC = (): React.ReactElement => {
               email: email.trim(),
               password,
               role,
-              section: role === "student" ? section.trim() || null : null,
+              section: role === "student" ? normalizedSection : null,
             }),
             headers: { "Content-Type": "application/json" },
           },
@@ -107,7 +128,6 @@ const Signup: React.FC = (): React.ReactElement => {
           showMsgRef.current?.(data?.error || "Signup failed", "error");
         }
       } catch (err) {
-         
         console.error("Signup error:", err);
         showMsgRef.current?.("Server error", "error");
       }
@@ -117,6 +137,14 @@ const Signup: React.FC = (): React.ReactElement => {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
     void handleSignup();
+  };
+
+  // Auto-uppercase section as user types
+  const handleSectionChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ): void => {
+    const value = e.target.value.toUpperCase();
+    setSection(value);
   };
 
   return (
@@ -163,10 +191,9 @@ const Signup: React.FC = (): React.ReactElement => {
               label="Section"
               name="section"
               value={section}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setSection(e.target.value)
-              }
-              placeholder="e.g. 7-A, STEM-2"
+              onChange={handleSectionChange}
+              placeholder="e.g. STEM-1, ABM-2A, ICT-12"
+              helperText="Format: STRAND-SECTION (e.g., STEM-1, HUMSS-2A)"
             />
           )}
 

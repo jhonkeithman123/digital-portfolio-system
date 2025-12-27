@@ -9,21 +9,21 @@ import { apiFetch } from "./utils/apiClient";
 import useMessage from "./hooks/useMessage.js";
 
 //* Pages
-import Home from "./pages/Home/Home.js";
+import Home from "./pages/Home/Home";
 import Login from "./pages/Login/Login";
 import RoleSelect from "./pages/RoleSelect/RoleSelect";
-import Signup from "./pages/Signup/Signup.js";
-import ForgotPassword from "./pages/ForgotPassword/ForgotPassword.js";
+import Signup from "./pages/Signup/Signup";
+import ForgotPassword from "./pages/ForgotPassword/ForgotPassword";
 import Dashboard from "./pages/Dashboard/Dashboard.js";
-import NotFound from "./pages/NotFound/NotFound.js";
-import JoinClassroom from "./pages/classrooms/JoinClassroom.js";
-import CreateClassroom from "./pages/classrooms/CreateClassroom.js";
+import JoinClassroom from "./pages/classrooms/JoinClassroom";
+import CreateClassroom from "./pages/classrooms/CreateClassroom";
 import QuizCreate from "./components/Quiz-component/QuizCreate";
 import QuizEditPage from "./components/Quiz-component/quiz-edit";
 import QuizTakePage from "./components/Quiz-component/quiz-take";
 import QuizReviewPage from "./components/Quiz-component/quiz-review";
 import QuizAttempt from "./components/Quiz-component/QuizAttempt";
 import ActivityView from "./components/Activity-components/ActivityView";
+import NotFoundHandler from "./NotFoundHandler.js";
 
 type ShowMessageFn = (
   text: string,
@@ -172,7 +172,7 @@ function App(): React.ReactElement {
               </ProtectedRoute>
             }
           />
-          <Route path="*" element={<NotFound />} />
+          <Route path="*" element={<NotFoundHandler />} />
         </Routes>
       </main>
     </Router>

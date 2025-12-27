@@ -189,6 +189,18 @@
   pointer-events: none;
 }
 
+.helper-text {
+  display: block;
+  margin-top: 4px;
+  font-style: 0.8rem;
+  color: #9ca3af;
+  font-style: italic;
+}
+
+[data-theme="dark"] .helper-text {
+  color: #6b7280;
+}
+
 /* Tame Chrome/Safari autofill */
 input.fi-input:-webkit-autofill,
 input.fi-input:-webkit-autofill:hover,

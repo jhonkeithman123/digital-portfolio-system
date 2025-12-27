@@ -763,6 +763,32 @@ export default function QuizEditor({
                                                     Checkboxes
                                                   </option>
                                                 </select>
+
+                                                <label
+                                                  className="manual-grading-toggle"
+                                                  title="Require to manually grade this question"
+                                                >
+                                                  <input
+                                                    type="checkbox"
+                                                    checked={
+                                                      q.requiresManualGrading ||
+                                                      false
+                                                    }
+                                                    onChange={(e) =>
+                                                      updateQuestion(
+                                                        pg.id,
+                                                        q.id,
+                                                        {
+                                                          requiresManualGrading:
+                                                            e.target.checked,
+                                                        }
+                                                      )
+                                                    }
+                                                  />
+                                                  <span className="toggle-label">
+                                                    Manual Grading
+                                                  </span>
+                                                </label>
                                               </div>
 
                                               {(q.type === "multiple_choice" ||

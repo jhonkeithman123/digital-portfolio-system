@@ -9,10 +9,17 @@ import "./css/quiz-take.css";
 
 type Question = {
   id: string | number;
+  type?:
+    | "multiple_choice"
+    | "checkboxes"
+    | "short_answer"
+    | "paragraph"
+    | string;
   text?: string;
-  type?: string;
   options?: string[];
+  correctAnswer?: any;
   sentenceLimit?: number | null;
+  requiresManualGrading?: boolean;
   [k: string]: any;
 };
 
@@ -142,7 +149,6 @@ export default function QuizTakePage(): React.ReactElement {
         setLastChecked(Date.now());
       } catch (err: any) {
         if (err?.name !== "AbortError") {
-           
           console.error("Load quiz error", err);
           showMsgRef.current("Server error while loading quiz", "error");
         }
@@ -181,7 +187,6 @@ export default function QuizTakePage(): React.ReactElement {
       );
       setLastChecked(Date.now());
     } catch (err) {
-       
       console.error("Load quiz error", err);
       showMsgRef.current("Server error while loading quiz", "error");
     } finally {
@@ -243,7 +248,6 @@ export default function QuizTakePage(): React.ReactElement {
       setShowWarning(false);
       setCurrentPage(0);
     } catch (err) {
-       
       console.error("Start attempt error", err);
       showMsgRef.current("Server error while starting attempt", "error");
     } finally {
@@ -286,11 +290,10 @@ export default function QuizTakePage(): React.ReactElement {
         );
       } else {
         setResult({ score: data.score });
-        showMsgRef.current("Attempt submitted", "success");
+        showMsgRef.current(data?.message || "Attempt submitted", "success");
         if (timerRef.current) window.clearInterval(timerRef.current);
       }
     } catch (err) {
-       
       console.error("Submit attempt error", err);
       showMsgRef.current("Server error while submitting attempt", "error");
     } finally {
@@ -322,7 +325,7 @@ export default function QuizTakePage(): React.ReactElement {
     );
 
   const pg = pages[currentPage] || { title: "Page", questions: [] };
-  const roleClass = user?.role === "teacher" ? "teacher" : "student";
+  const roleClass = user?.role === "teacher" ? "teacher-role" : "student-role";
 
   return (
     <TokenGuard
@@ -334,9 +337,9 @@ export default function QuizTakePage(): React.ReactElement {
       <Header
         variant="authed"
         user={user}
-        section={user?.role === "teacher" ? user?.section : null}
+        section={user?.role === "student" ? user?.section : null}
         headerClass={`qt-header ${roleClass}`}
-        welcomeClass={`qt-header ${roleClass}`}
+        welcomeClass={`qt-welcome ${roleClass}`}
       />
 
       {messageComponent}

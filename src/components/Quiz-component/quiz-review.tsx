@@ -12,6 +12,15 @@ import useMessage from "../../hooks/useMessage.js";
 import Header from "../Component-elements/Header.js";
 import "./css/quiz-review.css";
 
+interface Question {
+  id: string;
+  type: string;
+  text: string;
+  requiresManualGrading?: boolean;
+  correctAnswer?: any;
+  options?: string[];
+}
+
 type Attempt = {
   id: number | string;
   student_name?: string | null;
@@ -40,6 +49,11 @@ export default function QuizReviewPage(): React.ReactElement {
   const [gradingComment, setGradingComment] = useState<string>("");
   const [gradingPayload, setGradingPayload] = useState<Record<string, any>>({}); // optional per-question grading data
   const [filter, setFilter] = useState<string>("needs_grading");
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [questionScores, setQuestionScores] = useState<Record<string, number>>(
+    {}
+  );
+  const [manualScores, setManualScores] = useState<Record<string, number>>({});
 
   // refs for abort + throttling
   const attemptsControllerRef = useRef<AbortController | null>(null);
@@ -75,7 +89,8 @@ export default function QuizReviewPage(): React.ReactElement {
     setLoading(true);
 
     try {
-      const url = `/quizzes/${classCode}/quizzes/${quizId}/attempts?status=${encodeURIComponent(
+      // Load attempts
+      const url = `/quizzes/${classCode}/quizzes/${quizId}/attempt?status=${encodeURIComponent(
         filter
       )}`;
       const { unauthorized, data } = await apiFetch<{
@@ -83,18 +98,33 @@ export default function QuizReviewPage(): React.ReactElement {
         attempts?: Attempt[];
         message?: string;
       }>(url, { signal: ac.signal });
+
       if (unauthorized) {
         showMsgRef.current("Session expired. Please sign in again.", "error");
         setAttempts([]);
         return;
       }
+
       if (!mountedRef.current) return;
+
       if (!data?.success) {
         showMsgRef.current(data?.message || "Failed to load attempts", "error");
         setAttempts([]);
         return;
       }
+
       setAttempts(data.attempts || []);
+
+      const { data: quizData } = await apiFetch(
+        `/quizzes/${classCode}/quizzes/${quizId}`,
+        { signal: ac.signal }
+      );
+
+      if (quizData?.quiz?.questions?.pages) {
+        const pages = quizData.quiz.questions.pages;
+        const flatQuestions = pages.flatMap((p: any) => p.questions || []);
+        setQuestions(flatQuestions);
+      }
     } catch (err: unknown) {
       if ((err as any).name !== "AbortError") {
         console.error("load attempts", err);
@@ -128,27 +158,71 @@ export default function QuizReviewPage(): React.ReactElement {
     setGradingScore(a.score != null ? String(a.score) : "");
     setGradingComment("");
     setGradingPayload(a.grading || {});
+
+    const scores: Record<string, number> = {};
+    const manScores: Record<string, number> = {};
+
+    questions.forEach((q) => {
+      const g = a.grading?.[q.id];
+
+      if (q.requiresManualGrading) {
+        // For manual grading questions
+        manScores[q.id] = g?.manualScore ?? 0;
+        scores[q.id] = g?.manualScore ?? 0;
+      } else if (g?.scored) {
+        // For auto-generated questions, use the auto-score
+        scores[q.id] = g.correct ? 1 : 0;
+      } else {
+        scores[q.id] = 0;
+      }
+    });
+
+    setManualScores(manScores);
+    setQuestionScores(scores);
   }
 
   const submitGrade = useCallback(async (): Promise<void> => {
     if (!selected) return;
 
-    const scoreNum = Number(gradingScore);
-    if (!Number.isFinite(scoreNum) || scoreNum < 0 || scoreNum > 100) {
+    // Calculate final score including manual grades
+    let totalPoints = 0;
+    let maxPoints = questions.length;
+
+    questions.forEach((q) => {
+      totalPoints += questionScores[q.id] || 0;
+    });
+
+    const calculatedScore = maxPoints
+      ? Math.round((totalPoints / maxPoints) * 100)
+      : 0;
+
+    const finalScore = gradingScore ? Number(gradingScore) : calculatedScore;
+
+    if (!Number.isFinite(finalScore) || finalScore < 0 || finalScore > 100) {
       showMsgRef.current("Score must be 0-100", "error");
       return;
     }
 
+    const updatedGrading = { ...gradingPayload };
+    questions.forEach((q) => {
+      updatedGrading[q.id] = {
+        ...(updatedGrading[q.id] || {}),
+        questionScore: questionScores[q.id] || 0,
+        manualScore: questionScores[q.id] || 0,
+      };
+    });
+
     // optimistic update
     setAttempts((prev) =>
-      prev.map((x) => (x.id === selected.id ? { ...x, score: scoreNum } : x))
+      prev.map((x) => (x.id === selected.id ? { ...x, score: finalScore } : x))
     );
+
     try {
       const url = `/quizzes/${classCode}/quizzes/${quizId}/attempts/${selected.id}/grade`;
       const { unauthorized, data } = await apiFetch(url, {
         method: "PATCH",
         body: JSON.stringify({
-          score: scoreNum,
+          score: finalScore,
           grading: gradingPayload,
           comment: gradingComment,
         }),
@@ -179,6 +253,9 @@ export default function QuizReviewPage(): React.ReactElement {
     classCode,
     quizId,
     loadAttempts,
+    questions,
+    manualScores,
+    questionScores,
   ]);
 
   // keyboard navigation in attempt list
@@ -373,48 +450,149 @@ export default function QuizReviewPage(): React.ReactElement {
                     </div>
 
                     <div className="attempt-answers panel">
-                      <h4>Answers</h4>
-                      {Object.entries(selected.answers || {}).length === 0 && (
-                        <div className="qr-empty-sm">No answers</div>
+                      <h4>Answers & Grading</h4>
+
+                      {/* Show calculated total */}
+                      <div className="total-score-display">
+                        <span>Calculated Total: </span>
+                        <strong>
+                          {questions.length > 0
+                            ? `${questions.reduce(
+                                (sum, q) => sum + (questionScores[q.id] || 0),
+                                0
+                              )} / ${questions.length} 
+           (${Math.round(
+             (questions.reduce(
+               (sum, q) => sum + (questionScores[q.id] || 0),
+               0
+             ) /
+               questions.length) *
+               100
+           )}%)`
+                            : "—"}
+                        </strong>
+                      </div>
+
+                      {questions.length === 0 && (
+                        <div className="qr-empty-sm">No questions loaded</div>
                       )}
-                      {Object.entries(selected.answers || {}).map(
-                        ([qid, ans]) => (
-                          <div key={qid} className="attempt-answer">
-                            <div className="qid">Question {qid}</div>
-                            <div className="ans">
-                              {Array.isArray(ans)
-                                ? ans.join(", ")
-                                : String(ans)}
+
+                      {questions.map((q, idx) => {
+                        const answer = selected.answers?.[q.id];
+                        const grading = selected.grading?.[q.id];
+                        const needsManual = q.requiresManualGrading;
+
+                        return (
+                          <div key={q.id} className="attempt-question">
+                            <div className="question-header">
+                              <span className="question-number">
+                                Q{idx + 1}
+                              </span>
+                              <span className="question-text">{q.text}</span>
+                              {needsManual && (
+                                <span className="manual-badge">Manual</span>
+                              )}
+                              {!needsManual && grading?.scored && (
+                                <span
+                                  className={`auto-badge ${
+                                    grading.correct ? "correct" : "incorrect"
+                                  }`}
+                                >
+                                  {grading.correct ? "✓ Auto" : "✗ Auto"}
+                                </span>
+                              )}
                             </div>
-                            <div className="qr-row">
-                              <input
-                                className="input"
-                                placeholder="points"
-                                value={gradingPayload[qid]?.points ?? ""}
-                                onChange={(e) => {
-                                  const v = e.target.value;
-                                  setGradingPayload((p) => ({
-                                    ...p,
-                                    [qid]: { ...(p[qid] || {}), points: v },
-                                  }));
-                                }}
-                              />
+
+                            <div className="answer-section">
+                              <div className="student-answer">
+                                <strong>Student Answer:</strong>
+                                {q.type === "multiple_choice" && q.options ? (
+                                  <p>{q.options[parseInt(answer)] || "—"}</p>
+                                ) : q.type === "checkboxes" && q.options ? (
+                                  <ul>
+                                    {(Array.isArray(answer) ? answer : []).map(
+                                      (idx: number) => (
+                                        <li key={idx}>{q.options![idx]}</li>
+                                      )
+                                    )}
+                                  </ul>
+                                ) : (
+                                  <p className="text-answer">{answer || "—"}</p>
+                                )}
+                              </div>
+
+                              {!needsManual && q.correctAnswer && (
+                                <div className="expected-answer">
+                                  <strong>Expected:</strong>
+                                  {q.type === "multiple_choice" && q.options ? (
+                                    <p>
+                                      {q.options[parseInt(q.correctAnswer)] ||
+                                        "—"}
+                                    </p>
+                                  ) : q.type === "checkboxes" && q.options ? (
+                                    <ul>
+                                      {(Array.isArray(q.correctAnswer)
+                                        ? q.correctAnswer
+                                        : []
+                                      ).map((idx: number) => (
+                                        <li key={idx}>{q.options![idx]}</li>
+                                      ))}
+                                    </ul>
+                                  ) : (
+                                    <p className="text-answer">
+                                      {q.correctAnswer || "—"}
+                                    </p>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* Score input for EVERY question */}
+                              <div className="question-score-input">
+                                <label>
+                                  <span>Points for this question:</span>
+                                  <div className="score-input-group">
+                                    <input
+                                      type="number"
+                                      min={0}
+                                      max={1}
+                                      step={0.1}
+                                      value={questionScores[q.id] ?? 0}
+                                      onChange={(e) => {
+                                        const value =
+                                          parseFloat(e.target.value) || 0;
+                                        const clamped = Math.max(
+                                          0,
+                                          Math.min(1, value)
+                                        );
+                                        setQuestionScores({
+                                          ...questionScores,
+                                          [q.id]: clamped,
+                                        });
+                                      }}
+                                    />
+                                    <span className="score-max">/ 1</span>
+                                  </div>
+                                </label>
+                              </div>
+                            </div>
+
+                            <div className="qr-row feedback-row">
                               <input
                                 className="input grow"
-                                placeholder="feedback"
-                                value={gradingPayload[qid]?.feedback ?? ""}
+                                placeholder="Question feedback (optional)"
+                                value={gradingPayload[q.id]?.feedback ?? ""}
                                 onChange={(e) => {
                                   const v = e.target.value;
                                   setGradingPayload((p) => ({
                                     ...p,
-                                    [qid]: { ...(p[qid] || {}), feedback: v },
+                                    [q.id]: { ...(p[q.id] || {}), feedback: v },
                                   }));
                                 }}
                               />
                             </div>
                           </div>
-                        )
-                      )}
+                        );
+                      })}
                     </div>
                   </div>
                 )}

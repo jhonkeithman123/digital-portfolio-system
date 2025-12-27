@@ -94,7 +94,6 @@ const ActivityView: React.FC = (): React.ReactElement => {
           navigate(-1);
         }
       } catch (err) {
-         
         console.error("Activity load error", err);
         if (mountedRef.current) {
           showMsgRef.current("Server error loading activity", "error");
@@ -249,6 +248,26 @@ const ActivityView: React.FC = (): React.ReactElement => {
                     <span>Created {new Date(createdAt).toLocaleString()}</span>
                   </p>
 
+                  {activity.original_name && activity.file_path && (
+                    <div className="activity-attachment">
+                      <h3>
+                        Attachment
+                        <a
+                          href={`${
+                            import.meta.env.VITE_API_URL_LOCAL ||
+                            "http://localhost:5000"
+                          }/uploads/activities/${activity.file_path}`}
+                          target="_blank"
+                          rel="noopener noreference"
+                          className="activity-file-link"
+                        >
+                          📎 {activity.original_name}
+                        </a>
+                      </h3>
+                    </div>
+                  )}
+
+                  <h3>Instructions</h3>
                   {Array.isArray(activity.instructions) ? (
                     activity.instructions.map(
                       (instr: Instruction, idx: number) => (
