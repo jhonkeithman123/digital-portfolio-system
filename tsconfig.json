@@ -5,6 +5,8 @@
     { "path": "./tsconfig.node.json" }
   ],
   "compilerOptions": {
-    "types": ["vites/globals", "vite/client", "node"]
+    "types": ["vites/globals", "vite/client", "node"],
+    "jsx": "react-jsx",
+    "esModuleInterop": true
   }
 }

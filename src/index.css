@@ -1,4 +1,6 @@
 :root {
+  transition: brackground-color 0.6s ease-in-out, color 0.6s ease-in-out;
+
   --shadow-sm: 0 2px 4px rgba(15, 23, 42, 0.08);
   --shadow-md: 0 8px 20px rgba(15, 23, 42, 0.18);
   --shadow-lg: 0 18px 45px rgba(15, 23, 42, 0.24);
@@ -44,8 +46,6 @@
   --role-teacher-main: #ec4899;
   --role-teacher-soft: #fb7185;
   --role-teacher-glow: rgba(236, 72, 153, 0.55);
-
-  --transition-standard: all 0.35s ease;
 }
 
 /* dark theme, only when we set data-theme="dark" */
@@ -78,6 +78,8 @@
   --scroll-thumb: rgba(56, 100, 153, 0.16);
   --scroll-outline: rgba(96, 165, 250, 0.28);
   --scroll-thumb-hover: rgba(65, 110, 165, 0.32);
+
+  transition: background-color 0.6s ease-in-out, color 0.6s ease-in-out;
 }
 
 body,
@@ -91,6 +93,9 @@ html {
   -moz-osx-font-smoothing: grayscale;
   transition: background-color 0.6s ease-in-out, color 0.6s ease-in-out,
     background 0.6s ease-in-out;
+
+  background: var(--background-gradient);
+  color: var(--text-color);
 }
 
 /* Smooth + stable scrollbars */

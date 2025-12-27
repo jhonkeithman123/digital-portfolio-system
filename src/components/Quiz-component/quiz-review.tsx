@@ -33,6 +33,57 @@ type Attempt = {
   [k: string]: any;
 };
 
+const GRADING_STORAGE_KEY = "quiz_grading_state";
+
+function saveGradingState(
+  classCode: string,
+  quizId: string,
+  attemptId: string | number,
+  state: {
+    questionScores: Record<string, number>;
+    gradingScore: string;
+    gradingComment: string;
+    gradingPayload: Record<string, any>;
+  }
+) {
+  try {
+    const key = `${GRADING_STORAGE_KEY}_${classCode}_${quizId}`;
+    const stored = JSON.parse(localStorage.getItem(key) || "{}");
+    stored[attemptId] = {
+      ...state,
+      timestamp: Date.now(),
+    };
+    localStorage.setItem(key, JSON.stringify(stored));
+  } catch (err) {
+    console.error("Failed to load grading state:", err);
+    return null;
+  }
+}
+
+function loadGradingState(
+  classCode: string,
+  quizId: string,
+  attemptId: string | number
+) {
+  try {
+    const key = `${GRADING_STORAGE_KEY}_${classCode}_${quizId}`;
+    const stored = JSON.parse(localStorage.getItem(key) || "{}");
+    return stored[attemptId] || null;
+  } catch (err) {
+    console.error("Failed to load grading state:", err);
+    return null;
+  }
+}
+
+function clearGradingState(classCode: string, quizId: string) {
+  try {
+    const key = `${GRADING_STORAGE_KEY}_${classCode}_${quizId}`;
+    localStorage.removeItem(key);
+  } catch (err) {
+    console.error("Failed to clear grading state:", err);
+  }
+}
+
 export default function QuizReviewPage(): React.ReactElement {
   const params = useParams();
   const classCode = (params.classCode ||
@@ -48,12 +99,13 @@ export default function QuizReviewPage(): React.ReactElement {
   const [gradingScore, setGradingScore] = useState<string>("");
   const [gradingComment, setGradingComment] = useState<string>("");
   const [gradingPayload, setGradingPayload] = useState<Record<string, any>>({}); // optional per-question grading data
-  const [filter, setFilter] = useState<string>("needs_grading");
+  const [filter, setFilter] = useState<string>("");
   const [questions, setQuestions] = useState<Question[]>([]);
   const [questionScores, setQuestionScores] = useState<Record<string, number>>(
     {}
   );
   const [manualScores, setManualScores] = useState<Record<string, number>>({});
+  const [initialFilterSet, setInitialFilterSet] = useState(false);
 
   // refs for abort + throttling
   const attemptsControllerRef = useRef<AbortController | null>(null);
@@ -75,6 +127,8 @@ export default function QuizReviewPage(): React.ReactElement {
   }, [showMessage]);
 
   const loadAttempts = useCallback(async (): Promise<void> => {
+    if (!filter) return;
+
     const now = Date.now();
     if (now - lastFetchRef.current < 500) return;
     lastFetchRef.current = now;
@@ -136,50 +190,174 @@ export default function QuizReviewPage(): React.ReactElement {
     }
   }, [classCode, quizId, filter]);
 
+  // Effect to set initial filter
+  useEffect(() => {
+    if (initialFilterSet || !classCode || !quizId) return;
+
+    const setDefaultFilter = async () => {
+      const filterOptions = [
+        "needs_grading",
+        "in_progress",
+        "completed",
+        "all",
+      ];
+
+      for (const filterOption of filterOptions) {
+        try {
+          const url = `/quizzes/${classCode}/quizzes/${quizId}/attempt?status=${encodeURIComponent(
+            filterOption
+          )}`;
+          const { data } = await apiFetch<{
+            success?: boolean;
+            attempts?: Attempt[];
+          }>(url);
+
+          if (data?.success && data.attempts && data.attempts.length > 0) {
+            setFilter(filterOption);
+            setInitialFilterSet(true);
+            return;
+          }
+        } catch (err) {
+          console.error(`Error checking filter ${filterOption}:`, err);
+        }
+      }
+
+      setFilter("needs_grading");
+      setInitialFilterSet(true);
+    };
+
+    setDefaultFilter();
+  }, [classCode, quizId, initialFilterSet]);
+
+  // Main use effect
   useEffect(() => {
     mountedRef.current = true;
-    loadAttempts();
-    const onFocus = () => void loadAttempts();
+
+    if (initialFilterSet) {
+      loadAttempts();
+    }
+
+    const onFocus = () => {
+      if (initialFilterSet) {
+        loadAttempts();
+      }
+    };
+
     const onVisibility = () => {
       if (!document.hidden) onFocus();
     };
+
     window.addEventListener("focus", onFocus);
     document.addEventListener("visibilitychange", onVisibility);
+
     return () => {
       mountedRef.current = false;
       window.removeEventListener("focus", onFocus);
       document.removeEventListener("visibilitychange", onVisibility);
       if (attemptsControllerRef.current) attemptsControllerRef.current.abort();
     };
-  }, [loadAttempts]);
+  }, [loadAttempts, initialFilterSet]);
 
-  function openAttempt(a: Attempt) {
-    setSelected(a);
-    setGradingScore(a.score != null ? String(a.score) : "");
-    setGradingComment("");
-    setGradingPayload(a.grading || {});
+  useEffect(() => {
+    if (!selected || questions.length === 0) return;
 
-    const scores: Record<string, number> = {};
-    const manScores: Record<string, number> = {};
+    let totalPoints = 0;
+    let maxPoints = questions.length;
 
     questions.forEach((q) => {
-      const g = a.grading?.[q.id];
-
-      if (q.requiresManualGrading) {
-        // For manual grading questions
-        manScores[q.id] = g?.manualScore ?? 0;
-        scores[q.id] = g?.manualScore ?? 0;
-      } else if (g?.scored) {
-        // For auto-generated questions, use the auto-score
-        scores[q.id] = g.correct ? 1 : 0;
-      } else {
-        scores[q.id] = 0;
-      }
+      totalPoints += questionScores[q.id] || 0;
     });
 
-    setManualScores(manScores);
-    setQuestionScores(scores);
+    const calculatedScore = maxPoints
+      ? Math.round((totalPoints / maxPoints) * 100)
+      : 0;
+
+    setGradingScore(String(calculatedScore));
+  }, [questionScores, questions, selected]);
+
+  function openAttempt(a: Attempt) {
+    const savedState = loadGradingState(classCode!, quizId!, a.id);
+
+    // Saves the state of the previously oppened page in quiz-review.tsx
+    if (savedState) {
+      // Restore from localStorage
+      setSelected(a);
+      setGradingScore(a.score != null ? String(a.score) : "");
+      setGradingComment("");
+      setGradingPayload(a.grading || {});
+
+      const scores: Record<string, number> = {};
+      const manScores: Record<string, number> = {};
+
+      questions.forEach((q) => {
+        const g = a.grading?.[q.id];
+
+        if (q.requiresManualGrading) {
+          manScores[q.id] = g?.manualScore ?? 0;
+          scores[q.id] = g?.manualScore ?? 0;
+        } else if (g?.scored) {
+          scores[q.id] = g.correct ? 1 : 0;
+        } else {
+          scores[q.id] = 0;
+        }
+        setManualScores(manScores);
+      });
+    } else {
+      setSelected(a);
+      setGradingScore(a.score != null ? String(a.score) : "");
+      setGradingComment("");
+      setGradingPayload(a.grading || {});
+
+      const scores: Record<string, number> = {};
+      const manScores: Record<string, number> = {};
+
+      questions.forEach((q) => {
+        const g = a.grading?.[q.id];
+
+        if (q.requiresManualGrading) {
+          // For manual grading questions
+          manScores[q.id] = g?.manualScore ?? 0;
+          scores[q.id] = g?.manualScore ?? 0;
+        } else if (g?.scored) {
+          // For auto-generated questions, use the auto-score
+          scores[q.id] = g.correct ? 1 : 0;
+        } else {
+          scores[q.id] = 0;
+        }
+        setManualScores(manScores);
+        setQuestionScores(scores);
+      });
+    }
   }
+
+  // Save state whenever it changes
+  useEffect(() => {
+    if (selected && classCode && quizId) {
+      saveGradingState(classCode, quizId, selected.id, {
+        questionScores,
+        gradingScore,
+        gradingComment,
+        gradingPayload,
+      });
+    }
+  }, [
+    selected,
+    questionScores,
+    gradingScore,
+    gradingComment,
+    gradingPayload,
+    classCode,
+    quizId,
+  ]);
+
+  // Clear localstorage on unmount (when leaving the page)
+  useEffect(() => {
+    return () => {
+      if (classCode && quizId) {
+        clearGradingState(classCode, quizId);
+      }
+    };
+  }, [classCode, quizId]);
 
   const submitGrade = useCallback(async (): Promise<void> => {
     if (!selected) return;
@@ -209,6 +387,7 @@ export default function QuizReviewPage(): React.ReactElement {
         ...(updatedGrading[q.id] || {}),
         questionScore: questionScores[q.id] || 0,
         manualScore: questionScores[q.id] || 0,
+        feedback: gradingPayload[q.id]?.feedback || "",
       };
     });
 
@@ -223,7 +402,7 @@ export default function QuizReviewPage(): React.ReactElement {
         method: "PATCH",
         body: JSON.stringify({
           score: finalScore,
-          grading: gradingPayload,
+          grading: updatedGrading,
           comment: gradingComment,
         }),
       });
@@ -239,6 +418,19 @@ export default function QuizReviewPage(): React.ReactElement {
       }
 
       showMsgRef.current("Attempt graded", "success");
+
+      // Clear the saved state for this attempt after successful submission
+      if (classCode && quizId) {
+        try {
+          const key = `${GRADING_STORAGE_KEY}_${classCode}_${quizId}`;
+          const stored = JSON.parse(localStorage.getItem(key) || "{}");
+          delete stored[selected.id];
+          localStorage.setItem(key, JSON.stringify(stored));
+        } catch (e) {
+          console.error("Failed to clear attempt state:", e);
+        }
+      }
+
       loadAttempts();
       setSelected(null);
     } catch (err) {
@@ -254,8 +446,20 @@ export default function QuizReviewPage(): React.ReactElement {
     quizId,
     loadAttempts,
     questions,
-    manualScores,
     questionScores,
+  ]);
+
+  const hasUnsavedChanges = useMemo(() => {
+    if (!selected || !classCode || !quizId) return false;
+    const savedState = loadGradingState(classCode, quizId, selected.id);
+    return savedState !== null;
+  }, [
+    selected,
+    classCode,
+    quizId,
+    questionScores,
+    gradingScore,
+    gradingComment,
   ]);
 
   // keyboard navigation in attempt list
@@ -346,6 +550,11 @@ export default function QuizReviewPage(): React.ReactElement {
       <div className="quiz-review-shell">
         <section className="quiz-card">
           <div className="quiz-card-content">
+            {hasUnsavedChanges && (
+              <div className="unsaved-indicator">
+                <span>⚠️ You have unsaved grading changes</span>
+              </div>
+            )}
             <div className="qr-inner-bar">
               <div className="qr-title">
                 <span className="qr-eyebrow">Teacher</span>
@@ -355,8 +564,9 @@ export default function QuizReviewPage(): React.ReactElement {
                 <label className="qr-filter">
                   <span
                     style={{
-                      fontSize: ".62rem",
+                      fontSize: ".65rem",
                       color: "var(--qr-text-muted-dark)",
+                      marginRight: "0.4rem",
                     }}
                   >
                     Show
@@ -550,7 +760,46 @@ export default function QuizReviewPage(): React.ReactElement {
                               <div className="question-score-input">
                                 <label>
                                   <span>Points for this question:</span>
+                                  <div className="score-controls">
+                                    <div className="score-quick-buttons">
+                                      <button
+                                        className={`score-btn wrong ${
+                                          questionScores[q.id] === 0
+                                            ? "active"
+                                            : ""
+                                        }`}
+                                        type="button"
+                                        onClick={() => {
+                                          setQuestionScores({
+                                            ...questionScores,
+                                            [q.id]: 0,
+                                          });
+                                        }}
+                                      >
+                                        ✗ Wrong
+                                      </button>
+                                      <button
+                                        className={`score-btn correct ${
+                                          questionScores[q.id] === 1
+                                            ? "active"
+                                            : ""
+                                        }`}
+                                        onClick={() => {
+                                          setQuestionScores({
+                                            ...questionScores,
+                                            [q.id]: 1,
+                                          });
+                                        }}
+                                        type="button"
+                                      >
+                                        ✓ Correct
+                                      </button>
+                                    </div>
+                                  </div>
                                   <div className="score-input-group">
+                                    <span className="score-input-label">
+                                      Or enter partial credit:
+                                    </span>
                                     <input
                                       type="number"
                                       min={0}

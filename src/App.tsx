@@ -22,6 +22,7 @@ import QuizEditPage from "./components/Quiz-component/quiz-edit";
 import QuizTakePage from "./components/Quiz-component/quiz-take";
 import QuizReviewPage from "./components/Quiz-component/quiz-review";
 import QuizAttempt from "./components/Quiz-component/QuizAttempt";
+import QuizResults from "./components/Quiz-component/quiz-results";
 import ActivityView from "./components/Activity-components/ActivityView";
 import NotFoundHandler from "./NotFoundHandler.js";
 
@@ -101,14 +102,6 @@ function App(): React.ReactElement {
           <Route path="/signup" element={<Signup />} />
           <Route path="/forgot" element={<ForgotPassword />} />
           <Route
-            path="/quizzes/:classCode/quizzes/:quizId"
-            element={<QuizTakePage />}
-          />
-          <Route
-            path="/quizzes/:classCode/quizzes/:quizId/review"
-            element={<QuizReviewPage />}
-          />
-          <Route
             path="/home"
             element={
               <ProtectedRoute showMessage={showMessage}>
@@ -157,10 +150,26 @@ function App(): React.ReactElement {
             }
           />
           <Route
+            path="/quizzes/:classCode/quizzes/:quizId"
+            element={<QuizTakePage />}
+          />
+          <Route
+            path="/quizzes/:classCode/quizzes/:quizId/review"
+            element={<QuizReviewPage />}
+          />
+          <Route
             path="/quizzes/:classCode/quizzes/:quizId/attempts"
             element={
               <ProtectedRoute showMessage={showMessage}>
                 <QuizAttempt />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/quizzes/:classCode/quizzes/:quizId/results"
+            element={
+              <ProtectedRoute showMessage={showMessage}>
+                <QuizResults />
               </ProtectedRoute>
             }
           />

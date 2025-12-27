@@ -136,88 +136,24 @@
 }
 
 /* Header */
+/* Header - more compact */
 .nm-header {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  padding: 2px 2px 8px;
+  gap: 12px;
+  padding: 8px 8px 12px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.6);
-}
-
-.nm-actions {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.nm-btn {
-  appearance: none;
-  border: 1px solid rgba(255, 255, 255, 0.55);
-  background: linear-gradient(180deg, #ffffffcc, #ffffff99);
-  font-size: 11px;
-  padding: 4px 10px;
-  border-radius: 8px;
-  cursor: pointer;
-  line-height: 1.2;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25),
-    0 0 0 1px rgba(255, 255, 255, 0.5) inset;
-  transition: background 0.15s, transform 0.12s;
-}
-
-.nm-btn:hover {
-  background: linear-gradient(180deg, #ffffffee, #ffffffb0);
-}
-
-.nm-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-.nm-btn:active:not(:disabled) {
-  transform: translateY(1px);
-}
-
-.nm-item.selected {
-  border-color: rgba(77, 169, 255, 0.9);
-  background: rgba(255, 255, 255, 0.55);
-  box-shadow: 0 0 0 1px rgba(77, 169, 255, 0.5), 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-.nm-check {
-  width: 16px;
-  height: 16px;
-  border-radius: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.7);
-  background: rgba(255, 255, 255, 0.3);
-  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.25) inset;
-  display: inline-block;
-  margin-top: 4px;
-  position: relative;
-}
-.nm-check.on {
-  background: linear-gradient(180deg, #4da9ff, #1e74db);
-  border-color: rgba(255, 255, 255, 0.9);
-}
-.nm-check.on::after {
-  content: "";
-  position: absolute;
-  left: 4px;
-  top: 1px;
-  width: 6px;
-  height: 10px;
-  border: 2px solid #fff;
-  border-top: 0;
-  border-left: 0;
-  transform: rotate(45deg);
 }
 
 .nm-title {
   margin: 0;
-  font: 600 16px/1.2 system-ui, "Segoe UI", Arial, sans-serif;
+  font: 600 17px/1.2 system-ui, "Segoe UI", Arial, sans-serif;
   color: var(--nm-text);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
   cursor: default;
+  flex: 1;
 }
 
 .nm-close {
@@ -225,21 +161,287 @@
   border: 1px solid rgba(255, 255, 255, 0.65);
   background: linear-gradient(180deg, #ffffffcc, #ffffff99);
   color: var(--nm-muted);
-  font-size: 18px;
+  font-size: 16px;
+  font-weight: 700;
   line-height: 1;
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   border-radius: 8px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25),
     0 0 0 1px rgba(255, 255, 255, 0.5) inset;
   transition: background 140ms, transform 120ms;
+  flex-shrink: 0;
 }
+
 .nm-close:hover {
   background: linear-gradient(180deg, #ffffffee, #ffffffb0);
 }
+
 .nm-close:active {
   transform: translateY(1px);
+}
+
+/* Toolbar - new section for action buttons */
+.nm-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 10px 10px 0 0;
+  margin: -2px -2px 0;
+}
+
+/* Improved button styles */
+.nm-btn {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  background: linear-gradient(180deg, #ffffffcc, #ffffff99);
+  color: var(--nm-text);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  line-height: 1.3;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 28px;
+}
+
+.nm-btn:hover:not(:disabled) {
+  background: linear-gradient(180deg, #ffffffee, #ffffffb0);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(255, 255, 255, 0.6) inset;
+}
+
+.nm-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25) inset;
+}
+
+.nm-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Button with icon */
+.nm-btn-icon {
+  padding: 5px 10px;
+}
+
+.nm-icon {
+  font-size: 14px;
+  line-height: 1;
+  display: inline-block;
+}
+
+.nm-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+/* Danger button variant */
+.nm-btn-danger {
+  border-color: rgba(239, 68, 68, 0.5);
+  background: linear-gradient(
+    180deg,
+    rgba(254, 202, 202, 0.9),
+    rgba(252, 165, 165, 0.8)
+  );
+  color: #991b1b;
+}
+
+.nm-btn-danger:hover:not(:disabled) {
+  background: linear-gradient(
+    180deg,
+    rgba(254, 202, 202, 1),
+    rgba(252, 165, 165, 0.9)
+  );
+  border-color: rgba(239, 68, 68, 0.7);
+}
+
+:root[data-theme="dark"] .nm-btn-danger {
+  background: linear-gradient(
+    180deg,
+    rgba(127, 29, 29, 0.9),
+    rgba(153, 27, 27, 0.8)
+  );
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+:root[data-theme="dark"] .nm-btn-danger:hover:not(:disabled) {
+  background: linear-gradient(
+    180deg,
+    rgba(153, 27, 27, 0.95),
+    rgba(185, 28, 28, 0.85)
+  );
+}
+
+/* Selection info badge */
+.nm-selection-info {
+  padding: 6px 10px;
+  margin: 6px 8px;
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #2563eb;
+  text-align: center;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Checkbox for selection mode */
+.nm-check {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(148, 163, 184, 0.6);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+  margin-top: 2px;
+}
+
+.nm-check::before {
+  content: "✓";
+  font-size: 14px;
+  font-weight: 700;
+  color: transparent;
+  transition: color 0.15s ease;
+}
+
+.nm-check.on {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  border-color: #2563eb;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+}
+
+.nm-check.on::before {
+  color: white;
+}
+
+:root[data-theme="dark"] .nm-check {
+  border-color: rgba(148, 163, 184, 0.5);
+  background: rgba(30, 41, 59, 0.5);
+}
+
+:root[data-theme="dark"] .nm-check.on {
+  background: linear-gradient(135deg, #3b82f6, #1e40af);
+  border-color: #3b82f6;
+}
+
+/* Update nm-item grid when in selection mode */
+.nm-item.selected {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+:root[data-theme="dark"] .nm-item.selected {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.6);
+}
+
+/* Adjust grid when checkbox is present */
+.nm-item:has(.nm-check) {
+  grid-template-columns: auto auto 1fr;
+}
+
+/* Time spans across all columns when in selection mode */
+.nm-item:has(.nm-check) .nm-time {
+  grid-column: 2 / -1;
+}
+
+/* Dark theme button adjustments */
+:root[data-theme="dark"] .nm-selection-info {
+  background: rgba(59, 130, 246, 0.2);
+  color: #93c5fd;
+}
+:root[data-theme="dark"] .nm-btn {
+  border-color: rgba(148, 163, 184, 0.4);
+  background: linear-gradient(
+    180deg,
+    rgba(51, 65, 85, 0.9),
+    rgba(30, 41, 59, 0.85)
+  );
+  color: #e5e7eb;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(148, 163, 184, 0.3) inset;
+}
+
+:root[data-theme="dark"] .nm-btn:hover:not(:disabled) {
+  background: linear-gradient(
+    180deg,
+    rgba(71, 85, 105, 0.95),
+    rgba(51, 65, 85, 0.9)
+  );
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(148, 163, 184, 0.4) inset;
+}
+
+:root[data-theme="dark"] .nm-close {
+  background: linear-gradient(
+    180deg,
+    rgba(51, 65, 85, 0.9),
+    rgba(30, 41, 59, 0.85)
+  );
+  border-color: rgba(148, 163, 184, 0.4);
+  color: #cbd5e1;
+}
+
+:root[data-theme="dark"] .nm-close:hover {
+  background: linear-gradient(
+    180deg,
+    rgba(71, 85, 105, 0.95),
+    rgba(51, 65, 85, 0.9)
+  );
+}
+
+:root[data-theme="dark"] .nm-toolbar {
+  background: rgba(15, 23, 42, 0.3);
+  border-bottom-color: rgba(148, 163, 184, 0.2);
+}
+
+/* Responsive adjustments */
+@media (max-width: 420px) {
+  .nm-toolbar {
+    gap: 4px;
+  }
+
+  .nm-btn {
+    padding: 5px 8px;
+    font-size: 11px;
+  }
+
+  .nm-btn-icon {
+    padding: 4px 7px;
+  }
+
+  .nm-label {
+    font-size: 10px;
+  }
+
+  .nm-icon {
+    font-size: 13px;
+  }
 }
 
 /* List */

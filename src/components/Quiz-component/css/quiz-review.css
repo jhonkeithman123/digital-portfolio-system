@@ -167,6 +167,7 @@
   -webkit-backdrop-filter: blur(3px);
   color: var(--qr-text-light);
   isolation: isolate;
+  border-radius: 3px;
 }
 
 .qr-inner-bar:before {
@@ -590,20 +591,137 @@
   color: #1e40af;
 }
 
+.score-controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.score-quick-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.score-btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: rgba(15, 23, 42, 0.5);
+  color: #cbd5e1;
+}
+
+.score-btn:hover {
+  transform: translateY(-1px);
+}
+
+.score-btn:active {
+  transform: translateY(0);
+}
+
+.score-btn.wrong {
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #f87171;
+}
+
+.score-btn.wrong:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+.score-btn.wrong.active {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: rgba(239, 68, 68, 0.6);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+  color: #fca5a5;
+}
+
+.score-btn.correct {
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #34d399;
+}
+
+.score-btn.correct:hover {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.5);
+}
+
+.score-btn.correct.active {
+  background: rgba(16, 185, 129, 0.25);
+  border-color: rgba(16, 185, 129, 0.6);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+  color: #6ee7b7;
+}
+
+[data-theme="light"] .score-btn {
+  background: white;
+  color: #64748b;
+}
+
+[data-theme="light"] .score-btn.wrong {
+  border-color: rgba(220, 38, 38, 0.3);
+  color: #dc2626;
+}
+
+[data-theme="light"] .score-btn.wrong:hover {
+  background: rgba(254, 226, 226, 0.5);
+  border-color: rgba(220, 38, 38, 0.5);
+}
+
+[data-theme="light"] .score-btn.wrong.active {
+  background: rgba(254, 226, 226, 0.8);
+  border-color: #dc2626;
+  color: #b91c1c;
+}
+
+[data-theme="light"] .score-btn.correct {
+  border-color: rgba(5, 150, 105, 0.3);
+  color: #059669;
+}
+
+[data-theme="light"] .score-btn.correct:hover {
+  background: rgba(209, 250, 229, 0.5);
+  border-color: rgba(5, 150, 105, 0.5);
+}
+
+[data-theme="light"] .score-btn.correct.active {
+  background: rgba(209, 250, 229, 0.8);
+  border-color: #059669;
+  color: #047857;
+}
+
 .score-input-group {
   display: flex;
   align-items: center;
   gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+.score-input-label {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+[data-theme="light"] .score-input-label {
+  color: #64748b;
 }
 
 .question-score-input input {
-  width: 100px;
+  width: 80px;
   padding: 8px 12px;
   background: rgba(15, 23, 42, 0.7);
   border: 1px solid rgba(148, 163, 184, 0.3);
   border-radius: 8px;
   color: #f8fafc;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
   text-align: center;
 }
@@ -854,6 +972,40 @@
   letter-spacing: 0.5px;
 }
 
+.unsaved-indicator {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  padding: 12px 20px;
+  background: rgba(245, 158, 11, 0.2);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  border-radius: 10px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  font-weight: #fbbf24;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+[data-theme="light"] .unsaved-indicator {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.5);
+  color: #d97706;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
 /* RESPONSIVE */
 @media (max-width: 1100px) {
   .qr-body {
@@ -881,5 +1033,30 @@
   }
   .qr-item {
     padding: 7px 8px;
+  }
+}
+
+@media (max-width: 640px) {
+  .score-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .score-quick-buttons {
+    width: 100%;
+  }
+
+  .score-btn {
+    flex: 1;
+  }
+
+  .score-input-group {
+    margin-left: 0;
+    flex-wrap: wrap;
+  }
+
+  .score-input-label {
+    width: 100%;
+    margin-bottom: 4px;
   }
 }

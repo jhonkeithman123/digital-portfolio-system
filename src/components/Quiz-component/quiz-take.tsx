@@ -439,10 +439,7 @@ export default function QuizTakePage(): React.ReactElement {
                   you are ready before starting.
                 </p>
                 <div style={{ display: "flex", gap: 8 }}>
-                  <button
-                    className="quiz-button"
-                    onClick={() => navigate("/home")}
-                  >
+                  <button className="quiz-button" onClick={() => navigate(-1)}>
                     Cancel
                   </button>
                   <button

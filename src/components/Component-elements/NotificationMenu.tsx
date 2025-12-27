@@ -51,15 +51,12 @@ const NotificationMenu: React.FC<NotificationMenuProps> = ({
     } catch {}
   };
 
-  //* single entrypoint for notification actions (only navigates to /dash for now)
   const handleAction = async (n: Notification) => {
-    //* selection mode handled elsewhere
     if (selectionMode) {
       toggleSelect(n.id);
       return;
     }
 
-    //* mark notification read locally + server
     await markAsRead(n.id);
 
     const txt = String(n.message ?? "").toLocaleLowerCase();
@@ -67,7 +64,6 @@ const NotificationMenu: React.FC<NotificationMenuProps> = ({
       txt.includes("invite") || txt.includes("invited") || txt.includes("join");
 
     if (isInvite) {
-      //* attempt to find classroom code from notification payload
       const code =
         (n as any).code ||
         (n as any).classroom_code ||
@@ -95,14 +91,17 @@ const NotificationMenu: React.FC<NotificationMenuProps> = ({
             );
             return;
           }
-        } catch (err: unknown | undefined) {
-          // If backend check fails, fall back to navigating to dash
-        }
+        } catch (err: unknown | undefined) {}
       }
     }
 
-    // default/fallback navigation for now — only to /dash
-    navigate("/dash");
+    if (n.link && typeof n.link === "string") {
+      onClose();
+      navigate(n.link);
+    } else {
+      onClose();
+      navigate("/dash");
+    }
   };
 
   const toggleSelectionMode = () => {
@@ -118,6 +117,14 @@ const NotificationMenu: React.FC<NotificationMenuProps> = ({
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
+  };
+
+  const selectAll = () => {
+    setSelected(new Set(notifications.map((n) => n.id)));
+  };
+
+  const deselectAll = () => {
+    setSelected(new Set());
   };
 
   const markSelectedRead = async () => {
@@ -137,8 +144,54 @@ const NotificationMenu: React.FC<NotificationMenuProps> = ({
         return next;
       });
       setSelected(new Set<number>());
+      showMsgRef.current?.("Marked as read", "success");
     } catch (e) {
-      // silent
+      showMsgRef.current?.("Failed to mark as read", "error");
+    }
+  };
+
+  const deleteSelected = async () => {
+    if (!selected.size) return;
+    const ids = [...selected];
+
+    try {
+      const { unauthorized } = await apiFetch(`/notifications/delete-batch`, {
+        method: "DELETE",
+        body: JSON.stringify({ ids }),
+      });
+
+      if (unauthorized) return;
+
+      setNotifications((prev) => {
+        const next = prev.filter((n) => !selected.has(n.id));
+        setUnreadCount(next.filter((n) => !n.is_read).length);
+        return next;
+      });
+      setSelected(new Set<number>());
+      showMsgRef.current?.(`Deleted ${ids.length} notification(s)`, "success");
+    } catch (e) {
+      showMsgRef.current?.("Failed to delete notifications", "error");
+    }
+  };
+
+  const deleteAll = async () => {
+    if (!window.confirm("Delete all notifications? This cannot be undone.")) {
+      return;
+    }
+
+    try {
+      const { unauthorized } = await apiFetch(`/notifications/delete-all`, {
+        method: "DELETE",
+      });
+
+      if (unauthorized) return;
+
+      setNotifications([]);
+      setUnreadCount(0);
+      setSelected(new Set<number>());
+      showMsgRef.current?.("All notifications deleted", "success");
+    } catch (e) {
+      showMsgRef.current?.("Failed to delete notifications", "error");
     }
   };
 
@@ -151,8 +204,9 @@ const NotificationMenu: React.FC<NotificationMenuProps> = ({
       setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
       setUnreadCount(0);
       setSelected(new Set<number>());
+      showMsgRef.current?.("All marked as read", "success");
     } catch (e) {
-      // silent
+      showMsgRef.current?.("Failed to mark all as read", "error");
     }
   };
 
@@ -180,49 +234,93 @@ const NotificationMenu: React.FC<NotificationMenuProps> = ({
       });
   }, [setUnreadCount]);
 
+  const allSelected =
+    notifications.length > 0 && selected.size === notifications.length;
+
   return (
     <div className="notification-menu">
       <div className="nm-header">
         <h4 className="nm-title">Notifications</h4>
-        <button
-          className="nm-btn"
-          onClick={toggleSelectionMode}
-          title={selectionMode ? "Exit selection" : "Select multiple"}
-        >
-          {selectionMode ? "Done" : "Select"}
+        <button className="nm-close" onClick={onClose} aria-label="Close">
+          ✕
         </button>
-        {selectionMode && (
+      </div>
+
+      <div className="nm-toolbar">
+        {!selectionMode ? (
+          <>
+            <button
+              className="nm-btn nm-btn-icon"
+              onClick={toggleSelectionMode}
+              title="Select multiple"
+            >
+              <span className="nm-icon">☑</span>
+              <span className="nm-label">Select</span>
+            </button>
+            <button
+              className="nm-btn nm-btn-icon"
+              onClick={markAllRead}
+              disabled={!notifications.some((n) => !n.is_read)}
+              title="Mark all as read"
+            >
+              <span className="nm-icon">✓</span>
+              <span className="nm-label">Read All</span>
+            </button>
+            <button
+              className="nm-btn nm-btn-icon nm-btn-danger"
+              onClick={deleteAll}
+              disabled={notifications.length === 0}
+              title="Delete all notifications"
+            >
+              <span className="nm-icon">🗑</span>
+              <span className="nm-label">Delete All</span>
+            </button>
+          </>
+        ) : (
           <>
             <button
               className="nm-btn"
+              onClick={toggleSelectionMode}
+              title="Exit selection mode"
+            >
+              Done
+            </button>
+            <button
+              className="nm-btn nm-btn-icon"
+              onClick={allSelected ? deselectAll : selectAll}
+              disabled={notifications.length === 0}
+              title={allSelected ? "Deselect all" : "Select all"}
+            >
+              <span className="nm-icon">{allSelected ? "☐" : "☑"}</span>
+              <span className="nm-label">
+                {allSelected ? "Deselect" : "Select All"}
+              </span>
+            </button>
+            <button
+              className="nm-btn nm-btn-icon"
               onClick={markSelectedRead}
               disabled={!selected.size}
               title="Mark selected as read"
             >
-              Mark selected
+              <span className="nm-icon">✓</span>
+              <span className="nm-label">Read</span>
             </button>
             <button
-              className="nm-btn"
-              onClick={() => setSelected(new Set())}
+              className="nm-btn nm-btn-icon nm-btn-danger"
+              onClick={deleteSelected}
               disabled={!selected.size}
-              title="Clear selection"
+              title="Delete selected"
             >
-              Clear
+              <span className="nm-icon">🗑</span>
+              <span className="nm-label">Delete</span>
             </button>
           </>
         )}
-        <button
-          className="nm-btn"
-          onClick={markAllRead}
-          disabled={!notifications.some((n) => !n.is_read)}
-          title="Mark all as read"
-        >
-          Mark all
-        </button>
-        <button className="nm-close" onClick={onClose} aria-label="Close">
-          x
-        </button>
       </div>
+
+      {selectionMode && selected.size > 0 && (
+        <div className="nm-selection-info">{selected.size} selected</div>
+      )}
 
       <ul className="nm-list">
         {notifications.length === 0 && (
