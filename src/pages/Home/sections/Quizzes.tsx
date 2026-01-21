@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { apiFetch } from "../../../utils/apiClient.js";
-import useMessage from "../../../hooks/useMessage.js";
-import useConfirm from "../../../hooks/useConfirm.js";
-import type { Quiz } from "../../../types/quiz";
-import "../Home.css";
+import { apiFetch } from "utils/apiClient.js";
+import useMessage from "hooks/useMessage.js";
+import useConfirm from "hooks/useConfirm.js";
+import type { Quiz } from "types/quiz";
+import "home/Home.css";
 
 type Role = "teacher" | "student" | string;
 
@@ -38,7 +38,7 @@ const Quizzes: React.FC<QuizzesProps> = ({ role, classroomCode }) => {
       storedUser?.classroomCode ??
       storedUser?.currentClassroom ??
       localStorage.getItem("currentClassroom") ??
-      null
+      null,
   );
 
   useEffect(() => {
@@ -66,7 +66,7 @@ const Quizzes: React.FC<QuizzesProps> = ({ role, classroomCode }) => {
         } else {
           showMsgRef.current(
             "Failed to determine classroom. Please select a classroom first.",
-            "error"
+            "error",
           );
         }
       } catch (err) {
@@ -224,7 +224,7 @@ const Quizzes: React.FC<QuizzesProps> = ({ role, classroomCode }) => {
                           onClick={(e) => {
                             e.stopPropagation();
                             navigate(
-                              `/quizzes/${classCode}/quizzes/${q.id}/edit`
+                              `/quizzes/${classCode}/quizzes/${q.id}/edit`,
                             );
                           }}
                         >
@@ -235,7 +235,7 @@ const Quizzes: React.FC<QuizzesProps> = ({ role, classroomCode }) => {
                           onClick={(e) => {
                             e.stopPropagation();
                             navigate(
-                              `/quizzes/${classCode}/quizzes/${q.id}/attempts`
+                              `/quizzes/${classCode}/quizzes/${q.id}/attempts`,
                             );
                           }}
                         >
@@ -255,7 +255,7 @@ const Quizzes: React.FC<QuizzesProps> = ({ role, classroomCode }) => {
                           onClick={(e) => {
                             e.stopPropagation();
                             navigate(
-                              `/quizzes/${classCode}/quizzes/${q.id}/review`
+                              `/quizzes/${classCode}/quizzes/${q.id}/review`,
                             );
                           }}
                         >

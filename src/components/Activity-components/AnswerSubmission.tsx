@@ -1,11 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { apiFetch } from "../../utils/apiClient";
-import useMessage from "../../hooks/useMessage";
-import useConfirm from "../../hooks/useConfirm";
-import type {
-  AnswerSubmissionProps,
-  ExistingSubmission,
-} from "../../types/activity";
+import { apiFetch } from "utils/apiClient";
+import useMessage from "hooks/useMessage";
+import useConfirm from "hooks/useConfirm";
+import type { AnswerSubmissionProps, ExistingSubmission } from "types/activity";
 import "./css/AnswerSubmission.css";
 
 export default function AnswerSubmission({
@@ -59,7 +56,7 @@ export default function AnswerSubmission({
     setLoading(true);
     try {
       const url = `/activity/${encodeURIComponent(
-        String(activityId)
+        String(activityId),
       )}/my-submission`;
       console.log("[FRONTEND] Fetching:", url);
 
@@ -143,7 +140,7 @@ export default function AnswerSubmission({
           existingSubmission
             ? "Resubmitted successfully"
             : "Submitted successfully",
-          "success"
+          "success",
         );
       } else {
         showMsgRef.current(data?.error ?? "Failed to submit", "error");
@@ -185,11 +182,11 @@ export default function AnswerSubmission({
         error?: string;
       }>(
         `/activity/${encodeURIComponent(
-          String(activityId)
+          String(activityId),
         )}/submission/${encodeURIComponent(String(existingSubmission.id))}`,
         {
           method: "DELETE",
-        }
+        },
       );
 
       if (unauthorized) {

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import type { ShowMessageFn, TamperGuardOptions } from "../types/models";
+import type { ShowMessageFn, TamperGuardOptions } from "types/models";
 
 /**
  * useTamperGuard
@@ -16,7 +16,7 @@ export default function useTamperGuard(
     enabled = true,
     redirect = "/",
     logoutUrl,
-  }: TamperGuardOptions = {}
+  }: TamperGuardOptions = {},
 ): void {
   const navigate = useNavigate();
   const showMsgRef = useRef<ShowMessageFn | undefined>(showMessage);
@@ -40,7 +40,7 @@ export default function useTamperGuard(
         // best-effort server call to clear httpOnly cookie/session
         if (url) {
           fetch(url, { method: "POST", credentials: "include" }).catch(
-            () => {}
+            () => {},
           );
         }
       } catch {}
@@ -49,7 +49,7 @@ export default function useTamperGuard(
     const safeNotify = (
       text: string,
       kind: "info" | "success" | "error" = "error",
-      redirectTo = redirect
+      redirectTo = redirect,
     ) => {
       if (triggeredRef.current) return;
       triggeredRef.current = true;
@@ -134,12 +134,15 @@ export default function useTamperGuard(
     checkDOM();
     checkingScripts();
 
-    const interval = setInterval(() => {
-      if (stopped || triggeredRef.current) return;
-      checkLocalStorage();
-      checkDOM();
-      checkingScripts();
-    }, Math.max(500, Number(intervalMs) || 3000));
+    const interval = setInterval(
+      () => {
+        if (stopped || triggeredRef.current) return;
+        checkLocalStorage();
+        checkDOM();
+        checkingScripts();
+      },
+      Math.max(500, Number(intervalMs) || 3000),
+    );
 
     return () => {
       stopped = true;

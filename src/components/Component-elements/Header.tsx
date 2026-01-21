@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import useTheme from "../../hooks/useTheme";
+import useTheme from "hooks/useTheme";
 import "./css/Header.css";
 
 type Variant = "public" | "authed";
@@ -47,10 +47,10 @@ const Header: React.FC<HeaderProps> = ({
     const setHeaderHeight = (h?: number) => {
       try {
         const height =
-          typeof h === "number" ? h : headerRef.current?.offsetHeight ?? 0;
+          typeof h === "number" ? h : (headerRef.current?.offsetHeight ?? 0);
         document.documentElement.style.setProperty(
           "--header-height",
-          `${Math.round(height)}px`
+          `${Math.round(height)}px`,
         );
       } catch {}
     };
@@ -186,7 +186,7 @@ const ThemeSwitch: React.FC<ThemeSwitchProps> = React.memo(
         </span>
       </button>
     );
-  }
+  },
 );
 
 export default Header;

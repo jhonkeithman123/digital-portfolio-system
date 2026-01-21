@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { broadcastAuthState, clearGlobalAuthState } from "../utils/tabAuth";
+import { broadcastAuthState, clearGlobalAuthState } from "utils/tabAuth";
 
 type SessionData = {
   success?: boolean;
@@ -67,7 +67,7 @@ export default function useTokenStatus(): {
           window.dispatchEvent(
             new CustomEvent("app:tokenExpired", {
               detail: { reason: `http:${resp.status}` },
-            })
+            }),
           );
         } catch {
           // ignore
@@ -90,7 +90,7 @@ export default function useTokenStatus(): {
           window.dispatchEvent(
             new CustomEvent("app:tokenExpired", {
               detail: { reason: "unauthorized" },
-            })
+            }),
           );
         } catch {
           // ignore
@@ -121,7 +121,7 @@ export default function useTokenStatus(): {
 
       try {
         window.dispatchEvent(
-          new CustomEvent("app:tokenExpired", { detail: { reason: "error" } })
+          new CustomEvent("app:tokenExpired", { detail: { reason: "error" } }),
         );
       } catch {
         // ignore
@@ -141,7 +141,7 @@ export default function useTokenStatus(): {
       }
       if (
         ["user", "role", "token", "justLoggedIn", "globalAuthState"].includes(
-          key
+          key,
         )
       ) {
         void checkNow();

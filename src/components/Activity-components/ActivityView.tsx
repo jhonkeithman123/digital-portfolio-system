@@ -6,17 +6,17 @@ import React, {
   useMemo,
 } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { apiFetch } from "../../utils/apiClient";
-import useMessage from "../../hooks/useMessage";
-import useRealTimeData from "../../hooks/useRealTimeData";
-import Header from "../Component-elements/Header";
-import useLoadingState from "../../hooks/useLoading";
-import LoadingOverlay from "../Component-elements/loading_overlay";
+import { apiFetch } from "utils/apiClient";
+import useMessage from "hooks/useMessage";
+import useRealTimeData from "hooks/useRealTimeData";
+import Header from "components/Component-elements/Header";
+import useLoadingState from "hooks/useLoading";
+import LoadingOverlay from "components/Component-elements/loading_overlay";
 import ActivityComments from "./ActivityComments";
 import AnswerSubmission from "./AnswerSubmission";
 import TeacherInstructions from "./TeacherInstructions";
 import ActivitySubmissions from "./Activities";
-import type { Instruction, Submission } from "../../types/activity";
+import type { Instruction, Submission } from "types/activity";
 import "./css/Activity.css";
 
 const ActivityView: React.FC = (): React.ReactElement => {
@@ -298,7 +298,7 @@ const ActivityView: React.FC = (): React.ReactElement => {
                     activity.instructions.map(
                       (instr: Instruction, idx: number) => (
                         <p key={instr.id ?? idx}>{instr.instruction_text}</p>
-                      )
+                      ),
                     )
                   ) : (
                     <p>No instructions</p>
@@ -381,8 +381,8 @@ const ActivityView: React.FC = (): React.ReactElement => {
                                   score: newScore,
                                   graded_at: new Date().toISOString(),
                                 }
-                              : s
-                          )
+                              : s,
+                          ),
                         );
                       }}
                     />

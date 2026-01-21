@@ -1,15 +1,15 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { apiFetch } from "../../utils/apiClient";
+import { apiFetch } from "utils/apiClient";
 
-import useMessage from "../../hooks/useMessage";
-import useLogout from "../../hooks/useLogout";
-import LoadingOverlay from "../../components/Component-elements/loading_overlay";
-import useLoadingState from "../../hooks/useLoading";
-import Header from "../../components/Component-elements/Header";
+import useMessage from "hooks/useMessage";
+import useLogout from "hooks/useLogout";
+import LoadingOverlay from "components/Component-elements/loading_overlay";
+import useLoadingState from "hooks/useLoading";
+import Header from "components/Component-elements/Header";
 
 import InvNotificationMenu from "./InvNotificationMenu";
-import TokenGuard from "../../components/auth/tokenGuard";
+import TokenGuard from "components/auth/tokenGuard";
 import "./css/JoinClassroom.css";
 import "./css/InviteBell.css";
 
@@ -58,7 +58,7 @@ const JoinClassroom: React.FC = (): React.ReactElement => {
       .catch((err) => {
         if (!mounted) return;
         showMsgRef.current?.("Failed to fetch invites", "error");
-         
+
         console.error("JoinClassroom invites fetch:", err);
       });
 
@@ -76,7 +76,7 @@ const JoinClassroom: React.FC = (): React.ReactElement => {
       if (!useCode || useCode.length !== 10) {
         showMsgRef.current?.(
           "Please enter a valid 10-character classroom code.",
-          "error"
+          "error",
         );
         return;
       }
@@ -91,7 +91,7 @@ const JoinClassroom: React.FC = (): React.ReactElement => {
         if (unauthorized) {
           showMsgRef.current?.(
             "Session expired. Please sign in again.",
-            "error"
+            "error",
           );
           return;
         }
@@ -105,12 +105,12 @@ const JoinClassroom: React.FC = (): React.ReactElement => {
         } else {
           showMsgRef.current?.(
             data?.error || "Failed to join classroom",
-            "error"
+            "error",
           );
         }
       } catch (err) {
         showMsgRef.current?.("Server error. Try again later.", "error");
-         
+
         console.error("Join classroom error:", err);
       }
     });

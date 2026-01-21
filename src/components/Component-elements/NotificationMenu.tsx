@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, type SetStateAction } from "react";
 import { useNavigate } from "react-router-dom";
-import useMessage from "../../hooks/useMessage";
-import { apiFetch } from "../../utils/apiClient";
+import useMessage from "hooks/useMessage";
+import { apiFetch } from "utils/apiClient";
 import "./css/NotificationMenu.css";
 
 interface Notification {
@@ -43,7 +43,7 @@ const NotificationMenu: React.FC<NotificationMenuProps> = ({
       if (unauthorized) return;
       setNotifications((prev) => {
         const next = prev.map((n) =>
-          n.id === id ? { ...n, is_read: true } : n
+          n.id === id ? { ...n, is_read: true } : n,
         );
         setUnreadCount(next.filter((n) => !n.is_read).length);
         return next;
@@ -81,13 +81,13 @@ const NotificationMenu: React.FC<NotificationMenuProps> = ({
       if (code) {
         try {
           const { unauthorized, data } = await apiFetch(
-            `/classrooms/${encodeURIComponent(String(code))}/is-member`
+            `/classrooms/${encodeURIComponent(String(code))}/is-member`,
           );
           if (unauthorized) return;
           if (data?.isMember) {
             showMsgRef.current?.(
               "You are already enrolled in that classroom.",
-              "info"
+              "info",
             );
             return;
           }
@@ -138,7 +138,7 @@ const NotificationMenu: React.FC<NotificationMenuProps> = ({
       if (unauthorized) return;
       setNotifications((prev) => {
         const next = prev.map((n) =>
-          selected.has(n.id) ? { ...n, is_read: true } : n
+          selected.has(n.id) ? { ...n, is_read: true } : n,
         );
         setUnreadCount(next.filter((n) => !n.is_read).length);
         return next;
@@ -212,7 +212,7 @@ const NotificationMenu: React.FC<NotificationMenuProps> = ({
 
   useEffect(() => {
     apiFetch<{ notifications?: Notification[]; message?: Notification[] }>(
-      `/notifications`
+      `/notifications`,
     )
       .then(({ unauthorized, data }) => {
         if (unauthorized) {
@@ -223,8 +223,8 @@ const NotificationMenu: React.FC<NotificationMenuProps> = ({
         const list = Array.isArray(data?.notifications)
           ? data.notifications
           : Array.isArray(data?.message)
-          ? data.message
-          : [];
+            ? data.message
+            : [];
         setUnreadCount(list.filter((n) => !n.is_read).length);
         setNotifications(list);
       })

@@ -1,12 +1,12 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { apiFetch } from "../../utils/apiClient";
+import { apiFetch } from "utils/apiClient";
 import TokenGuard from "../auth/tokenGuard";
-import useMessage from "../../hooks/useMessage";
-import Header from "../Component-elements/Header";
+import useMessage from "hooks/useMessage";
+import Header from "components/Component-elements/Header";
 import "./css/quiz-results.css";
 
-import type { Question, QuizAttempt as Attempt, Quiz } from "../../types/quiz";
+import type { Question, QuizAttempt as Attempt, Quiz } from "types/quiz";
 
 export default function QuizResults(): React.ReactElement {
   const { classCode, quizId } = useParams<{
@@ -45,7 +45,7 @@ export default function QuizResults(): React.ReactElement {
 
         // Load quiz info
         const { unauthorized: quizUnauth, data: quizData } = await apiFetch(
-          `/quizzes/${classCode}/quizzes/${quizId}`
+          `/quizzes/${classCode}/quizzes/${quizId}`,
         );
 
         if (quizUnauth) {
@@ -91,7 +91,7 @@ export default function QuizResults(): React.ReactElement {
 
         // Get the latest completed/graded attempt
         const completedAttempts = attemptData.attempts.filter(
-          (a: Attempt) => a.status === "completed"
+          (a: Attempt) => a.status === "completed",
         );
 
         if (completedAttempts.length === 0) {
@@ -102,7 +102,7 @@ export default function QuizResults(): React.ReactElement {
 
         // Sort by attempt_no descending to get latest
         const latestAttempt = completedAttempts.sort(
-          (a: Attempt, b: Attempt) => b.attempt_no! - a.attempt_no!
+          (a: Attempt, b: Attempt) => b.attempt_no! - a.attempt_no!,
         )[0];
 
         setAttempt(latestAttempt);

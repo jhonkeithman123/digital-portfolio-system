@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import useTokenStatus from "../../hooks/useTokenStatus";
-import { useAuthRestoreGuard, TAB_AUTH_KEY } from "../../utils/tabAuth";
+import useTokenStatus from "hooks/useTokenStatus";
+import { useAuthRestoreGuard, TAB_AUTH_KEY } from "utils/tabAuth";
 
 interface TokenGuardProps {
   children: React.ReactNode;

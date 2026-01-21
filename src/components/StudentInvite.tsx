@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
-import useMessage from "../hooks/useMessage";
-import { apiFetch } from "../utils/apiClient";
-import useLoadingState from "../hooks/useLoading";
+import useMessage from "hooks/useMessage";
+import { apiFetch } from "utils/apiClient";
+import useLoadingState from "hooks/useLoading";
 import LoadingOverlay from "./Component-elements/loading_overlay";
 import "./css/StudentInvite.css";
 
@@ -65,7 +65,7 @@ const StudentInvite: React.FC<StudentInviteProps> = ({
         }
       } catch (err: unknown) {
         if ((err as any)?.name === "AbortError") return;
-         
+
         console.error("StudentInvite fetch error:", err);
         showMsgRef.current("Failed to fetch students", "error");
       }
@@ -106,7 +106,7 @@ const StudentInvite: React.FC<StudentInviteProps> = ({
             method: "POST",
             body: JSON.stringify({ studentId }),
             headers: { "Content-Type": "application/json" },
-          }
+          },
         );
 
         if (unauthorized) {
@@ -124,7 +124,6 @@ const StudentInvite: React.FC<StudentInviteProps> = ({
           showMsgRef.current(data?.error || "Invite failed", "error");
         }
       } catch (error) {
-         
         console.error("Invite error:", error);
         showMsgRef.current("Invite error", "error");
       }

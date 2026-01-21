@@ -6,17 +6,17 @@ import React, {
   useMemo,
 } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { apiFetch } from "../../utils/apiClient.js";
-import TokenGuard from "../auth/tokenGuard.js";
-import useMessage from "../../hooks/useMessage.js";
-import Header from "../Component-elements/Header.js";
+import { apiFetch } from "utils/apiClient.js";
+import TokenGuard from "components/auth/tokenGuard.js";
+import useMessage from "hooks/useMessage.js";
+import Header from "components/Component-elements/Header.js";
 import "./css/quiz-review.css";
 
 import type {
   Question,
   QuizAttempt as Attempt,
   GradingState,
-} from "../../types/quiz";
+} from "types/quiz";
 
 const GRADING_STORAGE_KEY = "quiz_grading_state";
 

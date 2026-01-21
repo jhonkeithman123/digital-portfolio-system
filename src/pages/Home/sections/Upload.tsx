@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
-import "../Home.css";
-import { apiFetch } from "../../../utils/apiClient";
+import "home/Home.css";
+import { apiFetch } from "utils/apiClient";
 import { useNavigate } from "react-router-dom";
-import useConfirm from "../../../hooks/useConfirm";
-import useRealTimeData from "../../../hooks/useRealTimeData";
-import type { Activity, NormalizedActivity } from "../../../types/activity";
+import useConfirm from "hooks/useConfirm";
+import useRealTimeData from "hooks/useRealTimeData";
+import type { Activity, NormalizedActivity } from "types/activity";
 
 type Role = "teacher" | "student" | string;
 
@@ -100,7 +100,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
     if (!allowedTypes.includes(f.type)) {
       showMsgRef.current(
         "Invalid type: PDF, DOC, DOCX, JPG, PNG only.",
-        "error"
+        "error",
       );
       return false;
     }
@@ -121,7 +121,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
       fetchFn: async () => {
         if (!classroomCode) return [];
         const path = `/activity/classroom/${encodeURIComponent(
-          String(classroomCode)
+          String(classroomCode),
         )}`;
         const { data } = await apiFetch(path);
         return data?.success ? normalize(data.activities || []) : [];
@@ -145,7 +145,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
       setLoadingActivities(true);
       try {
         const path = `/activity/classroom/${encodeURIComponent(
-          String(classroomCode)
+          String(classroomCode),
         )}`;
         dbg("[Upload] fetching activities from", path);
         const { data } = await apiFetch(path, { signal: ac.signal });
@@ -162,7 +162,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
           else if (!ignore)
             showMsgRef.current(
               data?.error || fb.data?.error || "Failed to load activities",
-              "error"
+              "error",
             );
         }
       } catch (e) {
@@ -202,7 +202,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
         {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
-        }
+        },
       );
       if (unauthorized) {
         showMsgRef.current?.("Session expired. Please sign in again.", "error");
@@ -211,7 +211,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
       if (!data?.success) {
         showMsgRef.current?.(
           data?.error || "Failed to delete activity",
-          "error"
+          "error",
         );
         return;
       }
@@ -287,7 +287,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
         dbg("Create failed:", data?.error);
         showMsgRef.current(
           data?.error || "Failed to create activity.",
-          "error"
+          "error",
         );
       } else {
         showMsgRef.current("Activity created.", "success");
@@ -306,7 +306,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
         try {
           dbg("Reloading list after create");
           const { data: reload } = await apiFetch(
-            `/activity/classroom/${encodeURIComponent(String(classroomCode))}`
+            `/activity/classroom/${encodeURIComponent(String(classroomCode))}`,
           );
           dbg("Reload response:", reload);
           if (reload?.success)

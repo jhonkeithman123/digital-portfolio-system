@@ -1,12 +1,12 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { apiFetch } from "../../utils/apiClient";
-import useMessage from "../../hooks/useMessage";
-import useLogout from "../../hooks/useLogout";
-import TokenGuard from "../../components/auth/tokenGuard";
-import LoadingOverlay from "../../components/Component-elements/loading_overlay";
-import useLoadingState from "../../hooks/useLoading";
-import Header from "../../components/Component-elements/Header";
+import { apiFetch } from "utils/apiClient";
+import useMessage from "hooks/useMessage";
+import useLogout from "hooks/useLogout";
+import TokenGuard from "components/auth/tokenGuard";
+import LoadingOverlay from "components/Component-elements/loading_overlay";
+import useLoadingState from "hooks/useLoading";
+import Header from "components/Component-elements/Header";
 import "./css/CreateClassroom.css";
 
 const CreateClassroom: React.FC = (): React.ReactElement => {
@@ -37,7 +37,7 @@ const CreateClassroom: React.FC = (): React.ReactElement => {
         if (!trimmedName || !trimmedYear) {
           return showMsgRef.current(
             "Please fill all required fields.",
-            "error"
+            "error",
           );
         }
 
@@ -62,11 +62,11 @@ const CreateClassroom: React.FC = (): React.ReactElement => {
           showMsgRef.current("Classroom created", "success");
           if (data.classroom?.id) {
             navigate(
-              `/classrooms/${encodeURIComponent(String(data.classroom.id))}`
+              `/classrooms/${encodeURIComponent(String(data.classroom.id))}`,
             );
           } else if (data.classroom?.code) {
             navigate(
-              `/classrooms/${encodeURIComponent(String(data.classroom.code))}`
+              `/classrooms/${encodeURIComponent(String(data.classroom.code))}`,
             );
           } else {
             navigate("/dash");
@@ -74,12 +74,12 @@ const CreateClassroom: React.FC = (): React.ReactElement => {
         } else {
           showMsgRef.current(
             data?.error || "Failed to create classroom.",
-            "error"
+            "error",
           );
         }
       });
     },
-    [name, schoolYear, section, navigate, wrap]
+    [name, schoolYear, section, navigate, wrap],
   );
 
   return (

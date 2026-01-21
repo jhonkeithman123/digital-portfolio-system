@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./css/useLogout.css";
-import { clearGlobalAuthState, removeTabAuth } from "../utils/tabAuth";
+import { clearGlobalAuthState, removeTabAuth } from "utils/tabAuth";
 
 type TriggerLogoutFn = (opts?: { confirm?: boolean }) => void;
 type UseLogoutReturn = [TriggerLogoutFn, () => React.ReactElement | null];

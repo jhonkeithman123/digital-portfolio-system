@@ -1,13 +1,13 @@
 import React, { useEffect, useRef, useState, useCallback } from "react";
-import { apiFetch } from "../../utils/apiClient";
-import useMessage from "../../hooks/useMessage";
-import useLoadingState from "../../hooks/useLoading";
+import { apiFetch } from "utils/apiClient";
+import useMessage from "hooks/useMessage";
+import useLoadingState from "hooks/useLoading";
 import LoadingOverlay from "../Component-elements/loading_overlay";
 import "./css/ActivityComments.css";
-import useConfirm from "../../hooks/useConfirm";
+import useConfirm from "hooks/useConfirm";
 
-import type { Comment, ActivityCommentsProps } from "../../types/activity";
-import useRealTimeData from "../../hooks/useRealTimeData";
+import type { Comment, ActivityCommentsProps } from "types/activity";
+import useRealTimeData from "hooks/useRealTimeData";
 
 const ActivityComments: React.FC<ActivityCommentsProps> = ({
   activityId,
@@ -22,7 +22,7 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
     Record<string | number, string>
   >({});
   const [editDrafts, setEditDrafts] = useState<Record<string | number, string>>(
-    {}
+    {},
   );
   const [editingId, setEditingId] = useState<string | number | null>(null);
   const showMsgRef = useRef<typeof showMessage>(showMessage);
@@ -64,7 +64,7 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
     fetchFn: async () => {
       if (!activityId) return [];
       const { data } = await apiFetch(
-        `/activity/${encodeURIComponent(String(activityId))}/comments`
+        `/activity/${encodeURIComponent(String(activityId))}/comments`,
       );
       if (data?.success && Array.isArray(data.comments)) {
         const unique = Array.from(
@@ -72,8 +72,8 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
             (data.comments ?? []).map((item: Comment) => [
               item.id,
               { ...item, replies: item.replies ?? [] },
-            ])
-          )
+            ]),
+          ),
         ).map(([, value]) => value as Comment);
         return unique;
       }
@@ -114,8 +114,8 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
                 (data.comments ?? []).map((item) => [
                   item.id,
                   { ...item, replies: item.replies ?? [] },
-                ])
-              )
+                ]),
+              ),
             ).map(([, value]) => value as Comment);
 
             console.log("[ActivityComments] Loaded comments:", unique.length);
@@ -123,7 +123,7 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
           } else {
             console.warn(
               "[ActivityComments] No success or invalid data:",
-              data
+              data,
             );
             if (data?.error) {
               showMsgRef.current(data.error, "error");
@@ -141,7 +141,7 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
         }
       });
     },
-    [activityId, wrap]
+    [activityId, wrap],
   );
 
   useEffect(() => {
@@ -221,13 +221,13 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
     await wrap(async () => {
       const { data } = await apiFetch(
         `/activity/${encodeURIComponent(
-          activityId
+          activityId,
         )}/comments/${encodeURIComponent(id)}/replies`,
         {
           method: "POST",
           body: JSON.stringify({ reply: draft }),
           headers: { "Content-Type": "application/json" },
-        }
+        },
       );
 
       if (data?.success && data?.reply) {
@@ -235,8 +235,8 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
           prev.map((c) =>
             c.id === id
               ? { ...c, replies: [...(c.replies ?? []), data.reply] }
-              : c
-          )
+              : c,
+          ),
         );
         setReplyDrafts((prev) => {
           const next = { ...prev };
@@ -260,19 +260,19 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
         try {
           const { data, unauthorized } = await apiFetch(
             `/activity/${encodeURIComponent(
-              String(activityId)
+              String(activityId),
             )}/comments/${encodeURIComponent(String(id))}`,
             {
               method: "PATCH",
               body: JSON.stringify({ comment: draft }),
               headers: { "Content-Type": "application/json" },
-            }
+            },
           );
 
           if (unauthorized) {
             showMsgRef.current?.(
               "Session expired. Please login again",
-              "error"
+              "error",
             );
             return;
           }
@@ -282,7 +282,7 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
             if (data?.type === "comment" && data?.comment) {
               const updated = data.comment;
               setComments((prev) =>
-                prev.map((c) => (c.id === id ? { ...c, ...updated } : c))
+                prev.map((c) => (c.id === id ? { ...c, ...updated } : c)),
               );
               showMsgRef.current?.("Comment updated", "success");
             } else if (data.type === "reply" && data.reply) {
@@ -293,15 +293,15 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
                   replies: (c.replies ?? []).map((r) =>
                     String((r as any).id) === String(updatedReply.id)
                       ? updatedReply
-                      : r
+                      : r,
                   ),
-                }))
+                })),
               );
               showMsgRef.current?.("Reply updated", "success");
             } else {
               console.warn(
                 "[ActivityComments] Unexpected response structure:",
-                data
+                data,
               );
               showMsgRef.current?.("Updated successfuly", "success");
             }
@@ -317,7 +317,7 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
             console.warn("[ActivityComments] update failed:", data);
             showMsgRef.current?.(
               data?.error ?? "Failed to updated comment",
-              "error"
+              "error",
             );
           }
         } catch (e: unknown | undefined) {
@@ -326,7 +326,7 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
         }
       });
     },
-    [activityId, editDrafts, wrap]
+    [activityId, editDrafts, wrap],
   );
 
   const deleteComment = useCallback(
@@ -344,18 +344,18 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
         try {
           const { data, unauthorized } = await apiFetch(
             `/activity/${encodeURIComponent(
-              String(activityId)
+              String(activityId),
             )}/comments/${encodeURIComponent(String(id))}`,
             {
               method: "DELETE",
               headers: { "Content-Type": "application/json" },
-            }
+            },
           );
 
           if (unauthorized) {
             showMsgRef.current?.(
               data?.error || "Session expired. Please login again",
-              "error"
+              "error",
             );
             return;
           }
@@ -366,7 +366,7 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
           } else {
             showMsgRef.current?.(
               data?.error ?? "Failed to delete comment",
-              "error"
+              "error",
             );
           }
         } catch (e) {
@@ -375,7 +375,7 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
         }
       });
     },
-    [activityId, wrap]
+    [activityId, wrap],
   );
 
   const deleteReply = useCallback(
@@ -393,20 +393,20 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
         try {
           const { data, unauthorized } = await apiFetch(
             `/activity/${encodeURIComponent(
-              String(activityId)
+              String(activityId),
             )}/comments/${encodeURIComponent(
-              String(commentId)
+              String(commentId),
             )}/replies/${encodeURIComponent(String(replyId))}`,
             {
               method: "DELETE",
               headers: { "Content-Type": "application/json" },
-            }
+            },
           );
 
           if (unauthorized) {
             showMsgRef.current?.(
               data?.error || "Session expired. Please login again.",
-              "error"
+              "error",
             );
             return;
           }
@@ -418,17 +418,17 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
                   ? {
                       ...c,
                       replies: (c.replies ?? []).filter(
-                        (r) => String((r as any).id) !== String(replyId)
+                        (r) => String((r as any).id) !== String(replyId),
                       ),
                     }
-                  : c
-              )
+                  : c,
+              ),
             );
             showMsgRef.current?.("Reply delete", "success");
           } else {
             showMsgRef.current?.(
               data?.error ?? "Failed to delete reply",
-              "error"
+              "error",
             );
           }
         } catch (e) {
@@ -437,7 +437,7 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
         }
       });
     },
-    [activityId, wrap]
+    [activityId, wrap],
   );
 
   return (
@@ -525,7 +525,7 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
                     <strong>{c.username ?? c.authorName ?? "User"}</strong>
                     <time dateTime={c.created_at ?? c.createdAt ?? undefined}>
                       {new Date(
-                        c.created_at ?? c.createdAt ?? ""
+                        c.created_at ?? c.createdAt ?? "",
                       ).toLocaleString()}
                     </time>
                   </div>
@@ -623,7 +623,7 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
                                 {new Date(
                                   (r as any).created_at ??
                                     (r as any).createdAt ??
-                                    ""
+                                    "",
                                 ).toLocaleString()}
                               </time>
                             </div>
@@ -683,7 +683,7 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
                                       setEditDrafts((prev) => ({
                                         ...prev,
                                         [(r as any).id]: String(
-                                          (r as any).reply ?? ""
+                                          (r as any).reply ?? "",
                                         ),
                                       }));
                                       setEditingId((r as any).id);

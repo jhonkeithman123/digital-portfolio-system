@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { apiFetch } from "../../utils/apiClient";
+import { apiFetch } from "utils/apiClient";
 import "./css/InvNotificationMenu.css";
 
 type Invite = {
@@ -54,15 +54,15 @@ const InvNotificationMenu: React.FC<InvNotificationMenuProps> = ({
           8 + window.scrollX,
           Math.min(
             Math.round(window.scrollX + (window.innerWidth - overlayW) / 2),
-            window.scrollX + window.innerWidth - overlayW - 8
-          )
+            window.scrollX + window.innerWidth - overlayW - 8,
+          ),
         );
         const top = Math.max(
           8 + window.scrollY,
           Math.min(
             Math.round(window.scrollY + (window.innerHeight - overlayH) / 2),
-            window.scrollY + window.innerHeight - overlayH - 8
-          )
+            window.scrollY + window.innerHeight - overlayH - 8,
+          ),
         );
         setPos({ top, left, transformOrigin: "center" });
         return;
@@ -78,11 +78,11 @@ const InvNotificationMenu: React.FC<InvNotificationMenuProps> = ({
       // clamp inside viewport
       left = Math.max(
         8 + window.scrollX,
-        Math.min(left, window.scrollX + window.innerWidth - overlayW - 8)
+        Math.min(left, window.scrollX + window.innerWidth - overlayW - 8),
       );
       top = Math.max(
         8 + window.scrollY,
-        Math.min(top, window.scrollY + window.innerHeight - overlayH - 8)
+        Math.min(top, window.scrollY + window.innerHeight - overlayH - 8),
       );
 
       // if there's not enough space above, put below anchor
@@ -109,7 +109,7 @@ const InvNotificationMenu: React.FC<InvNotificationMenuProps> = ({
         `/classrooms/invites/${encodeURIComponent(String(inviteId))}/hide`,
         {
           method: "POST",
-        }
+        },
       );
       if (unauthorized) return;
       if (!data?.success) return;
@@ -120,7 +120,6 @@ const InvNotificationMenu: React.FC<InvNotificationMenuProps> = ({
         return next;
       });
     } catch (err) {
-       
       console.error("Failed to hide invite:", err);
     }
   };

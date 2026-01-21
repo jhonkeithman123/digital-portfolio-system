@@ -6,11 +6,11 @@ import React, {
   useMemo,
 } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { apiFetch } from "../../utils/apiClient";
+import { apiFetch } from "utils/apiClient";
 import QuizTimer from "./QuizTimer";
-import Header from "../Component-elements/Header";
-import useMessage from "../../hooks/useMessage";
-import TokenGuard from "../auth/tokenGuard";
+import Header from "components/Component-elements/Header";
+import useMessage from "hooks/useMessage";
+import TokenGuard from "components/auth/tokenGuard";
 import "./css/quiz-attempt.css";
 
 type Status = "idle" | "loading" | "ready" | "error";
@@ -79,7 +79,7 @@ export default function QuizAttempt(): React.ReactElement {
       try {
         const { unauthorized, data } = await apiFetch(
           `/quizzes/${classCode}/quizzes/${quizId}`,
-          { signal }
+          { signal },
         );
 
         if (unauthorized) {
@@ -95,7 +95,7 @@ export default function QuizAttempt(): React.ReactElement {
         }
 
         const pages = normalizePages(
-          data.quiz?.questions?.pages ?? data.quiz?.questions
+          data.quiz?.questions?.pages ?? data.quiz?.questions,
         );
         const attemptsRemaining = data.quiz?.attempts_remaining ?? null;
         const attemptsUsed = data.quiz?.attempts_used ?? null;
@@ -122,7 +122,7 @@ export default function QuizAttempt(): React.ReactElement {
         }
       }
     },
-    [classCode, quizId]
+    [classCode, quizId],
   );
 
   useEffect(() => {
@@ -142,7 +142,7 @@ export default function QuizAttempt(): React.ReactElement {
     try {
       const { unauthorized, data } = await apiFetch(
         `/quizzes/${classCode}/quizzes/${quizId}/attempt`,
-        { method: "POST" }
+        { method: "POST" },
       );
 
       if (unauthorized) {
@@ -171,7 +171,7 @@ export default function QuizAttempt(): React.ReactElement {
 
     const { unauthorized, data } = await apiFetch(
       `/quizzes/${classCode}/quizzes/${quizId}/submit`,
-      { method: "POST", body: JSON.stringify({ attemptId, answers }) }
+      { method: "POST", body: JSON.stringify({ attemptId, answers }) },
     );
     if (unauthorized) {
       showMsgRef.current("Session expired. Please sign in again.", "error");
@@ -186,7 +186,7 @@ export default function QuizAttempt(): React.ReactElement {
     } else {
       showMsgRef.current(
         "Submit failed: " + (data?.message || "Unknown error"),
-        "error"
+        "error",
       );
     }
   }, [attemptId, answers, classCode, quizId, navigate]);
@@ -268,12 +268,12 @@ export default function QuizAttempt(): React.ReactElement {
 
   const totalCount = quiz!.pages.reduce(
     (acc, pg) => acc + (pg.questions?.length || 0),
-    0
+    0,
   );
 
   const answeredCount = quiz!.pages.reduce(
     (acc, pg) => acc + (pg.questions || []).filter((q) => isAnswered(q)).length,
-    0
+    0,
   );
 
   const allAnswered =
@@ -327,7 +327,7 @@ export default function QuizAttempt(): React.ReactElement {
                     onExpire={() =>
                       showMsgRef.current(
                         "Time's up — submitting automatically",
-                        "info"
+                        "info",
                       )
                     }
                   />
@@ -392,7 +392,7 @@ export default function QuizAttempt(): React.ReactElement {
                                 checked={checked}
                                 onChange={(e) => {
                                   const set = new Set(
-                                    Array.isArray(arr) ? arr : []
+                                    Array.isArray(arr) ? arr : [],
                                   );
                                   if (e.target.checked) set.add(String(oi));
                                   else set.delete(String(oi));
@@ -430,7 +430,7 @@ export default function QuizAttempt(): React.ReactElement {
                       className="quiz-btn subtle"
                       onClick={() =>
                         setPageIndex((i) =>
-                          Math.min(quiz!.pages.length - 1, i + 1)
+                          Math.min(quiz!.pages.length - 1, i + 1),
                         )
                       }
                       disabled={pageIndex >= quiz!.pages.length - 1}
@@ -459,8 +459,8 @@ export default function QuizAttempt(): React.ReactElement {
                         !attemptId
                           ? "Start attempt first"
                           : allAnswered
-                          ? "Submit answers"
-                          : "Answer all questions to submit"
+                            ? "Submit answers"
+                            : "Answer all questions to submit"
                       }
                     >
                       Submit

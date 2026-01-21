@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
-import { apiFetch } from "../../utils/apiClient";
-import useMessage from "../../hooks/useMessage";
+import { apiFetch } from "utils/apiClient";
+import useMessage from "hooks/useMessage";
 import type {
   Submission,
   ActivitySubmissionsProps as Props,
-} from "../../types/activity";
+} from "types/activity";
 import "./css/Activity.css";
 
 const ActivitySubmissions: React.FC<Props> = ({
@@ -46,13 +46,13 @@ const ActivitySubmissions: React.FC<Props> = ({
     try {
       const { data, unauthorized } = await apiFetch(
         `/activity/${encodeURIComponent(
-          String(activityId)
+          String(activityId),
         )}/submissions/${encodeURIComponent(String(submissionId))}/score`,
         {
           method: "PATCH",
           body: JSON.stringify({ score: parsed }),
           headers: { "Content-Type": "application/json" },
-        }
+        },
       );
 
       if (unauthorized) {

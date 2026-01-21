@@ -1,13 +1,13 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { apiFetch } from "../../utils/apiClient.js";
-import TokenGuard from "../auth/tokenGuard.js";
-import Header from "../Component-elements/Header.js";
-import useMessage from "../../hooks/useMessage.js";
-import useConfirm from "../../hooks/useConfirm.js";
+import { apiFetch } from "utils/apiClient.js";
+import TokenGuard from "components/auth/tokenGuard.js";
+import Header from "components/Component-elements/Header.js";
+import useMessage from "hooks/useMessage.js";
+import useConfirm from "hooks/useConfirm.js";
 import "./css/quiz-take.css";
 
-import type { Question, Page, ServerQuiz, QuizAttempt } from "../../types/quiz";
+import type { Question, Page, ServerQuiz, QuizAttempt } from "types/quiz";
 
 function millisLeft(until: string | number | Date | null): number {
   if (!until) return 0;
@@ -112,7 +112,10 @@ export default function QuizTakePage(): React.ReactElement {
         const ps = parsePages(raw);
         setPages(ps);
         setQuestionsCount(
-          ps.reduce((a, p) => a + ((p.questions && p.questions.length) || 0), 0)
+          ps.reduce(
+            (a, p) => a + ((p.questions && p.questions.length) || 0),
+            0,
+          ),
         );
         setLastChecked(Date.now());
       } catch (err: any) {
@@ -151,7 +154,7 @@ export default function QuizTakePage(): React.ReactElement {
       const ps = parsePages(q?.questions);
       setPages(ps);
       setQuestionsCount(
-        ps.reduce((a, p) => a + ((p.questions && p.questions.length) || 0), 0)
+        ps.reduce((a, p) => a + ((p.questions && p.questions.length) || 0), 0),
       );
       setLastChecked(Date.now());
     } catch (err) {
@@ -183,7 +186,7 @@ export default function QuizTakePage(): React.ReactElement {
     try {
       const { unauthorized, data } = await apiFetch(
         `/quizzes/${classCode}/quizzes/${quizId}/attempt`,
-        { method: "POST" }
+        { method: "POST" },
       );
       if (unauthorized || !data?.success) {
         showMsgRef.current(data?.message || "Failed to start attempt", "error");
@@ -249,12 +252,12 @@ export default function QuizTakePage(): React.ReactElement {
       const payload = { attemptId, answers };
       const { unauthorized, data } = await apiFetch(
         `/quizzes/${classCode}/quizzes/${quizId}/submit`,
-        { method: "POST", body: JSON.stringify(payload) }
+        { method: "POST", body: JSON.stringify(payload) },
       );
       if (unauthorized || !data?.success) {
         showMsgRef.current(
           data?.message || "Failed to submit attempt",
-          "error"
+          "error",
         );
       } else {
         setResult({ score: data.score });
@@ -559,7 +562,7 @@ export default function QuizTakePage(): React.ReactElement {
                         className="quiz-action-btn"
                         onClick={() =>
                           setCurrentPage((p) =>
-                            Math.min(p + 1, pages.length - 1)
+                            Math.min(p + 1, pages.length - 1),
                           )
                         }
                       >

@@ -1,10 +1,10 @@
 import React, { useMemo, useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import useMessage from "../../hooks/useMessage.js";
-import TokenGuard from "../auth/tokenGuard.js";
-import { apiFetch } from "../../utils/apiClient.js";
-import Header from "../Component-elements/Header.js";
+import useMessage from "hooks/useMessage.js";
+import TokenGuard from "components/auth/tokenGuard.js";
+import { apiFetch } from "utils/apiClient.js";
+import Header from "components/Component-elements/Header.js";
 import "./css/quiz.css";
 
 import type {
@@ -12,7 +12,7 @@ import type {
   Page,
   // QuizInitialData,
   QuizEditorProps,
-} from "../../types/quiz";
+} from "types/quiz";
 
 function uid(prefix = "") {
   return prefix + Math.random().toString(36).slice(2, 9);

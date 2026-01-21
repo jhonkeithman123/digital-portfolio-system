@@ -6,17 +6,17 @@ import React, {
   useCallback,
 } from "react";
 import { useNavigate } from "react-router-dom";
-import useMessage from "../../hooks/useMessage";
-import Header from "../../components/Component-elements/Header";
-import useLoadingState from "../../hooks/useLoading";
-import LoadingOverlay from "../../components/Component-elements/loading_overlay";
+import useMessage from "hooks/useMessage";
+import Header from "components/Component-elements/Header";
+import useLoadingState from "hooks/useLoading";
+import LoadingOverlay from "components/Component-elements/loading_overlay";
 import {
   localStorageRemove,
   localStorageGet,
   localStorageSet,
-} from "../../utils/modifyFromLocalStorage";
-import { apiFetchPublic } from "../../utils/apiClient";
-import InputField from "../../components/Component-elements/InputField";
+} from "utils/modifyFromLocalStorage";
+import { apiFetchPublic } from "utils/apiClient";
+import InputField from "components/Component-elements/InputField";
 import "./Login.css";
 import {
   installLoginPageGuard,
@@ -24,7 +24,7 @@ import {
   getGlobalAuthState,
   broadcastAuthState,
   isTabAuthenticated,
-} from "../../utils/tabAuth";
+} from "utils/tabAuth";
 
 type Role = "teacher" | "student" | string;
 type User = { role?: Role; [k: string]: any };
@@ -55,7 +55,7 @@ const Login: React.FC = (): React.ReactElement => {
 
     if (globalAuth?.authenticated || isThisTabAuth) {
       console.log(
-        "[Login] User already authenticated, redirecting to dashboard"
+        "[Login] User already authenticated, redirecting to dashboard",
       );
       showMsgRef.current("You are already logged in!", "info");
       setTabAuth();
@@ -77,11 +77,11 @@ const Login: React.FC = (): React.ReactElement => {
       // If user is authenticated and tries to go back to login
       if (globalAuth?.authenticated || isThisTabAuth) {
         console.log(
-          "[Login] Authenticated user tried to access login via back button"
+          "[Login] Authenticated user tried to access login via back button",
         );
         showMsgRef.current(
           "You cannot return to login while authenticated. Please logout first.",
-          "error"
+          "error",
         );
         // Push them forward to dashboard
         navigate("/dash", { replace: true });
@@ -104,7 +104,7 @@ const Login: React.FC = (): React.ReactElement => {
         console.log("[Login] Detected back navigation after login");
         showMsgRef.current(
           "You cannot return to login after logging in. Redirecting...",
-          "info"
+          "info",
         );
         navigate("/dash", { replace: true });
       }
@@ -120,7 +120,7 @@ const Login: React.FC = (): React.ReactElement => {
       localStorage.clear();
       showMsgRef.current(
         "Your role is not in the storage. Please choose again.",
-        "error"
+        "error",
       );
       navigate("/");
     }
@@ -130,7 +130,7 @@ const Login: React.FC = (): React.ReactElement => {
     (page = "login") => {
       navigate(`/${page}`);
     },
-    [navigate]
+    [navigate],
   );
 
   const validation = useCallback((): Record<string, string> => {
@@ -166,7 +166,7 @@ const Login: React.FC = (): React.ReactElement => {
             body: JSON.stringify({ email, password, role }),
             headers: { "Content-Type": "application/json" },
           },
-          { withCredentials: true }
+          { withCredentials: true },
         );
 
         if (!ok || !data?.success) {
@@ -199,7 +199,7 @@ const Login: React.FC = (): React.ReactElement => {
             window.history.replaceState(
               { justLoggedIn: true },
               "",
-              window.location.href
+              window.location.href,
             );
           }
         } catch {

@@ -1,19 +1,19 @@
 import React, { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import Header from "../../components/Component-elements/Header";
+import Header from "components/Component-elements/Header";
 import {
   localStorageGet,
   localStorageRemove,
   localStorageSet,
-} from "../../utils/modifyFromLocalStorage";
+} from "utils/modifyFromLocalStorage";
 import "./RoleSelect.css";
-import { apiFetch } from "../../utils/apiClient";
-import type { Role } from "../../types/models";
+import { apiFetch } from "utils/apiClient";
+import type { Role } from "types/models";
 import {
   installLoginPageGuard,
   getGlobalAuthState,
   setTabAuth,
-} from "../../utils/tabAuth";
+} from "utils/tabAuth";
 
 const RoleSelect: React.FC = (): React.ReactElement => {
   const navigate = useNavigate();
@@ -33,7 +33,7 @@ const RoleSelect: React.FC = (): React.ReactElement => {
     // if authenticated globally, don't run the login page guard
     if (globalAuth?.authenticated) {
       console.log(
-        "[RoleSelect] User already authenticated, redirectign to dashboard"
+        "[RoleSelect] User already authenticated, redirectign to dashboard",
       );
       setTabAuth();
       navigate("/dash", { replace: true });

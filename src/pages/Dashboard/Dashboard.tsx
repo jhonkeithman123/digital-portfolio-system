@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { apiFetch } from "../../utils/apiClient";
+import { apiFetch } from "utils/apiClient";
 import type {
   User,
   ShowcaseItem,
@@ -8,26 +8,26 @@ import type {
   Quiz,
   ClassroomInfo,
   ShowMessageFn,
-} from "../../types/models";
-import useTamperGuard from "../../security/useTamperGuard";
-import useMessage from "../../hooks/useMessage";
-import useLogout from "../../hooks/useLogout";
-import useConfirm from "../../hooks/useConfirm";
-import BurgerMenu from "../../components/Component-elements/burger_menu";
-import StudentInvite from "../../components/StudentInvite";
-import Header from "../../components/Component-elements/Header";
-import TokenGuard from "../../components/auth/tokenGuard";
-import InputField from "../../components/Component-elements/InputField";
-import NotificationBell from "../../components/Component-elements/NotificationBell";
-import LoadingOverlay from "../../components/Component-elements/loading_overlay";
-import useLoadingState from "../../hooks/useLoading";
+} from "types/models";
+import useTamperGuard from "security/useTamperGuard";
+import useMessage from "hooks/useMessage";
+import useLogout from "hooks/useLogout";
+import useConfirm from "hooks/useConfirm";
+import BurgerMenu from "components/Component-elements/burger_menu";
+import StudentInvite from "components/StudentInvite";
+import Header from "components/Component-elements/Header";
+import TokenGuard from "components/auth/tokenGuard";
+import InputField from "components/Component-elements/InputField";
+import NotificationBell from "components/Component-elements/NotificationBell";
+import LoadingOverlay from "components/Component-elements/loading_overlay";
+import useLoadingState from "hooks/useLoading";
 import "./Dashboard.css";
-import useRealTimeData from "../../hooks/useRealTimeData";
+import useRealTimeData from "hooks/useRealTimeData";
 import {
   setTabAuth,
   broadcastAuthState,
   getGlobalAuthState,
-} from "../../utils/tabAuth";
+} from "utils/tabAuth";
 
 const roleColors = {
   student: "#007bff",
@@ -50,7 +50,7 @@ const Dashboard: React.FC = (): React.ReactElement => {
   const [hasActivity, setHasActivity] = useState<boolean>(false);
   const [checkingEnrollment, setCheckingEnrollment] = useState<boolean>(true);
   const [classroomInfo, setClassroomInfo] = useState<ClassroomInfo | null>(
-    null
+    null,
   );
   const [studentQuizzes, setStudentQuizzes] = useState<Quiz[]>([]);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
@@ -172,7 +172,7 @@ const Dashboard: React.FC = (): React.ReactElement => {
       fetchFn: async () => {
         if (!classroomInfo?.code) return [];
         const { data } = await apiFetch(
-          `/quizzes/${classroomInfo.code}/quizzes`
+          `/quizzes/${classroomInfo.code}/quizzes`,
         );
         return Array.isArray(data?.quizzes) ? data.quizzes : [];
       },
@@ -303,7 +303,7 @@ const Dashboard: React.FC = (): React.ReactElement => {
       });
       if (!data?.success) throw new Error();
       setStudents((prev: Student[]) =>
-        prev.map((s) => (s.id === id ? { ...s, section: value } : s))
+        prev.map((s) => (s.id === id ? { ...s, section: value } : s)),
       );
       setEditSections((prev) => ({ ...prev, [id]: "" }));
       showMsgRef.current?.("Section saved", "success");
@@ -347,7 +347,10 @@ const Dashboard: React.FC = (): React.ReactElement => {
           }
         })
         .catch(() =>
-          showMsgRef.current?.("Server error while checking classroom", "error")
+          showMsgRef.current?.(
+            "Server error while checking classroom",
+            "error",
+          ),
         )
         .finally(() => setCheckingEnrollment(false));
     } else if (user.role === "teacher") {
@@ -377,7 +380,10 @@ const Dashboard: React.FC = (): React.ReactElement => {
           }
         })
         .catch(() =>
-          showMsgRef.current?.("Server error while checking classroom", "error")
+          showMsgRef.current?.(
+            "Server error while checking classroom",
+            "error",
+          ),
         )
         .finally(() => setCheckingEnrollment(false));
     }

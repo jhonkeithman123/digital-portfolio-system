@@ -1,6 +1,6 @@
 import React, { useMemo, useEffect, useRef, useState } from "react";
 import "./css/QuizTimer.css";
-import type { QuizTimerProps } from "../../types/quiz";
+import type { QuizTimerProps } from "types/quiz";
 
 export default function QuizTimer({
   expiresAt = null,
@@ -17,7 +17,7 @@ export default function QuizTimer({
   };
 
   const [remainingMs, setRemainingMs] = useState<number>(() =>
-    computeRemainingMs(expiresAt)
+    computeRemainingMs(expiresAt),
   );
   const initialMsRef = useRef<number | null>(null);
   const expiredRef = useRef<boolean>(false);
@@ -70,7 +70,7 @@ export default function QuizTimer({
   const seconds = Math.ceil((remainingMs % 60000) / 1000);
   const label = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(
     2,
-    "0"
+    "0",
   )}`;
 
   const stateClass = useMemo(() => {

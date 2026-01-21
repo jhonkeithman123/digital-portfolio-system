@@ -1,13 +1,13 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import Header from "../../components/Component-elements/Header";
-import useMessage from "../../hooks/useMessage";
-import InputField from "../../components/Component-elements/InputField";
-import LoadingOverlay from "../../components/Component-elements/loading_overlay";
-import useLoadingState from "../../hooks/useLoading";
-import { apiFetchPublic } from "../../utils/apiClient";
+import Header from "components/Component-elements/Header";
+import useMessage from "hooks/useMessage";
+import InputField from "components/Component-elements/InputField";
+import LoadingOverlay from "components/Component-elements/loading_overlay";
+import useLoadingState from "hooks/useLoading";
+import { apiFetchPublic } from "utils/apiClient";
 import "./ForgotPassword.css";
-import { installLoginPageGuard } from "../../utils/tabAuth";
+import { installLoginPageGuard } from "utils/tabAuth";
 
 const validRoles = ["student", "teacher"] as const;
 type Role = (typeof validRoles)[number];
@@ -47,7 +47,7 @@ export default function ForgotPassword(): React.ReactElement {
       } catch {}
       showMsgRef.current(
         "Your role is not in the storage. Please choose again.",
-        "error"
+        "error",
       );
       navigate("/");
     }
@@ -82,11 +82,10 @@ export default function ForgotPassword(): React.ReactElement {
         } else {
           showMsgRef.current(
             data?.message || "Invalid or expired code",
-            "error"
+            "error",
           );
         }
       } catch (err) {
-         
         console.error(err);
         showMsgRef.current("Server error. Try again later.", "error");
       }
@@ -112,21 +111,20 @@ export default function ForgotPassword(): React.ReactElement {
             method: "POST",
             body: JSON.stringify({ email, role }),
             headers: { "Content-Type": "application/json" },
-          } as RequestInit
+          } as RequestInit,
         );
 
         if (ok && data?.success) {
           showMsgRef.current(
             data.message || "Verification code sent!",
-            "success"
+            "success",
           );
           setStep("code");
         } else {
-           
           console.error(data);
           showMsgRef.current(
             data?.error || "Failed to send verification code.",
-            "error"
+            "error",
           );
         }
       } catch (error) {
@@ -162,16 +160,14 @@ export default function ForgotPassword(): React.ReactElement {
         if (ok && data?.success) {
           showMsgRef.current(
             data.message || "Password reset successful!",
-            "success"
+            "success",
           );
           setTimeout(() => navigate("/login"), 1500);
         } else {
-           
           console.error(data || "Failed to reset password.");
           showMsgRef.current("Failed to reset password.", "error");
         }
       } catch (err) {
-         
         console.error("Server error", err);
         showMsgRef.current("Server error", "error");
       }
@@ -217,8 +213,8 @@ export default function ForgotPassword(): React.ReactElement {
           step === "verify"
             ? "Submitting..."
             : step === "code"
-            ? "Verifying..."
-            : "Resetting..."
+              ? "Verifying..."
+              : "Resetting..."
         }
         fullPage={false}
       />

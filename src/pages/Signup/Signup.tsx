@@ -1,14 +1,14 @@
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import Header from "../../components/Component-elements/Header.js";
-import useMessage from "../../hooks/useMessage.js";
-import InputField from "../../components/Component-elements/InputField.js";
-import LoadingOverlay from "../../components/Component-elements/loading_overlay.js";
-import useLoadingState from "../../hooks/useLoading.js";
-import { apiFetchPublic } from "../../utils/apiClient.js";
-import type { Role } from "../../types/models";
+import Header from "components/Component-elements/Header.js";
+import useMessage from "hooks/useMessage.js";
+import InputField from "components/Component-elements/InputField.js";
+import LoadingOverlay from "components/Component-elements/loading_overlay.js";
+import useLoadingState from "hooks/useLoading.js";
+import { apiFetchPublic } from "utils/apiClient.js";
+import type { Role } from "types/models";
 import "./Signup.css";
-import { installLoginPageGuard } from "../../utils/tabAuth.js";
+import { installLoginPageGuard } from "utils/tabAuth.js";
 
 const validRoles = ["student", "teacher"] as const;
 
@@ -45,7 +45,7 @@ const Signup: React.FC = (): React.ReactElement => {
       } catch {}
       showMsgRef.current?.(
         "Your role is not in the storage. Please choose again.",
-        "error"
+        "error",
       );
       setTimeout(() => navigate("/"), 2000);
     }
@@ -89,7 +89,7 @@ const Signup: React.FC = (): React.ReactElement => {
       if (!validateSectionFormat(section)) {
         showMsgRef.current?.(
           "Section must follow format: STRAND-SECTION (e.g., STEM-1, ABM-2A, ICT-12",
-          "error"
+          "error",
         );
         return false;
       }
@@ -118,7 +118,7 @@ const Signup: React.FC = (): React.ReactElement => {
             }),
             headers: { "Content-Type": "application/json" },
           },
-          { withCredentials: false }
+          { withCredentials: false },
         );
 
         if (ok && data?.success) {
@@ -141,7 +141,7 @@ const Signup: React.FC = (): React.ReactElement => {
 
   // Auto-uppercase section as user types
   const handleSectionChange = (
-    e: React.ChangeEvent<HTMLInputElement>
+    e: React.ChangeEvent<HTMLInputElement>,
   ): void => {
     const value = e.target.value.toUpperCase();
     setSection(value);

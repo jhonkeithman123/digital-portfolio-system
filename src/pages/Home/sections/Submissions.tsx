@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
-import "../Home.css";
+import "home/Home.css";
 
 type Role = "teacher" | "student" | string;
 
@@ -59,7 +59,7 @@ interface SubmissionsProps {
   onPostShowcaseReply?: (
     submissionId: string | number,
     commentId: string | number,
-    text: string
+    text: string,
   ) => void;
 }
 
@@ -92,7 +92,7 @@ const Submissions: React.FC<SubmissionsProps> = ({
       "Provide structured assessment (score / rubric) in future iteration",
       "Persist showcase and assessment via backend endpoints",
     ],
-    []
+    [],
   );
 
   const handlePostComment = useCallback(
@@ -102,7 +102,7 @@ const Submissions: React.FC<SubmissionsProps> = ({
       onPostShowcaseComment?.(sId, text);
       setShowcaseCommentDrafts((p) => ({ ...p, [sId]: "" }));
     },
-    [onPostShowcaseComment, showcaseCommentDrafts]
+    [onPostShowcaseComment, showcaseCommentDrafts],
   );
 
   const handlePostReply = useCallback(
@@ -112,7 +112,7 @@ const Submissions: React.FC<SubmissionsProps> = ({
       onPostShowcaseReply?.(sId, cId, text);
       setShowcaseReplyDrafts((p) => ({ ...p, [cId]: "" }));
     },
-    [onPostShowcaseReply, showcaseReplyDrafts]
+    [onPostShowcaseReply, showcaseReplyDrafts],
   );
 
   return (
@@ -148,7 +148,7 @@ const Submissions: React.FC<SubmissionsProps> = ({
                         {submission.studentName} - {submission.activityName} (
                         {submission.submittedAt
                           ? new Date(
-                              submission.submittedAt
+                              submission.submittedAt,
                             ).toLocaleDateString()
                           : "—"}
                         )
@@ -169,7 +169,7 @@ const Submissions: React.FC<SubmissionsProps> = ({
                         <strong>Submitted:</strong>{" "}
                         {activeSubmission.submittedAt
                           ? new Date(
-                              activeSubmission.submittedAt
+                              activeSubmission.submittedAt,
                             ).toLocaleString()
                           : "—"}
                       </p>
@@ -353,7 +353,7 @@ const Submissions: React.FC<SubmissionsProps> = ({
                                 }
                               >
                                 {new Date(
-                                  c.created_at ?? c.createdAt ?? ""
+                                  c.created_at ?? c.createdAt ?? "",
                                 ).toLocaleString()}
                               </time>
                             </div>

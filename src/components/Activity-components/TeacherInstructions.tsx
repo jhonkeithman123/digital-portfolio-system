@@ -1,13 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
-import useMessage from "../../hooks/useMessage";
-import useLoadingState from "../../hooks/useLoading";
+import useMessage from "hooks/useMessage";
+import useLoadingState from "hooks/useLoading";
 import LoadingOverlay from "../Component-elements/loading_overlay";
-import useRealTimeData from "../../hooks/useRealTimeData";
-import { apiFetch } from "../../utils/apiClient";
-import type {
-  Instruction,
-  TeacherInstructionsProps,
-} from "../../types/activity";
+import useRealTimeData from "hooks/useRealTimeData";
+import { apiFetch } from "utils/apiClient";
+import type { Instruction, TeacherInstructionsProps } from "types/activity";
 import "./css/TeacherInstructions.css";
 
 /**
@@ -20,7 +17,7 @@ const TeacherInstructions: React.FC<TeacherInstructionsProps> = ({
   onSaved,
 }): React.ReactElement => {
   const [instructionHistory, setInstructionHistory] = useState<Instruction[]>(
-    Array.isArray(currentInstructions) ? currentInstructions : []
+    Array.isArray(currentInstructions) ? currentInstructions : [],
   );
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editDrafts, setEditDrafts] = useState<Record<number, string>>({});
@@ -40,7 +37,7 @@ const TeacherInstructions: React.FC<TeacherInstructionsProps> = ({
     fetchFn: async () => {
       if (!activityId) return [];
       const { data } = await apiFetch(
-        `/activity/${encodeURIComponent(String(activityId))}/instructions`
+        `/activity/${encodeURIComponent(String(activityId))}/instructions`,
       );
       return Array.isArray(data?.instructions) ? data.instructions : [];
     },
@@ -78,7 +75,7 @@ const TeacherInstructions: React.FC<TeacherInstructionsProps> = ({
             method: "PATCH",
             body: JSON.stringify({ instructions: newInstruction }),
             headers: { "Content-Type": "application/json" },
-          }
+          },
         );
 
         if (unauthorized) {
@@ -95,7 +92,7 @@ const TeacherInstructions: React.FC<TeacherInstructionsProps> = ({
         } else {
           showMsgRef.current(
             data?.error || "Failed to add instruction",
-            "error"
+            "error",
           );
         }
       } catch (e) {
@@ -134,13 +131,13 @@ const TeacherInstructions: React.FC<TeacherInstructionsProps> = ({
           error?: string;
         }>(
           `/activity/${encodeURIComponent(
-            String(activityId)
+            String(activityId),
           )}/instructions/${encodeURIComponent(String(id))}`,
           {
             method: "PUT",
             body: JSON.stringify({ instruction_text: updatedText }),
             headers: { "Content-Type": "application/json" },
-          }
+          },
         );
 
         if (unauthorized) {
@@ -157,7 +154,7 @@ const TeacherInstructions: React.FC<TeacherInstructionsProps> = ({
         } else {
           showMsgRef.current(
             data?.error || "Failed to update instruction",
-            "error"
+            "error",
           );
         }
       } catch (e) {

@@ -1,20 +1,20 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import useMessage from "../../hooks/useMessage";
-import Submissions from "./sections/Submissions";
-import Quizzes from "./sections/Quizzes";
-import FileUpload from "./sections/Upload";
-import Header from "../../components/Component-elements/Header";
-import useLogout from "../../hooks/useLogout";
-import TokenGuard from "../../components/auth/tokenGuard";
-import LoadingOverlay from "../../components/Component-elements/loading_overlay";
-import { apiFetch } from "../../utils/apiClient";
+import useMessage from "hooks/useMessage";
+import Submissions from "home/sections/Submissions";
+import Quizzes from "home/sections/Quizzes";
+import FileUpload from "home/sections/Upload";
+import Header from "components/Component-elements/Header";
+import useLogout from "hooks/useLogout";
+import TokenGuard from "components/auth/tokenGuard";
+import LoadingOverlay from "components/Component-elements/loading_overlay";
+import { apiFetch } from "utils/apiClient";
 import "./Home.css";
 import {
   broadcastAuthState,
   getGlobalAuthState,
   setTabAuth,
-} from "../../utils/tabAuth";
+} from "utils/tabAuth";
 
 type Role = "teacher" | "student" | string;
 
@@ -51,14 +51,14 @@ const Home: React.FC = (): React.ReactElement => {
   const [role, setRole] = useState<Role>("");
   const [user, setUser] = useState<User | null>(null);
   const [classroomInfo, setClassroomInfo] = useState<ClassroomInfo | null>(
-    null
+    null,
   );
   const [loadingClassroom, setLoadingClassroom] = useState<boolean>(false);
   const [assessmentDraft, setAssessmentDraft] = useState<string>("");
   const [isSavingAssessment, setIsSavingAssessment] = useState<boolean>(false);
   const [submissionsList] = useState<Submission[]>([]);
   const [activeSubmission, setActiveSubmission] = useState<Submission | null>(
-    null
+    null,
   );
 
   const dbg = (...a: unknown[]) => console.debug("[Home]", ...a);
@@ -96,7 +96,7 @@ const Home: React.FC = (): React.ReactElement => {
         if (unauthorized || !data?.success) {
           showMsgRef.current(
             "Missing or expired session. Please log in.",
-            "error"
+            "error",
           );
           navigate("/login", { replace: true });
           return;
@@ -237,7 +237,7 @@ const Home: React.FC = (): React.ReactElement => {
               isSavingAssessment={isSavingAssessment}
               onSelectSubmission={(e) => {
                 const selected = submissionsList.find(
-                  (s) => String(s.id) === String(e.target.value)
+                  (s) => String(s.id) === String(e.target.value),
                 );
                 setActiveSubmission(selected ?? null);
                 setAssessmentDraft(selected?.feedback ?? "");
@@ -255,7 +255,7 @@ const Home: React.FC = (): React.ReactElement => {
                     if (data?.success) {
                       showMsgRef.current(
                         "Assessment saved successfully!",
-                        "success"
+                        "success",
                       );
                     } else {
                       showMsgRef.current("Failed to save assessment", "error");

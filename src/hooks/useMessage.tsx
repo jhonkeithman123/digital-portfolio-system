@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import MessageContainer from "../components/Component-elements/MessageContainer";
+import MessageContainer from "components/Component-elements/MessageContainer";
 
 type MessageType = "info" | "success" | "error";
 

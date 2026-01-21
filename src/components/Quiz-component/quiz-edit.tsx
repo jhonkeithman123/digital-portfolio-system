@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { apiFetch } from "../../utils/apiClient";
-import useMessage from "../../hooks/useMessage";
+import { apiFetch } from "utils/apiClient";
+import useMessage from "hooks/useMessage";
 import QuizEditor from "./quiz";
-import TokenGuard from "../auth/tokenGuard";
-import type { Page, QuizInitialData, ServerQuiz } from "../../types/quiz";
+import TokenGuard from "components/auth/tokenGuard";
+import type { Page, QuizInitialData, ServerQuiz } from "types/quiz";
 
 function toPagesFromServerQuestions(raw: any) {
   try {

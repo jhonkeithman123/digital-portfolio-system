@@ -22,7 +22,34 @@
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    "noUncheckedSideEffectImports": true,
+
+    /* Path Aliasing */
+    "baseUrl": "./src",
+    "paths": {
+      /* root */
+      "@/*": ["*"],
+
+      /* subfolders of root */
+      "components/*": ["components/*"],
+      "hooks/*": ["hooks/*"],
+      "utils/*": ["utils/*"],
+      "types/*": ["types/*"],
+      "security/*": ["security/*"],
+
+      /* Pages aliasing */
+      "pages/*": ["pages/*"],
+
+      /* Subfolders of pages */
+      "classroom/*": ["pages/classrooms/*"],
+      "dash/*": ["pages/Dashboard/*"],
+      "forgot/*": ["pages/ForgotPassword/*"],
+      "home/*": ["pages/Home/*"],
+      "login/*": ["pages/Login/*"],
+      "notFound/*": ["pages/NotFound/*"],
+      "roleSelect": ["pages/RoleSelect/*"],
+      "signup/*": ["pages/Signup/*"]
+    }
   },
   "include": ["src", "src/types/**/*.d.ts", "src/types/**/*.ts", "server"]
 }

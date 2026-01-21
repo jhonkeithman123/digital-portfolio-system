@@ -5,30 +5,30 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import { apiFetch } from "./utils/apiClient";
-import useMessage from "./hooks/useMessage.js";
+import { apiFetch } from "utils/apiClient";
+import useMessage from "hooks/useMessage.js";
 
 //* Pages
-import Home from "./pages/Home/Home";
-import Login from "./pages/Login/Login";
-import RoleSelect from "./pages/RoleSelect/RoleSelect";
-import Signup from "./pages/Signup/Signup";
-import ForgotPassword from "./pages/ForgotPassword/ForgotPassword";
-import Dashboard from "./pages/Dashboard/Dashboard.js";
-import JoinClassroom from "./pages/classrooms/JoinClassroom";
-import CreateClassroom from "./pages/classrooms/CreateClassroom";
-import QuizCreate from "./components/Quiz-component/QuizCreate";
-import QuizEditPage from "./components/Quiz-component/quiz-edit";
-import QuizTakePage from "./components/Quiz-component/quiz-take";
-import QuizReviewPage from "./components/Quiz-component/quiz-review";
-import QuizAttempt from "./components/Quiz-component/QuizAttempt";
-import QuizResults from "./components/Quiz-component/quiz-results";
-import ActivityView from "./components/Activity-components/ActivityView";
+import Home from "pages/Home/Home";
+import Login from "pages/Login/Login";
+import RoleSelect from "pages/RoleSelect/RoleSelect";
+import Signup from "pages/Signup/Signup";
+import ForgotPassword from "pages/ForgotPassword/ForgotPassword";
+import Dashboard from "pages/Dashboard/Dashboard.js";
+import JoinClassroom from "pages/classrooms/JoinClassroom";
+import CreateClassroom from "pages/classrooms/CreateClassroom";
+import QuizCreate from "components/Quiz-component/QuizCreate";
+import QuizEditPage from "components/Quiz-component/quiz-edit";
+import QuizTakePage from "components/Quiz-component/quiz-take";
+import QuizReviewPage from "components/Quiz-component/quiz-review";
+import QuizAttempt from "components/Quiz-component/QuizAttempt";
+import QuizResults from "components/Quiz-component/quiz-results";
+import ActivityView from "components/Activity-components/ActivityView";
 import NotFoundHandler from "./NotFoundHandler.js";
 
 type ShowMessageFn = (
   text: string,
-  kind?: "info" | "success" | "error"
+  kind?: "info" | "success" | "error",
 ) => void;
 
 const routerBase =
