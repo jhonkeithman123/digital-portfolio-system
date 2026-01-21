@@ -5,7 +5,7 @@ import React, {
   useRef,
   useCallback,
 } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom"; // ADD useLocation
 import useMessage from "hooks/useMessage";
 import Header from "components/Component-elements/Header";
 import useLoadingState from "hooks/useLoading";
@@ -38,20 +38,22 @@ const Login: React.FC = (): React.ReactElement => {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const navigate = useNavigate();
+  const location = useLocation(); // ADD THIS
   const { messageComponent, showMessage } = useMessage();
   const valid_roles = useMemo(() => ["student", "teacher"], []);
   const { loading, wrap } = useLoadingState(false);
 
   const showMsgRef = useRef<typeof showMessage>(showMessage);
+  const checkAuthRef = useRef(false);
   const role = localStorageGet({ keys: ["role"] })[0] as Role | null;
 
-  // Reset accent color when on login page
+  // Set accent color based on role
   useEffect(() => {
     try {
       if (role && (role === "student" || role === "teacher")) {
         const accentColor = roleColors[role] ?? "#6c757d";
         document.documentElement.style.setProperty(
-          "--accentColor",
+          "--accent-color",
           accentColor,
         );
         console.log(
@@ -71,55 +73,60 @@ const Login: React.FC = (): React.ReactElement => {
 
   // Check if user is already authenticated when landing on login page
   useEffect(() => {
+    if (checkAuthRef.current) return;
+    checkAuthRef.current = true;
+
     const checkAuth = async () => {
-      const globalAuth = getGlobalAuthState();
-      const isThisTabAuth = isTabAuthenticated();
+      console.log("[Login] Checking authentication with server...");
 
-      // Only trust global auth if it's recent (within last 5 minutes)
-      const isGlobalAuthFresh =
-        globalAuth?.timestamp &&
-        Date.now() - globalAuth.timestamp < 5 * 60 * 1000;
+      try {
+        const { data, ok } = await apiFetchPublic("/auth/session");
 
-      if ((globalAuth?.authenticated && isGlobalAuthFresh) || isThisTabAuth) {
-        // Verify with server before redirecting
-        try {
-          const { data } = await apiFetchPublic("/auth/session");
-          if (data?.success) {
-            console.log("[Login] Session valid, redirecting to dashboard");
-            navigate("/dash", { replace: true });
-            return;
-          }
-        } catch {
-          // Session invalid, clear state and stay on login
-          clearGlobalAuthState();
+        if (ok && data?.success) {
+          // User is actually authenticated
+          console.log("[Login] User authenticated, redirecting to dashboard");
+          // DON'T call setTabAuth or broadcastAuthState here - they're already set
+          navigate("/dash", { replace: true });
+          return;
         }
+      } catch (err) {
+        console.log("[Login] Session check failed:", err);
       }
+
+      // Not authenticated - clear any stale state
+      console.log("[Login] Not authenticated, clearing stale state");
+      clearGlobalAuthState();
 
       // Only install guard if NOT authenticated
       const cleanup = installLoginPageGuard();
       return cleanup;
     };
 
-    checkAuth();
+    const cleanupPromise = checkAuth();
+    return () => {
+      cleanupPromise.then((cleanup) => cleanup && cleanup());
+    };
   }, [navigate]);
 
   // Listen for popstate events (browser back/forward)
   useEffect(() => {
-    const handlePopState = () => {
-      const globalAuth = getGlobalAuthState();
-      const isThisTabAuth = isTabAuthenticated();
+    const handlePopState = async () => {
+      try {
+        const { data, ok } = await apiFetchPublic("/auth/session");
 
-      // If user is authenticated and tries to go back to login
-      if (globalAuth?.authenticated || isThisTabAuth) {
-        console.log(
-          "[Login] Authenticated user tried to access login via back button",
-        );
-        showMsgRef.current(
-          "You cannot return to login while authenticated. Please logout first.",
-          "error",
-        );
-        // Push them forward to dashboard
-        navigate("/dash", { replace: true });
+        if (ok && data?.success) {
+          console.log(
+            "[Login] Authenticated user pressed back, redirecting to dashboard",
+          );
+          showMsgRef.current(
+            "You cannot return to login while authenticated. Please logout first.",
+            "error",
+          );
+          navigate("/dash", { replace: true });
+        }
+      } catch {
+        // Not authenticated, stay on login
+        console.log("[Login] Not authenticated, staying on login page");
       }
     };
 
@@ -135,7 +142,6 @@ const Login: React.FC = (): React.ReactElement => {
     try {
       const historyState = window.history.state;
       if (historyState?.justLoggedIn) {
-        // User just logged in and pressed back - redirect them
         console.log("[Login] Detected back navigation after login");
         showMsgRef.current(
           "You cannot return to login after logging in. Redirecting...",
@@ -146,13 +152,11 @@ const Login: React.FC = (): React.ReactElement => {
     } catch {
       // ignore errors
     }
-  }, [navigate, location]);
+  }, [navigate, location]); // location is now properly imported
 
   useEffect(() => {
-    localStorageRemove({ keys: ["token", "user", "currentClassroom"] });
-
     if (!role || !valid_roles.includes(role)) {
-      localStorage.clear();
+      console.log("[Login] Invalid or missing role");
       showMsgRef.current(
         "Your role is not in the storage. Please choose again.",
         "error",
@@ -217,18 +221,18 @@ const Login: React.FC = (): React.ReactElement => {
           values: [JSON.stringify(data.user ?? {}), data.user?.role],
         });
 
-        // Set tab auth and broadcast to all tabs
+        // Set tab auth and broadcast ONCE after successful login
         setTabAuth();
         broadcastAuthState(true, data.user?.id);
 
-        // mark that we just performed a login so Dashboard can clear cookie if user navigates back
+        // Mark that we just performed a login
         try {
           sessionStorage.setItem("justLoggedIn", "1");
         } catch {
           // ignore storage errors
         }
 
-        // mark using history state so back/forward behavior works per-tab
+        // Mark using history state
         try {
           if (window.history && window.history.replaceState) {
             window.history.replaceState(
@@ -241,7 +245,8 @@ const Login: React.FC = (): React.ReactElement => {
           // ignore
         }
 
-        navigate(`/dash`);
+        // Use replace to prevent going back to login
+        navigate("/dash", { replace: true });
       } catch (err) {
         console.error("Login error:", err);
         showMsgRef.current("Server Error", "error");

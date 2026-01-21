@@ -4,14 +4,15 @@ import { clearGlobalAuthState } from "./tabAuth";
 //   (import.meta.env.VITE_API_URL as string | undefined) ??
 //   (typeof window !== "undefined" ? window.location.origin : "");
 const REMOTE_API_BASE: string = "http://localhost:5000";
-
 const LOCAL_API_BASE: string | undefined = import.meta.env
   .VITE_API_URL_LOCAL as string | undefined;
 
 //* hard fallback when remote is marked unavailable
 const FALLBACK_LOCALHOST = "http://localhost:5000";
-
 const DEV_MODE = (import.meta.env.MODE as string | undefined) !== "production";
+
+let last401Time = 0;
+const CLEAR_DEBOUNCE = 5000; // Only clear auth state once per 5 seconds
 
 /** Check remote API root for "unavailable" signals (500 status, x-db-status header, or body text) */
 async function isRemoteUnavailable(timeoutMs = 1200): Promise<boolean> {
@@ -59,13 +60,11 @@ async function isRemoteUnavailable(timeoutMs = 1200): Promise<boolean> {
 
 /** Resolve API base: prefer local dev server when in dev mode and reachable */
 async function resolveApiBase(): Promise<string> {
-  // FIX: In development, always use localhost:5000
   if (DEV_MODE) {
     console.log("[apiClient] DEV_MODE - using localhost:5000");
     return "http://localhost:5000";
   }
 
-  // Production logic (keep your existing logic)
   if (REMOTE_API_BASE) {
     try {
       const remoteUnavailable = await isRemoteUnavailable();
@@ -153,12 +152,22 @@ export async function apiFetch<T = any>(
   }
 
   if (res.status === 401) {
-    console.log("[apiFetch] 401 unauthorized => clearing token + returning");
-    clearGlobalAuthState();
-    try {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-    } catch {}
+    console.log("[apiFetch] 401 unauthorized for:", path);
+
+    // Debounce clearing auth state to prevent excessive calls
+    const now = Date.now();
+    if (now - last401Time > CLEAR_DEBOUNCE) {
+      last401Time = now;
+      console.log("[apiFetch] Clearing auth state (debounced)");
+      clearGlobalAuthState();
+      try {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+      } catch {}
+    } else {
+      console.log("[apiFetch] Skipping auth clear (too soon)");
+    }
+
     return { ok: false, status: 401, data: null, unauthorized: true };
   }
 

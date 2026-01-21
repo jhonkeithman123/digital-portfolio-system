@@ -234,9 +234,7 @@ const Quizzes: React.FC<QuizzesProps> = ({ role, classroomCode }) => {
                           className="quiz-action-btn view"
                           onClick={(e) => {
                             e.stopPropagation();
-                            navigate(
-                              `/quizzes/${classCode}/quizzes/${q.id}/attempts`,
-                            );
+                            navigate(`/quizzes/${classCode}/quizzes/${q.id}`);
                           }}
                         >
                           Attempts

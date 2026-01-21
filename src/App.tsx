@@ -19,9 +19,8 @@ import JoinClassroom from "pages/classrooms/JoinClassroom";
 import CreateClassroom from "pages/classrooms/CreateClassroom";
 import QuizCreate from "components/Quiz-component/QuizCreate";
 import QuizEditPage from "components/Quiz-component/quiz-edit";
-import QuizTakePage from "components/Quiz-component/quiz-take";
 import QuizReviewPage from "components/Quiz-component/quiz-review";
-import QuizAttempt from "components/Quiz-component/QuizAttempt";
+import QuizAttempt from "components/Quiz-component/QuizAttempt"; // MERGED: replaces QuizTakePage
 import QuizResults from "components/Quiz-component/quiz-results";
 import ActivityView from "components/Activity-components/ActivityView";
 import NotFoundHandler from "./NotFoundHandler.js";
@@ -65,7 +64,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
           setAuthorized(true);
         }
       } catch (err) {
-        // on error, deny access
         showMsgRef.current("Unauthorized access", "error");
         if (mounted) setAuthorized(false);
       }
@@ -151,19 +149,15 @@ function App(): React.ReactElement {
           />
           <Route
             path="/quizzes/:classCode/quizzes/:quizId"
-            element={<QuizTakePage />}
-          />
-          <Route
-            path="/quizzes/:classCode/quizzes/:quizId/review"
-            element={<QuizReviewPage />}
-          />
-          <Route
-            path="/quizzes/:classCode/quizzes/:quizId/attempts"
             element={
               <ProtectedRoute showMessage={showMessage}>
                 <QuizAttempt />
               </ProtectedRoute>
             }
+          />
+          <Route
+            path="/quizzes/:classCode/quizzes/:quizId/review"
+            element={<QuizReviewPage />}
           />
           <Route
             path="/quizzes/:classCode/quizzes/:quizId/results"

@@ -15,7 +15,7 @@ interface AuthState {
  */
 export function broadcastAuthState(
   authenticated: boolean,
-  userId?: string | number
+  userId?: string | number,
 ): void {
   try {
     const state: AuthState = {
@@ -25,10 +25,13 @@ export function broadcastAuthState(
     };
     localStorage.setItem(GLOBAL_AUTH_KEY, JSON.stringify(state));
 
-    // Dispatch custom event for same-tab listeners
-    window.dispatchEvent(new CustomEvent(AUTH_SYNC_EVENT, { detail: state }));
-  } catch {
-    /* ignore storage errors */
+    // Dispatch event for same-tab listening (but prevent infinite loops)
+    const event = new CustomEvent(AUTH_SYNC_EVENT, { detail: state });
+    window.dispatchEvent(event);
+
+    console.log("[TabAuth] Broadcast auth state:", state);
+  } catch (err) {
+    console.error("[TabAuth] Failed to broadcast auth state:", err);
   }
 }
 
@@ -51,9 +54,12 @@ export function getGlobalAuthState(): AuthState | null {
 export function clearGlobalAuthState(): void {
   try {
     localStorage.removeItem(GLOBAL_AUTH_KEY);
-    broadcastAuthState(false);
-  } catch {
-    /* ignore */
+    localStorage.removeItem(TAB_AUTH_KEY);
+    localStorage.removeItem(JUST_LOGGED_KEY);
+    localStorage.removeItem(FLAG_KEY);
+    console.log("[TabAuth] Cleared all auth state");
+  } catch (err) {
+    console.error("[TabAuth] Failed to clear auth state:", err);
   }
 }
 
@@ -95,86 +101,57 @@ export function isTabAuthenticated(): boolean {
  * asks server to logout then reloads the page. Returns a cleanup fn.
  */
 export function installLoginPageGuard(): () => void {
-  if (typeof window === "undefined") return () => {};
+  let redirectPending = false;
 
-  // clear tabAuth asap (per-tab marker)
-  removeTabAuth();
+  const handler = (e: StorageEvent) => {
+    if (redirectPending) return;
 
-  const doLogoutAndReload = async () => {
-    try {
-      await fetch("/auth/logout", { method: "POST", credentials: "include" });
-    } catch {
-      /* ignore network errors */
-    }
-
-    // Clear all auth-related storage
-    clearGlobalAuthState();
-    try {
-      localStorage.removeItem("user");
-      sessionStorage.clear();
-    } catch {
-      /* ignore */
-    }
-
-    try {
-      window.location.replace(window.location.href);
-    } catch {
-      window.location.reload();
-    }
-  };
-
-  const handleRefreshLogic = () => {
-    try {
-      // If this tab was just used to log in and we haven't done refresh for this tab, force logout+reload
-      if (
-        sessionStorage.getItem(JUST_LOGGED_KEY) &&
-        !sessionStorage.getItem(FLAG_KEY)
-      ) {
-        sessionStorage.removeItem(JUST_LOGGED_KEY);
-        removeTabAuth();
-        sessionStorage.setItem(FLAG_KEY, "1");
-        void doLogoutAndReload();
-        return;
-      }
-
-      // avoid repeated work per-tab
-      if (sessionStorage.getItem(FLAG_KEY)) return;
-
-      // detect likely auth cookie presence before calling logout
-      const hasAuthCookie = (() => {
-        try {
-          if (!("cookie" in document)) return false;
-          const c = document.cookie || "";
-          return /(?:^|;\s*)(?:_HOST-token|token|session|sid)=/i.test(c);
-        } catch {
-          return false;
+    if (e.key === GLOBAL_AUTH_KEY && e.newValue) {
+      try {
+        const state = JSON.parse(e.newValue) as AuthState;
+        if (state.authenticated) {
+          console.log("[TabAuth] Auth detected in another tab, redirecting...");
+          redirectPending = true;
+          setTimeout(() => {
+            window.location.href = "/dash";
+          }, 100);
         }
-      })();
-
-      // mark so we don't loop
-      sessionStorage.setItem(FLAG_KEY, "1");
-
-      if (!hasAuthCookie) return;
-
-      void doLogoutAndReload();
-    } catch {
-      /* ignore storage errors */
+      } catch {
+        // ignore parse errors
+      }
     }
   };
 
-  // run immediately
-  handleRefreshLogic();
+  window.addEventListener("storage", handler);
 
-  // pageshow and focus cover bfcache and tab restores
-  const onPageShow = () => void handleRefreshLogic();
-  const onFocus = () => void handleRefreshLogic();
+  // Same-tab events with debouncing
+  let lastEventTime = 0;
+  const sameTabHandler = (e: Event) => {
+    if (redirectPending) return;
 
-  window.addEventListener("pageshow", onPageShow);
-  window.addEventListener("focus", onFocus);
+    const now = Date.now();
+    if (now - lastEventTime < 1000) {
+      console.log("[TabAuth] Ignoring duplicate auth sync event");
+      return;
+    }
+    lastEventTime = now;
+
+    const customEvent = e as CustomEvent<AuthState>;
+    console.log("[TabAuth] Same-tab auth sync event", customEvent.detail);
+
+    if (customEvent.detail?.authenticated) {
+      redirectPending = true;
+      setTimeout(() => {
+        window.location.href = "/dash";
+      }, 100);
+    }
+  };
+
+  window.addEventListener(AUTH_SYNC_EVENT, sameTabHandler);
 
   return () => {
-    window.removeEventListener("pageshow", onPageShow);
-    window.removeEventListener("focus", onFocus);
+    window.removeEventListener("storage", handler);
+    window.removeEventListener(AUTH_SYNC_EVENT, sameTabHandler);
   };
 }
 
@@ -185,11 +162,29 @@ export function installLoginPageGuard(): () => void {
  */
 export function useAuthRestoreGuard(
   revalidate: () => Promise<void>,
-  onMissing?: () => void
+  onMissing?: () => void,
 ): () => void {
   if (typeof window === "undefined") return () => {};
 
+  let isChecking = false;
+  let lastCheck = 0;
+  const MIN_CHECK_INTERVAL = 30000; // 30 seconds minimum between checks
+
   const handler = async () => {
+    if (isChecking) {
+      console.log("[TabAuth] Check already in progress, skipping");
+      return;
+    }
+
+    const now = Date.now();
+    if (now - lastCheck < MIN_CHECK_INTERVAL) {
+      console.log("[TabAuth] Check too soon, skipping");
+      return;
+    }
+
+    isChecking = true;
+    lastCheck = now;
+
     try {
       const tabAuth = sessionStorage.getItem(TAB_AUTH_KEY);
       const globalAuth = getGlobalAuthState();
@@ -212,41 +207,64 @@ export function useAuthRestoreGuard(
         return;
       }
     } catch {
-      // ignore storage errors and continue to revalidate
+      // ignore storage errors
     }
 
     try {
       await revalidate();
     } catch {
       // swallow — caller handles navigation/messages
+    } finally {
+      isChecking = false;
     }
   };
 
-  // Listen for cross-tab storage changes
+  // Listen for cross-tab storage changes (debounced)
+  let storageTimeout: number | null = null;
   const onStorage = (event: StorageEvent) => {
     if (event.key === GLOBAL_AUTH_KEY) {
-      console.log("[TabAuth] Cross-tab auth state change detected");
-      void handler();
+      if (storageTimeout) clearTimeout(storageTimeout);
+      storageTimeout = window.setTimeout(() => {
+        console.log("[TabAuth] Cross-tab auth state change detected");
+        void handler();
+      }, 500);
     }
   };
 
-  // Listen for same-tab custom events
+  // Listen for same-tab custom events (debounced)
+  let authSyncTimeout: number | null = null;
   const onAuthSync = ((event: CustomEvent<AuthState>) => {
-    console.log("[TabAuth] Same-tab auth sync event", event.detail);
-    if (!event.detail.authenticated) {
-      removeTabAuth();
-      onMissing?.();
-    } else {
-      setTabAuth();
-      void handler();
-    }
+    if (authSyncTimeout) clearTimeout(authSyncTimeout);
+    authSyncTimeout = window.setTimeout(() => {
+      console.log("[TabAuth] Same-tab auth sync event", event.detail);
+      if (!event.detail.authenticated) {
+        removeTabAuth();
+        onMissing?.();
+      } else {
+        setTabAuth();
+        void handler();
+      }
+    }, 500);
   }) as EventListener;
 
+  // Reduce frequency of event listeners
   const onPop = () => void handler();
   const onPageShow = (_ev?: PageTransitionEvent) => {
-    void handler();
+    // Only check on actual page show, not bfcache restore
+    if (!_ev?.persisted) {
+      void handler();
+    }
   };
-  const onFocus = () => void handler();
+
+  // Only check focus if tab was hidden for more than 1 minute
+  let lastFocusCheck = Date.now();
+  const onFocus = () => {
+    const now = Date.now();
+    if (now - lastFocusCheck > 60000) {
+      lastFocusCheck = now;
+      void handler();
+    }
+  };
 
   window.addEventListener("storage", onStorage);
   window.addEventListener(AUTH_SYNC_EVENT, onAuthSync);
@@ -263,5 +281,7 @@ export function useAuthRestoreGuard(
     window.removeEventListener("popstate", onPop);
     window.removeEventListener("pageshow", onPageShow);
     window.removeEventListener("focus", onFocus);
+    if (storageTimeout) clearTimeout(storageTimeout);
+    if (authSyncTimeout) clearTimeout(authSyncTimeout);
   };
 }

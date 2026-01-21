@@ -5,38 +5,6 @@
   color: var(--text-color);
 }
 
-.theme-toggle-container {
-  max-width: 1080px;
-  margin: 0.75rem auto 0;
-  display: flex;
-  justify-content: flex-end;
-  padding: 0 16px;
-}
-
-.theme-toggle {
-  padding: 8px 16px;
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.65);
-  background: radial-gradient(circle at top left, #ffffff, #e5e7eb);
-  color: #0f172a;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.25);
-  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease,
-    border-color 0.15s ease;
-}
-
-.theme-toggle:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.32);
-}
-
-:root[data-theme="dark"] .theme-toggle {
-  background: radial-gradient(circle at top left, #1f2937, #020617);
-  color: #e5e7eb;
-  border-color: rgba(148, 163, 184, 0.9);
-}
-
 .empty-upload p,
 .file-types,
 .quiz-subtitle,
@@ -75,7 +43,9 @@
   width: 100%;
   max-width: 1080px;
   margin-bottom: 0.5rem;
-  box-shadow: 0 0 0 1px var(--card-border), 0 18px 40px rgba(15, 23, 42, 0.28);
+  box-shadow:
+    0 0 0 1px var(--card-border),
+    0 18px 40px rgba(15, 23, 42, 0.28);
   overflow: hidden;
 }
 
@@ -128,18 +98,16 @@
 /* STUDENT: blue / cyan */
 .home-header .role-badge.student {
   /* pill itself */
-  background: radial-gradient(
-        circle at 0% 0%,
-        rgba(255, 255, 255, 0.95),
-        transparent 70%
-      )
+  background:
+    radial-gradient(circle at 0% 0%, rgba(255, 255, 255, 0.95), transparent 70%)
       padding-box,
     linear-gradient(135deg, #2563eb, #38bdf8) border-box;
   color: #0f172a;
 }
 
 .home-header.student-role {
-  background: radial-gradient(
+  background:
+    radial-gradient(
       circle at -10% -10%,
       rgba(248, 250, 252, 0.45),
       transparent 55%
@@ -149,11 +117,8 @@
 
 /* TEACHER: pink / coral */
 .home-header .role-badge.teacher {
-  background: radial-gradient(
-        circle at 0% 0%,
-        rgba(255, 255, 255, 0.95),
-        transparent 70%
-      )
+  background:
+    radial-gradient(circle at 0% 0%, rgba(255, 255, 255, 0.95), transparent 70%)
       padding-box,
     linear-gradient(135deg, #ec4899, #fb7185) border-box;
   color: #0f172a;
@@ -161,7 +126,8 @@
 
 /* header variant for teacher */
 .home-header.teacher-role {
-  background: radial-gradient(
+  background:
+    radial-gradient(
       circle at -10% -10%,
       rgba(248, 250, 252, 0.45),
       transparent 55%
@@ -171,7 +137,8 @@
 
 /* Slightly softer in dark mode */
 :root[data-theme="dark"] .home-header.student-role {
-  background: radial-gradient(
+  background:
+    radial-gradient(
       circle at -10% -10%,
       rgba(15, 23, 42, 0.9),
       transparent 55%
@@ -180,7 +147,8 @@
 }
 
 :root[data-theme="dark"] .home-header.teacher-role {
-  background: radial-gradient(
+  background:
+    radial-gradient(
       circle at -10% -10%,
       rgba(15, 23, 42, 0.9),
       transparent 55%
@@ -198,7 +166,8 @@
   text-transform: capitalize;
   background: linear-gradient(180deg, #ffffff, #e5f0ff);
   color: #1d4ed8;
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.35),
+  box-shadow:
+    0 10px 30px rgba(15, 23, 42, 0.35),
     0 0 0 1px rgba(255, 255, 255, 0.8) inset;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -215,22 +184,16 @@
 
 /* Role‑aware welcome pill */
 .home-welcome.student-role {
-  background: radial-gradient(
-        circle at 0% 0%,
-        rgba(255, 255, 255, 0.95),
-        transparent 70%
-      )
+  background:
+    radial-gradient(circle at 0% 0%, rgba(255, 255, 255, 0.95), transparent 70%)
       padding-box,
     linear-gradient(180deg, #dbeafe, #eff6ff) border-box;
   color: #1d4ed8;
 }
 
 .home-welcome.teacher-role {
-  background: radial-gradient(
-        circle at 0% 0%,
-        rgba(255, 255, 255, 0.95),
-        transparent 70%
-      )
+  background:
+    radial-gradient(circle at 0% 0%, rgba(255, 255, 255, 0.95), transparent 70%)
       padding-box,
     linear-gradient(180deg, #ffe4f1, #fee2e2) border-box;
   color: #be123c;
@@ -238,22 +201,16 @@
 
 /* Dark‑mode variants: a bit deeper but still soft */
 :root[data-theme="dark"] .home-welcome.student-role {
-  background: radial-gradient(
-        circle at 0% 0%,
-        rgba(15, 23, 42, 0.96),
-        transparent 70%
-      )
+  background:
+    radial-gradient(circle at 0% 0%, rgba(15, 23, 42, 0.96), transparent 70%)
       padding-box,
     linear-gradient(180deg, #1d4ed8, #0f172a) border-box;
   color: #e5e7eb;
 }
 
 :root[data-theme="dark"] .home-welcome.teacher-role {
-  background: radial-gradient(
-        circle at 0% 0%,
-        rgba(15, 23, 42, 0.96),
-        transparent 70%
-      )
+  background:
+    radial-gradient(circle at 0% 0%, rgba(15, 23, 42, 0.96), transparent 70%)
       padding-box,
     linear-gradient(180deg, #be185d, #0f172a) border-box;
   color: #fee2e2;
@@ -375,7 +332,10 @@
   background: linear-gradient(90deg, #3b82f6, #06b6d4);
   color: #f9fafb;
   box-shadow: 0 4px 10px rgba(15, 23, 42, 0.4);
-  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    opacity 0.15s ease;
 }
 
 .activity-open-btn:hover {
@@ -403,12 +363,13 @@
     rgba(235, 245, 255, 0.6)
   );
   color: #071422;
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.09),
+  box-shadow:
+    0 6px 18px rgba(15, 23, 42, 0.09),
     inset 0 -2px 8px rgba(255, 255, 255, 0.6);
   min-width: 88px;
   text-align: center;
-  font-family: "Roboto Mono", "SFMono-Regular", ui-monospace, "Segoe UI Mono",
-    monospace;
+  font-family:
+    "Roboto Mono", "SFMono-Regular", ui-monospace, "Segoe UI Mono", monospace;
 }
 
 /* improved activity date pill */
@@ -453,7 +414,8 @@
 /* hover affordance */
 .activity-item:hover .activity-clock {
   transform: translateY(-2px);
-  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.12),
+  box-shadow:
+    0 10px 26px rgba(15, 23, 42, 0.12),
     inset 0 -2px 8px rgba(255, 255, 255, 0.6);
 }
 
@@ -466,7 +428,10 @@
   border: 1px solid rgba(220, 53, 69, 0.12);
   cursor: pointer;
   font-weight: 700;
-  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease,
+    background 0.12s ease;
 }
 
 .activity-delete-btn:hover {
@@ -497,7 +462,8 @@
     rgba(8, 20, 36, 0.75)
   );
   color: #e6eef8;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6),
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.6),
     inset 0 1px 0 rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.03);
 }
@@ -681,7 +647,9 @@
   padding: 1.25rem 1.5rem 1.75rem;
   border-radius: 16px;
   background: var(--card-bg);
-  box-shadow: 0 0 0 1px var(--card-border), 0 12px 28px rgba(15, 23, 42, 0.28);
+  box-shadow:
+    0 0 0 1px var(--card-border),
+    0 12px 28px rgba(15, 23, 42, 0.28);
 }
 
 :root[data-theme="dark"] .quizzes-section {
@@ -716,7 +684,10 @@
   font-weight: 600;
   border-radius: 10px;
   cursor: pointer;
-  transition: background 0.18s, box-shadow 0.18s, transform 0.18s;
+  transition:
+    background 0.18s,
+    box-shadow 0.18s,
+    transform 0.18s;
 }
 
 .quiz-create-btn .quiz-btn-icon {
@@ -857,11 +828,8 @@
 
 /* DARK THEME CONTRAST TWEAKS ---------------------------------------- */
 :root[data-theme="dark"] .quiz-item {
-  background: linear-gradient(
-      180deg,
-      rgba(15, 23, 42, 0.85),
-      rgba(15, 23, 42, 0.7)
-    ),
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.7)),
     radial-gradient(
       circle at top left,
       var(--role-accent-soft),
@@ -871,7 +839,8 @@
 }
 
 :root[data-theme="dark"] .quiz-item:hover {
-  box-shadow: 0 18px 46px -12px rgba(0, 0, 0, 0.8),
+  box-shadow:
+    0 18px 46px -12px rgba(0, 0, 0, 0.8),
     0 0 0 1px var(--role-accent) inset;
 }
 

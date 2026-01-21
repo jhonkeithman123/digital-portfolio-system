@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { broadcastAuthState, clearGlobalAuthState } from "utils/tabAuth";
+import { apiFetch } from "utils/apiClient";
+import { clearGlobalAuthState, getGlobalAuthState } from "utils/tabAuth";
 
 type SessionData = {
   success?: boolean;
@@ -11,6 +12,9 @@ type SessionData = {
   [k: string]: any;
 };
 
+const CHECK_INTERVAL = 5 * 60 * 1000; // Check every 5 mins
+const REFRESH_BEFORE_EXPIRY = 2 * 60 * 1000; // Refresh 2 minutes before expiry
+
 export default function useTokenStatus(): {
   expired: boolean;
   ready: boolean;
@@ -20,167 +24,126 @@ export default function useTokenStatus(): {
   const [expired, setExpired] = useState<boolean>(false);
   const [ready, setReady] = useState<boolean>(false);
   const [remainingMs, setRemainingMs] = useState<number | null>(null);
+
   const timerRef = useRef<number | null>(null);
+  const intervalRef = useRef<number | null>(null);
   const mountedRef = useRef<boolean>(true);
-
-  const schedule = useCallback((ms?: number) => {
-    if (timerRef.current !== null) {
-      window.clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-
-    const defaultMs = 5 * 60 * 1000;
-    const wait = Math.min(Math.max(ms ?? defaultMs, 5000), 24 * 60 * 60 * 1000);
-    timerRef.current = window.setTimeout(() => {
-      void checkNow();
-    }, wait);
-  }, []);
+  const lastCheckRef = useRef<number>(0);
 
   const checkNow = useCallback(async (): Promise<void> => {
-    const API_BASE = "http://localhost:5000";
-    const url = `${API_BASE}/auth/session`;
+    if (!mountedRef.current) return;
 
-    const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), 8000);
+    // Debounce: Don't check more than once per 30 seconds
+    const now = Date.now();
+    if (now - lastCheckRef.current < 30000) {
+      console.log(
+        "[useTokenStatus] Skipping check (too soon since last check)",
+      );
+      return;
+    }
+    lastCheckRef.current = now;
 
     try {
-      const resp = await fetch(url, {
-        method: "GET",
-        credentials: "include",
-        signal: controller.signal,
-        headers: {
-          Accept: "application/json",
-        },
-      });
-      clearTimeout(timeout);
+      const { unauthorized, data } =
+        await apiFetch<SessionData>("/auth/session");
 
-      if (!resp.ok) {
-        console.warn(`[useTokenStatus] Session check failed: ${resp.status}`);
+      if (!mountedRef.current) return;
+
+      if (unauthorized || !data?.success) {
+        console.log("[useTokenStatus] Session invalid or expired");
         setExpired(true);
         setReady(true);
-        setRemainingMs(0);
-
-        // Broadcast logout to all tabs
+        setRemainingMs(null);
         clearGlobalAuthState();
 
-        try {
-          window.dispatchEvent(
-            new CustomEvent("app:tokenExpired", {
-              detail: { reason: `http:${resp.status}` },
-            }),
-          );
-        } catch {
-          // ignore
+        // Clear intervals
+        if (timerRef.current !== null) {
+          clearTimeout(timerRef.current);
+          timerRef.current = null;
+        }
+        if (intervalRef.current !== null) {
+          clearInterval(intervalRef.current);
+          intervalRef.current = null;
         }
         return;
       }
 
-      const data = (await resp.json()) as SessionData;
-
-      if (data?.success === false || data == null) {
-        console.warn("[useTokenStatus] Session invalid:", data);
-        setExpired(true);
-        setReady(true);
-        setRemainingMs(0);
-
-        // Broadcast logout to all tabs
-        clearGlobalAuthState();
-
-        try {
-          window.dispatchEvent(
-            new CustomEvent("app:tokenExpired", {
-              detail: { reason: "unauthorized" },
-            }),
-          );
-        } catch {
-          // ignore
-        }
-        return;
-      }
-
-      // Valid session - broadcast to all tabs
       console.log("[useTokenStatus] Session valid:", data.user);
       setExpired(false);
       setReady(true);
 
-      const userId = data.user?.id;
-      broadcastAuthState(true, userId);
+      const ms = data.expiresInMs ?? null;
+      setRemainingMs(ms);
 
-      const next = 5 * 60 * 1000; // 5 minutes
-      setRemainingMs(next);
-      schedule(next);
-    } catch (err) {
-      clearTimeout(timeout);
-      console.error("[useTokenStatus] Session check error:", err);
-      setExpired(true);
-      setReady(true);
-      setRemainingMs(0);
-
-      // Broadcast logout to all tabs
-      clearGlobalAuthState();
-
-      try {
-        window.dispatchEvent(
-          new CustomEvent("app:tokenExpired", { detail: { reason: "error" } }),
-        );
-      } catch {
-        // ignore
+      // Clear existing timer
+      if (timerRef.current !== null) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
       }
+
+      // Set expiry timer
+      if (ms !== null && ms > 0) {
+        timerRef.current = window.setTimeout(() => {
+          if (!mountedRef.current) return;
+          console.log("[useTokenStatus] Session expired by timer");
+          setExpired(true);
+          setRemainingMs(0);
+          clearGlobalAuthState();
+        }, ms);
+
+        // Set refresh timer (refresh before expiry)
+        if (ms > REFRESH_BEFORE_EXPIRY) {
+          setTimeout(() => {
+            if (!mountedRef.current) return;
+            console.log("[useTokenStatus] Refreshing session before expiry");
+            checkNow();
+          }, ms - REFRESH_BEFORE_EXPIRY);
+        }
+      }
+    } catch (err) {
+      if (!mountedRef.current) return;
+      console.error("[useTokenStatus] Error checking session:", err);
+      // Don't immediately mark as expired on network error
+      console.log("[useTokenStatus] Network error, keeping current state");
     }
-  }, [schedule]);
+  }, []);
 
   useEffect(() => {
     mountedRef.current = true;
-    void checkNow();
 
-    const onStorage = (ev: StorageEvent) => {
-      const key = ev.key;
-      if (!key) {
-        void checkNow();
-        return;
+    // Check if global auth state exists and is fresh
+    const globalAuth = getGlobalAuthState();
+    const isFresh =
+      globalAuth?.timestamp &&
+      Date.now() - globalAuth.timestamp < 2 * 60 * 1000;
+
+    if (globalAuth?.authenticated && isFresh) {
+      console.log("[useTokenStatus] Using fresh global auth state");
+      setExpired(false);
+      setReady(true);
+    }
+
+    // Initial check
+    checkNow();
+
+    // Set up periodic checks (every 5 minutes)
+    intervalRef.current = window.setInterval(() => {
+      if (mountedRef.current && !expired) {
+        console.log("[useTokenStatus] Periodic session check");
+        checkNow();
       }
-      if (
-        ["user", "role", "token", "justLoggedIn", "globalAuthState"].includes(
-          key,
-        )
-      ) {
-        void checkNow();
-      }
-    };
-
-    const onPop = () => void checkNow();
-    const onFocus = () => void checkNow();
-    const onVisibility = () => {
-      if (document.visibilityState === "visible") void checkNow();
-    };
-
-    const onAppLogout = () => {
-      clearGlobalAuthState();
-      void checkNow();
-    };
-    const onAppLogin = () => void checkNow();
-
-    window.addEventListener("storage", onStorage);
-    window.addEventListener("popstate", onPop);
-    window.addEventListener("focus", onFocus);
-    document.addEventListener("visibilitychange", onVisibility);
-    window.addEventListener("app:logout", onAppLogout as EventListener);
-    window.addEventListener("app:login", onAppLogin as EventListener);
+    }, CHECK_INTERVAL);
 
     return () => {
       mountedRef.current = false;
       if (timerRef.current !== null) {
-        window.clearTimeout(timerRef.current);
-        timerRef.current = null;
+        clearTimeout(timerRef.current);
       }
-      window.removeEventListener("storage", onStorage);
-      window.removeEventListener("popstate", onPop);
-      window.removeEventListener("focus", onFocus);
-      document.removeEventListener("visibilitychange", onVisibility);
-      window.removeEventListener("app:logout", onAppLogout as EventListener);
-      window.removeEventListener("app:login", onAppLogin as EventListener);
+      if (intervalRef.current !== null) {
+        clearInterval(intervalRef.current);
+      }
     };
-  }, [checkNow]);
+  }, [checkNow, expired]);
 
   return { expired, ready, remainingMs, refresh: checkNow };
 }
