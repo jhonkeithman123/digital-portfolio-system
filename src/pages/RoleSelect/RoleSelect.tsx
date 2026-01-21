@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Header from "../../components/Component-elements/Header";
 import {
   localStorageGet,
@@ -9,15 +9,41 @@ import {
 import "./RoleSelect.css";
 import { apiFetch } from "../../utils/apiClient";
 import type { Role } from "../../types/models";
-import { installLoginPageGuard } from "../../utils/tabAuth";
+import {
+  installLoginPageGuard,
+  getGlobalAuthState,
+  setTabAuth,
+} from "../../utils/tabAuth";
 
 const RoleSelect: React.FC = (): React.ReactElement => {
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
+    // Don't redirect if coming from logout
+    const fromLogout = location.state?.fromLogout;
+    if (fromLogout) {
+      console.log("[RoleSelect] Coming from logout, staying  on role select");
+      return;
+    }
+
+    // Check if user is already authenticated in another tab
+    const globalAuth = getGlobalAuthState();
+
+    // if authenticated globally, don't run the login page guard
+    if (globalAuth?.authenticated) {
+      console.log(
+        "[RoleSelect] User already authenticated, redirectign to dashboard"
+      );
+      setTabAuth();
+      navigate("/dash", { replace: true });
+      return;
+    }
+
+    // Only install login page if NOT authenticated
     const cleanup = installLoginPageGuard();
     return cleanup;
-  }, []);
+  }, [navigate]);
 
   const handleSelect = (role: Role): void => {
     try {
@@ -29,6 +55,14 @@ const RoleSelect: React.FC = (): React.ReactElement => {
   };
 
   useEffect(() => {
+    // Check global auth first
+    const globalAuth = getGlobalAuthState();
+    if (globalAuth?.authenticated) {
+      setTabAuth();
+      navigate("/dash", { replace: true });
+      return;
+    }
+
     localStorageRemove({ keys: ["role"] });
     const token = localStorageGet({ keys: ["token"] })[0];
     if (!token) return;
@@ -46,6 +80,7 @@ const RoleSelect: React.FC = (): React.ReactElement => {
             keys: ["user"],
             values: [JSON.stringify(data.user), data.user.role],
           });
+          setTabAuth();
           navigate("/dash");
         }
       } catch (e) {

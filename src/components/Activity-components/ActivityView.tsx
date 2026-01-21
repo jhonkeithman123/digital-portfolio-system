@@ -8,15 +8,16 @@ import React, {
 import { useParams, useNavigate } from "react-router-dom";
 import { apiFetch } from "../../utils/apiClient";
 import useMessage from "../../hooks/useMessage";
+import useRealTimeData from "../../hooks/useRealTimeData";
 import Header from "../Component-elements/Header";
 import useLoadingState from "../../hooks/useLoading";
 import LoadingOverlay from "../Component-elements/loading_overlay";
 import ActivityComments from "./ActivityComments";
 import AnswerSubmission from "./AnswerSubmission";
 import TeacherInstructions from "./TeacherInstructions";
+import ActivitySubmissions from "./Activities";
+import type { Instruction, Submission } from "../../types/activity";
 import "./css/Activity.css";
-import type { Instruction } from "./TeacherInstructions";
-import ActivitySubmissions, { type Submission } from "./Activities";
 
 const ActivityView: React.FC = (): React.ReactElement => {
   const { id } = useParams<{ id?: string }>();
@@ -127,6 +128,31 @@ const ActivityView: React.FC = (): React.ReactElement => {
       ac.abort();
     };
   }, [loadActivity]);
+
+  // Real-time polling for submissions (teacher only)
+  const { refresh: refreshSubmissions, isPolling: pollingSubmissions } =
+    useRealTimeData({
+      fetchFn: async () => {
+        if (user?.role !== "teacher" || !id) return [];
+        const { data } = await apiFetch<{
+          success?: boolean;
+          submissions?: Submission[];
+          maxScore?: number;
+        }>(`/activity/${encodeURIComponent(String(id))}/submissions`);
+
+        if (data?.success && Array.isArray(data.submissions)) {
+          if (data.maxScore) setMaxScore(data.maxScore);
+          return data.submissions;
+        }
+        return [];
+      },
+      interval: 10000, // Poll every 10 seconds
+      enabled: user?.role === "teacher" && !!id && activeTab === "submissions",
+      onChange: (submissions) => {
+        setSubmissions(submissions);
+        setSubmissionsLoading(false);
+      },
+    });
 
   const loadSubmissions = useCallback(async () => {
     if (user?.role !== "teacher" || !id) return;
@@ -297,25 +323,70 @@ const ActivityView: React.FC = (): React.ReactElement => {
 
               {activeTab === "submissions" &&
                 (user?.role === "teacher" ? (
-                  <ActivitySubmissions
-                    submissions={submissions}
-                    loading={submissionsLoading}
-                    maxScore={maxScore}
-                    activityId={id!}
-                    onScoreUpdate={(submissionId, newScore) => {
-                      setSubmissions((prev) =>
-                        prev.map((s) =>
-                          String(s.id) === String(submissionId)
-                            ? {
-                                ...s,
-                                score: newScore,
-                                graded_at: new Date().toISOString(),
-                              }
-                            : s
-                        )
-                      );
-                    }}
-                  />
+                  <>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        marginBottom: "1rem",
+                      }}
+                    >
+                      <h3 style={{ margin: 0 }}>Student Submissions</h3>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "8px",
+                          alignItems: "center",
+                        }}
+                      >
+                        {pollingSubmissions && (
+                          <span
+                            className="polling-indicator"
+                            title="Checking for updates..."
+                          >
+                            🔄
+                          </span>
+                        )}
+                        <button
+                          className="refresh-btn"
+                          onClick={refreshSubmissions}
+                          disabled={submissionsLoading}
+                          title="Refresh submissions"
+                          style={{
+                            padding: "6px 12px",
+                            fontSize: "13px",
+                            background: "var(--accent-color)",
+                            color: "white",
+                            border: "none",
+                            borderRadius: "6px",
+                            cursor: "pointer",
+                          }}
+                        >
+                          Refresh
+                        </button>
+                      </div>
+                    </div>
+                    <ActivitySubmissions
+                      submissions={submissions}
+                      loading={submissionsLoading}
+                      maxScore={maxScore}
+                      activityId={id!}
+                      onScoreUpdate={(submissionId, newScore) => {
+                        setSubmissions((prev) =>
+                          prev.map((s) =>
+                            String(s.id) === String(submissionId)
+                              ? {
+                                  ...s,
+                                  score: newScore,
+                                  graded_at: new Date().toISOString(),
+                                }
+                              : s
+                          )
+                        );
+                      }}
+                    />
+                  </>
                 ) : (
                   <p className="submission-empty">
                     Submissions are visible to teachers only

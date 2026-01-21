@@ -18,7 +18,13 @@ import {
 import { apiFetchPublic } from "../../utils/apiClient";
 import InputField from "../../components/Component-elements/InputField";
 import "./Login.css";
-import { installLoginPageGuard, setTabAuth } from "../../utils/tabAuth";
+import {
+  installLoginPageGuard,
+  setTabAuth,
+  getGlobalAuthState,
+  broadcastAuthState,
+  isTabAuthenticated,
+} from "../../utils/tabAuth";
 
 type Role = "teacher" | "student" | string;
 type User = { role?: Role; [k: string]: any };
@@ -41,12 +47,71 @@ const Login: React.FC = (): React.ReactElement => {
     showMsgRef.current = showMessage;
   }, [showMessage]);
 
-  // On first access to the login page in this tab, clear server auth cookie
-  // then perform a single reload so the page state is consistent (prevents stale session).
+  // Check if user is already authenticated when landing on login page
   useEffect(() => {
+    // Check if user is already authenticated in another tab or this tab
+    const globalAuth = getGlobalAuthState();
+    const isThisTabAuth = isTabAuthenticated();
+
+    if (globalAuth?.authenticated || isThisTabAuth) {
+      console.log(
+        "[Login] User already authenticated, redirecting to dashboard"
+      );
+      showMsgRef.current("You are already logged in!", "info");
+      setTabAuth();
+      navigate("/dash", { replace: true });
+      return;
+    }
+
+    // Only install login page guard if NOT authenticated
     const cleanup = installLoginPageGuard();
     return cleanup;
-  }, []);
+  }, [navigate]);
+
+  // Listen for popstate events (browser back/forward)
+  useEffect(() => {
+    const handlePopState = () => {
+      const globalAuth = getGlobalAuthState();
+      const isThisTabAuth = isTabAuthenticated();
+
+      // If user is authenticated and tries to go back to login
+      if (globalAuth?.authenticated || isThisTabAuth) {
+        console.log(
+          "[Login] Authenticated user tried to access login via back button"
+        );
+        showMsgRef.current(
+          "You cannot return to login while authenticated. Please logout first.",
+          "error"
+        );
+        // Push them forward to dashboard
+        navigate("/dash", { replace: true });
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [navigate]);
+
+  // Check history state for justLoggedIn marker
+  useEffect(() => {
+    try {
+      const historyState = window.history.state;
+      if (historyState?.justLoggedIn) {
+        // User just logged in and pressed back - redirect them
+        console.log("[Login] Detected back navigation after login");
+        showMsgRef.current(
+          "You cannot return to login after logging in. Redirecting...",
+          "info"
+        );
+        navigate("/dash", { replace: true });
+      }
+    } catch {
+      // ignore errors
+    }
+  }, [navigate, location]);
 
   useEffect(() => {
     localStorageRemove({ keys: ["token", "user", "currentClassroom"] });
@@ -117,10 +182,13 @@ const Login: React.FC = (): React.ReactElement => {
           values: [JSON.stringify(data.user ?? {}), data.user?.role],
         });
 
+        // Set tab auth and broadcast to all tabs
+        setTabAuth();
+        broadcastAuthState(true, data.user?.id);
+
         // mark that we just performed a login so Dashboard can clear cookie if user navigates back
         try {
           sessionStorage.setItem("justLoggedIn", "1");
-          setTabAuth();
         } catch {
           // ignore storage errors
         }
@@ -140,8 +208,6 @@ const Login: React.FC = (): React.ReactElement => {
 
         navigate(`/dash`);
       } catch (err) {
-        // keep console for debugging; surface friendly message to user
-         
         console.error("Login error:", err);
         showMsgRef.current("Server Error", "error");
       }

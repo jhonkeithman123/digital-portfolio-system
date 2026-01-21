@@ -7,43 +7,15 @@ import { apiFetch } from "../../utils/apiClient.js";
 import Header from "../Component-elements/Header.js";
 import "./css/quiz.css";
 
-type Question = {
-  id: string;
-  type:
-    | "multiple_choice"
-    | "checkboxes"
-    | "short_answer"
-    | "paragraph"
-    | string;
-  text?: string;
-  options?: string[];
-  correctAnswer?: any;
-  sentenceLimit?: number | string | null;
-  [k: string]: any;
-};
-
-type Page = {
-  id: string;
-  title: string;
-  questions: Question[];
-};
-
-type QuizInitialData = {
-  quizId?: string | null;
-  title?: string;
-  attemptsAllowed?: number | string | null;
-  timeLimitSeconds?: number | null;
-  pages?: Page[];
-  [k: string]: any;
-};
+import type {
+  Question,
+  Page,
+  // QuizInitialData,
+  QuizEditorProps,
+} from "../../types/quiz";
 
 function uid(prefix = "") {
   return prefix + Math.random().toString(36).slice(2, 9);
-}
-
-interface QuizEditorProps {
-  classroomCode?: string;
-  initialData?: QuizInitialData | null;
 }
 
 export default function QuizEditor({
@@ -65,18 +37,20 @@ export default function QuizEditor({
 
   // state
   const [title, setTitle] = useState<string>(
-    initialData?.title ?? "Untitled Quiz"
+    initialData?.title ?? "Untitled Quiz",
   );
   const [pages, setPages] = useState<Page[]>(
-    initialData?.pages ?? [{ id: uid("page-"), title: "Page 1", questions: [] }]
+    initialData?.pages ?? [
+      { id: uid("page-"), title: "Page 1", questions: [] },
+    ],
   );
   const [attemptsAllowed, setAttemptsAllowed] = useState<string>(
-    String(initialData?.attemptsAllowed ?? 1)
+    String(initialData?.attemptsAllowed ?? 1),
   );
   const [timeLimitMinutes, setTimeLimitMinutes] = useState<string>(
     initialData?.timeLimitSeconds
       ? String(Math.ceil(initialData.timeLimitSeconds / 60))
-      : ""
+      : "",
   );
 
   const hydrated = useRef<boolean>(false);
@@ -100,13 +74,13 @@ export default function QuizEditor({
     setPages(
       initialData.pages ?? [
         { id: uid("page-"), title: "Page 1", questions: [] },
-      ]
+      ],
     );
     setAttemptsAllowed(String(initialData.attemptsAllowed ?? 1));
     setTimeLimitMinutes(
       initialData.timeLimitSeconds
         ? String(Math.ceil(initialData.timeLimitSeconds / 60))
-        : ""
+        : "",
     );
 
     hydrated.current = true;
@@ -120,7 +94,7 @@ export default function QuizEditor({
   }
   function addQuestion(
     pageId: string,
-    type: Question["type"] = "multiple_choice"
+    type: Question["type"] = "multiple_choice",
   ): void {
     setPages((p) =>
       p.map((pg) =>
@@ -138,38 +112,38 @@ export default function QuizEditor({
                       correctAnswer: null,
                     }
                   : type === "checkboxes"
-                  ? {
-                      id: uid("q-"),
-                      type,
-                      text: "New question",
-                      options: ["", "", "", ""],
-                      correctAnswer: [],
-                    }
-                  : type === "short_answer"
-                  ? {
-                      id: uid("q-"),
-                      type,
-                      text: "New question",
-                      sentenceLimit: 1,
-                      correctAnswer: "",
-                    }
-                  : {
-                      id: uid("q-"),
-                      type: "paragraph",
-                      text: "New question",
-                      sentenceLimit: 3,
-                      correctAnswer: "",
-                    },
+                    ? {
+                        id: uid("q-"),
+                        type,
+                        text: "New question",
+                        options: ["", "", "", ""],
+                        correctAnswer: [],
+                      }
+                    : type === "short_answer"
+                      ? {
+                          id: uid("q-"),
+                          type,
+                          text: "New question",
+                          sentenceLimit: 1,
+                          correctAnswer: "",
+                        }
+                      : {
+                          id: uid("q-"),
+                          type: "paragraph",
+                          text: "New question",
+                          sentenceLimit: 3,
+                          correctAnswer: "",
+                        },
               ],
             }
-          : pg
-      )
+          : pg,
+      ),
     );
   }
   function updateQuestion(
     pageId: string,
     qId: string,
-    patch: Partial<Question>
+    patch: Partial<Question>,
   ): void {
     setPages((p) =>
       p.map((pg) =>
@@ -177,11 +151,11 @@ export default function QuizEditor({
           ? {
               ...pg,
               questions: pg.questions.map((q) =>
-                q.id === qId ? { ...q, ...patch } : q
+                q.id === qId ? { ...q, ...patch } : q,
               ),
             }
-          : pg
-      )
+          : pg,
+      ),
     );
   }
 
@@ -190,7 +164,7 @@ export default function QuizEditor({
     length: number,
     from: number,
     to: number,
-    correct: any
+    correct: any,
   ) {
     const map = new Map<number, number>();
     for (let i = 0; i < length; i++) map.set(i, i);
@@ -260,7 +234,7 @@ export default function QuizEditor({
     if (kind === "QUESTION") {
       const srcPageIdx = pages.findIndex((p) => p.id === source.droppableId);
       const dstPageIdx = pages.findIndex(
-        (p) => p.id === destination.droppableId
+        (p) => p.id === destination.droppableId,
       );
       if (srcPageIdx < 0 || dstPageIdx < 0) return;
 
@@ -308,12 +282,12 @@ export default function QuizEditor({
                 opts.length,
                 source.index,
                 destination.index,
-                q.correctAnswer
+                q.correctAnswer,
               );
               return { ...q, options: opts, correctAnswer: newCorrect };
             }),
           };
-        })
+        }),
       );
       return;
     }
@@ -339,8 +313,8 @@ export default function QuizEditor({
       p.map((pg) =>
         pg.id !== pageId
           ? pg
-          : { ...pg, questions: pg.questions.filter((_, i) => i !== qIndex) }
-      )
+          : { ...pg, questions: pg.questions.filter((_, i) => i !== qIndex) },
+      ),
     );
   }
   function removeOption(pageId: string, qId: string, optIndex: number): void {
@@ -374,7 +348,7 @@ export default function QuizEditor({
             return { ...q, ...patch };
           }),
         };
-      })
+      }),
     );
   }
 
@@ -434,7 +408,7 @@ export default function QuizEditor({
   function changeQuestionType(
     pageId: string,
     qId: string,
-    nextType: string
+    nextType: string,
   ): void {
     setPages((prev) =>
       prev.map((pg) => {
@@ -474,9 +448,9 @@ export default function QuizEditor({
               const clean = Array.from(
                 new Set(
                   arr.filter(
-                    (i) => Number.isInteger(i) && i >= 0 && i < opts.length
-                  )
-                )
+                    (i) => Number.isInteger(i) && i >= 0 && i < opts.length,
+                  ),
+                ),
               ).sort((a, b) => a - b);
               return {
                 id: q.id,
@@ -509,7 +483,7 @@ export default function QuizEditor({
             return q;
           }),
         };
-      })
+      }),
     );
   }
 
@@ -672,8 +646,8 @@ export default function QuizEditor({
                                         p.map((x) =>
                                           x.id === pg.id
                                             ? { ...x, title: e.target.value }
-                                            : x
-                                        )
+                                            : x,
+                                        ),
                                       )
                                     }
                                   />
@@ -708,7 +682,7 @@ export default function QuizEditor({
                                     >
                                       {pg.questions.map((q, qidx) => (
                                         <Draggable
-                                          draggableId={q.id}
+                                          draggableId={String(q.id)}
                                           index={qidx}
                                           key={q.id}
                                         >
@@ -732,10 +706,10 @@ export default function QuizEditor({
                                                   onChange={(e) =>
                                                     updateQuestion(
                                                       pg.id,
-                                                      q.id,
+                                                      String(q.id),
                                                       {
                                                         text: e.target.value,
-                                                      }
+                                                      },
                                                     )
                                                   }
                                                 />
@@ -745,8 +719,8 @@ export default function QuizEditor({
                                                   onChange={(e) =>
                                                     changeQuestionType(
                                                       pg.id,
-                                                      q.id,
-                                                      e.target.value
+                                                      String(q.id),
+                                                      e.target.value,
                                                     )
                                                   }
                                                 >
@@ -777,11 +751,11 @@ export default function QuizEditor({
                                                     onChange={(e) =>
                                                       updateQuestion(
                                                         pg.id,
-                                                        q.id,
+                                                        String(q.id),
                                                         {
                                                           requiresManualGrading:
                                                             e.target.checked,
-                                                        }
+                                                        },
                                                       )
                                                     }
                                                   />
@@ -815,7 +789,10 @@ export default function QuizEditor({
                                                         className="options"
                                                       >
                                                         {(q.options || []).map(
-                                                          (opt, oi) => {
+                                                          (
+                                                            opt: any[],
+                                                            oi: any,
+                                                          ) => {
                                                             const isCb =
                                                               q.type ===
                                                               "checkboxes";
@@ -825,13 +802,13 @@ export default function QuizEditor({
                                                                 ? String(oi) ===
                                                                   String(
                                                                     q.correctAnswer ??
-                                                                      ""
+                                                                      "",
                                                                   )
                                                                 : Array.isArray(
-                                                                    q.correctAnswer
+                                                                    q.correctAnswer,
                                                                   ) &&
                                                                   q.correctAnswer.includes(
-                                                                    oi
+                                                                    oi,
                                                                   );
 
                                                             return (
@@ -868,7 +845,7 @@ export default function QuizEditor({
                                                                         oi + 1
                                                                       }`}
                                                                       onChange={(
-                                                                        e
+                                                                        e,
                                                                       ) => {
                                                                         const opts =
                                                                           [
@@ -881,11 +858,13 @@ export default function QuizEditor({
                                                                           e.target.value;
                                                                         updateQuestion(
                                                                           pg.id,
-                                                                          q.id,
+                                                                          String(
+                                                                            q.id,
+                                                                          ),
                                                                           {
                                                                             options:
                                                                               opts,
-                                                                          }
+                                                                          },
                                                                         );
                                                                       }}
                                                                     />
@@ -899,7 +878,7 @@ export default function QuizEditor({
                                                                           onChange={() => {
                                                                             const arr =
                                                                               Array.isArray(
-                                                                                q.correctAnswer
+                                                                                q.correctAnswer,
                                                                               )
                                                                                 ? [
                                                                                     ...q.correctAnswer,
@@ -907,7 +886,7 @@ export default function QuizEditor({
                                                                                 : [];
                                                                             const idx =
                                                                               arr.indexOf(
-                                                                                oi
+                                                                                oi,
                                                                               );
                                                                             if (
                                                                               idx >=
@@ -915,19 +894,21 @@ export default function QuizEditor({
                                                                             )
                                                                               arr.splice(
                                                                                 idx,
-                                                                                1
+                                                                                1,
                                                                               );
                                                                             else
                                                                               arr.push(
-                                                                                oi
+                                                                                oi,
                                                                               );
                                                                             updateQuestion(
                                                                               pg.id,
-                                                                              q.id,
+                                                                              String(
+                                                                                q.id,
+                                                                              ),
                                                                               {
                                                                                 correctAnswer:
                                                                                   arr,
-                                                                              }
+                                                                              },
                                                                             );
                                                                           }}
                                                                         />
@@ -944,13 +925,15 @@ export default function QuizEditor({
                                                                         onClick={() =>
                                                                           updateQuestion(
                                                                             pg.id,
-                                                                            q.id,
+                                                                            String(
+                                                                              q.id,
+                                                                            ),
                                                                             {
                                                                               correctAnswer:
                                                                                 String(
-                                                                                  oi
+                                                                                  oi,
                                                                                 ),
-                                                                            }
+                                                                            },
                                                                           )
                                                                         }
                                                                       >
@@ -964,8 +947,10 @@ export default function QuizEditor({
                                                                       onClick={() =>
                                                                         removeOption(
                                                                           pg.id,
-                                                                          q.id,
-                                                                          oi
+                                                                          String(
+                                                                            q.id,
+                                                                          ),
+                                                                          oi,
                                                                         )
                                                                       }
                                                                     >
@@ -975,7 +960,7 @@ export default function QuizEditor({
                                                                 )}
                                                               </Draggable>
                                                             );
-                                                          }
+                                                          },
                                                         )}
                                                         {
                                                           optsProvided.placeholder
@@ -986,14 +971,14 @@ export default function QuizEditor({
                                                           onClick={() =>
                                                             updateQuestion(
                                                               pg.id,
-                                                              q.id,
+                                                              String(q.id),
                                                               {
                                                                 options: [
                                                                   ...(q.options ||
                                                                     []),
                                                                   "",
                                                                 ],
-                                                              }
+                                                              },
                                                             )
                                                           }
                                                         >
@@ -1019,11 +1004,11 @@ export default function QuizEditor({
                                                     onChange={(e) =>
                                                       updateQuestion(
                                                         pg.id,
-                                                        q.id,
+                                                        String(q.id),
                                                         {
                                                           correctAnswer:
                                                             e.target.value,
-                                                        }
+                                                        },
                                                       )
                                                     }
                                                   />
@@ -1043,39 +1028,39 @@ export default function QuizEditor({
                                                         q.sentenceLimit == null
                                                           ? ""
                                                           : String(
-                                                              q.sentenceLimit
+                                                              q.sentenceLimit,
                                                             )
                                                       }
                                                       onChange={(e) => {
                                                         // store raw string, don't clamp per key
                                                         updateQuestion(
                                                           pg.id,
-                                                          q.id,
+                                                          String(q.id),
                                                           {
                                                             sentenceLimit:
                                                               e.target.value,
-                                                          }
+                                                          },
                                                         );
                                                       }}
                                                       onBlur={(e) => {
                                                         // clamp on commit (blur)
                                                         const n = parseInt(
                                                           e.target.value,
-                                                          10
+                                                          10,
                                                         );
                                                         const v =
                                                           Number.isFinite(n)
                                                             ? Math.min(
                                                                 3,
-                                                                Math.max(1, n)
+                                                                Math.max(1, n),
                                                               )
                                                             : 1;
                                                         updateQuestion(
                                                           pg.id,
-                                                          q.id,
+                                                          String(q.id),
                                                           {
                                                             sentenceLimit: v,
-                                                          }
+                                                          },
                                                         );
                                                       }}
                                                     />
@@ -1098,11 +1083,11 @@ export default function QuizEditor({
                                                     onChange={(e) =>
                                                       updateQuestion(
                                                         pg.id,
-                                                        q.id,
+                                                        String(q.id),
                                                         {
                                                           correctAnswer:
                                                             e.target.value,
-                                                        }
+                                                        },
                                                       )
                                                     }
                                                   />
@@ -1120,23 +1105,23 @@ export default function QuizEditor({
                                                         q.sentenceLimit == null
                                                           ? ""
                                                           : String(
-                                                              q.sentenceLimit
+                                                              q.sentenceLimit,
                                                             )
                                                       }
                                                       onChange={(e) => {
                                                         updateQuestion(
                                                           pg.id,
-                                                          q.id,
+                                                          String(q.id),
                                                           {
                                                             sentenceLimit:
                                                               e.target.value,
-                                                          }
+                                                          },
                                                         );
                                                       }}
                                                       onBlur={(e) => {
                                                         const n = parseInt(
                                                           e.target.value,
-                                                          10
+                                                          10,
                                                         );
                                                         const v =
                                                           Number.isFinite(n)
@@ -1144,10 +1129,10 @@ export default function QuizEditor({
                                                             : 3;
                                                         updateQuestion(
                                                           pg.id,
-                                                          q.id,
+                                                          String(q.id),
                                                           {
                                                             sentenceLimit: v,
-                                                          }
+                                                          },
                                                         );
                                                       }}
                                                     />

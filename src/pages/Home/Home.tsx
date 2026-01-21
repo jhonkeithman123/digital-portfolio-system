@@ -10,6 +10,11 @@ import TokenGuard from "../../components/auth/tokenGuard";
 import LoadingOverlay from "../../components/Component-elements/loading_overlay";
 import { apiFetch } from "../../utils/apiClient";
 import "./Home.css";
+import {
+  broadcastAuthState,
+  getGlobalAuthState,
+  setTabAuth,
+} from "../../utils/tabAuth";
 
 type Role = "teacher" | "student" | string;
 
@@ -66,11 +71,19 @@ const Home: React.FC = (): React.ReactElement => {
     if (didInit.current) return;
     didInit.current = true;
 
+    // Check global auth state first
+    const globalAuth = getGlobalAuthState();
+
     try {
       const cached = JSON.parse(localStorage.getItem("user") || "null");
       if (cached) {
         setUser(cached);
         setRole(cached.role || "");
+
+        // If user exists in localStorage and global auth is valid, set tab auth
+        if (globalAuth?.authenticated) {
+          setTabAuth();
+        }
       }
     } catch {
       // ignore parse error
@@ -91,7 +104,11 @@ const Home: React.FC = (): React.ReactElement => {
         if (data.user) {
           setUser(data.user);
           setRole(data.user.role || "");
-          dbg("Session user:", data.user);
+
+          // Set tab auth and broadcast to other tabs
+          setTabAuth();
+          broadcastAuthState(true, data.user.id);
+
           try {
             localStorage.setItem("user", JSON.stringify(data.user));
           } catch {
@@ -99,7 +116,6 @@ const Home: React.FC = (): React.ReactElement => {
           }
         }
       } catch (err) {
-         
         console.error("Session validation error:", err);
       }
     })();
@@ -126,7 +142,6 @@ const Home: React.FC = (): React.ReactElement => {
           showMsgRef.current("No classroom created yet.", "info");
         }
       } catch (e) {
-         
         console.error("Error loading classroom:", e);
         if (!ignore) showMsgRef.current("Failed to load classroom", "error");
       } finally {

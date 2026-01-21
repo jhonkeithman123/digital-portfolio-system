@@ -7,39 +7,7 @@ import useMessage from "../../hooks/useMessage.js";
 import useConfirm from "../../hooks/useConfirm.js";
 import "./css/quiz-take.css";
 
-type Question = {
-  id: string | number;
-  type?:
-    | "multiple_choice"
-    | "checkboxes"
-    | "short_answer"
-    | "paragraph"
-    | string;
-  text?: string;
-  options?: string[];
-  correctAnswer?: any;
-  sentenceLimit?: number | null;
-  requiresManualGrading?: boolean;
-  [k: string]: any;
-};
-
-type Page = {
-  id: string;
-  title?: string;
-  questions: Question[];
-  [k: string]: any;
-};
-
-type ServerQuiz = {
-  id?: string | number;
-  title?: string;
-  description?: string;
-  time_limit_seconds?: number | null;
-  attempts_allowed?: number | null;
-  attempts_remaining?: number | null;
-  questions?: any;
-  [k: string]: any;
-};
+import type { Question, Page, ServerQuiz, QuizAttempt } from "../../types/quiz";
 
 function millisLeft(until: string | number | Date | null): number {
   if (!until) return 0;
@@ -229,8 +197,8 @@ export default function QuizTakePage(): React.ReactElement {
       const exp = data.expiresAt
         ? new Date(data.expiresAt)
         : quiz.time_limit_seconds
-        ? new Date(Date.now() + quiz.time_limit_seconds * 1000)
-        : null;
+          ? new Date(Date.now() + quiz.time_limit_seconds * 1000)
+          : null;
       setExpiresAt(exp);
       if (exp) {
         setTimeLeftMs(millisLeft(exp));
@@ -356,7 +324,7 @@ export default function QuizTakePage(): React.ReactElement {
                   Attempts:{" "}
                   {quiz.attempts_remaining != null
                     ? `${quiz.attempts_remaining} remaining of ${quiz.attempts_allowed}`
-                    : quiz.attempts_allowed ?? "—"}{" "}
+                    : (quiz.attempts_allowed ?? "—")}{" "}
                   • Time:{" "}
                   {quiz.time_limit_seconds
                     ? `${Math.ceil(quiz.time_limit_seconds / 60)} min`

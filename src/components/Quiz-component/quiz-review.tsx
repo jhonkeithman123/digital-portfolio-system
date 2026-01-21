@@ -12,26 +12,11 @@ import useMessage from "../../hooks/useMessage.js";
 import Header from "../Component-elements/Header.js";
 import "./css/quiz-review.css";
 
-interface Question {
-  id: string;
-  type: string;
-  text: string;
-  requiresManualGrading?: boolean;
-  correctAnswer?: any;
-  options?: string[];
-}
-
-type Attempt = {
-  id: number | string;
-  student_name?: string | null;
-  student_username?: string | null;
-  attempt_no?: number;
-  status?: string;
-  score?: number;
-  answers?: Record<string, any>;
-  grading?: Record<string, any>;
-  [k: string]: any;
-};
+import type {
+  Question,
+  QuizAttempt as Attempt,
+  GradingState,
+} from "../../types/quiz";
 
 const GRADING_STORAGE_KEY = "quiz_grading_state";
 
@@ -44,7 +29,7 @@ function saveGradingState(
     gradingScore: string;
     gradingComment: string;
     gradingPayload: Record<string, any>;
-  }
+  },
 ) {
   try {
     const key = `${GRADING_STORAGE_KEY}_${classCode}_${quizId}`;
@@ -63,7 +48,7 @@ function saveGradingState(
 function loadGradingState(
   classCode: string,
   quizId: string,
-  attemptId: string | number
+  attemptId: string | number,
 ) {
   try {
     const key = `${GRADING_STORAGE_KEY}_${classCode}_${quizId}`;
@@ -102,7 +87,7 @@ export default function QuizReviewPage(): React.ReactElement {
   const [filter, setFilter] = useState<string>("");
   const [questions, setQuestions] = useState<Question[]>([]);
   const [questionScores, setQuestionScores] = useState<Record<string, number>>(
-    {}
+    {},
   );
   const [manualScores, setManualScores] = useState<Record<string, number>>({});
   const [initialFilterSet, setInitialFilterSet] = useState(false);
@@ -145,7 +130,7 @@ export default function QuizReviewPage(): React.ReactElement {
     try {
       // Load attempts
       const url = `/quizzes/${classCode}/quizzes/${quizId}/attempt?status=${encodeURIComponent(
-        filter
+        filter,
       )}`;
       const { unauthorized, data } = await apiFetch<{
         success?: boolean;
@@ -171,7 +156,7 @@ export default function QuizReviewPage(): React.ReactElement {
 
       const { data: quizData } = await apiFetch(
         `/quizzes/${classCode}/quizzes/${quizId}`,
-        { signal: ac.signal }
+        { signal: ac.signal },
       );
 
       if (quizData?.quiz?.questions?.pages) {
@@ -205,7 +190,7 @@ export default function QuizReviewPage(): React.ReactElement {
       for (const filterOption of filterOptions) {
         try {
           const url = `/quizzes/${classCode}/quizzes/${quizId}/attempt?status=${encodeURIComponent(
-            filterOption
+            filterOption,
           )}`;
           const { data } = await apiFetch<{
             success?: boolean;
@@ -393,7 +378,7 @@ export default function QuizReviewPage(): React.ReactElement {
 
     // optimistic update
     setAttempts((prev) =>
-      prev.map((x) => (x.id === selected.id ? { ...x, score: finalScore } : x))
+      prev.map((x) => (x.id === selected.id ? { ...x, score: finalScore } : x)),
     );
 
     try {
@@ -527,7 +512,7 @@ export default function QuizReviewPage(): React.ReactElement {
           </div>
         </li>
       )),
-    [attempts, selected]
+    [attempts, selected],
   );
 
   const roleClass = user?.role === "teacher" ? "teacher-role" : "student-role";
@@ -669,15 +654,15 @@ export default function QuizReviewPage(): React.ReactElement {
                           {questions.length > 0
                             ? `${questions.reduce(
                                 (sum, q) => sum + (questionScores[q.id] || 0),
-                                0
+                                0,
                               )} / ${questions.length} 
            (${Math.round(
              (questions.reduce(
                (sum, q) => sum + (questionScores[q.id] || 0),
-               0
+               0,
              ) /
                questions.length) *
-               100
+               100,
            )}%)`
                             : "—"}
                         </strong>
@@ -723,7 +708,7 @@ export default function QuizReviewPage(): React.ReactElement {
                                     {(Array.isArray(answer) ? answer : []).map(
                                       (idx: number) => (
                                         <li key={idx}>{q.options![idx]}</li>
-                                      )
+                                      ),
                                     )}
                                   </ul>
                                 ) : (
@@ -811,7 +796,7 @@ export default function QuizReviewPage(): React.ReactElement {
                                           parseFloat(e.target.value) || 0;
                                         const clamped = Math.max(
                                           0,
-                                          Math.min(1, value)
+                                          Math.min(1, value),
                                         );
                                         setQuestionScores({
                                           ...questionScores,

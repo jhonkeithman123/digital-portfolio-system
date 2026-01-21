@@ -6,31 +6,8 @@ import LoadingOverlay from "../Component-elements/loading_overlay";
 import "./css/ActivityComments.css";
 import useConfirm from "../../hooks/useConfirm";
 
-type Reply = {
-  id: string | number;
-  username?: string | null;
-  reply?: string;
-  created_at?: string | null;
-  createdAt?: string | null;
-  [k: string]: any;
-};
-
-type Comment = {
-  id: string | number;
-  user_id?: string | number;
-  username?: string | null;
-  authorName?: string | null;
-  comment?: string;
-  text?: string;
-  created_at?: string | null;
-  createdAt?: string | null;
-  replies?: Reply[];
-  [k: string]: any;
-};
-
-interface ActivityCommentsProps {
-  activityId: string | number;
-}
+import type { Comment, ActivityCommentsProps } from "../../types/activity";
+import useRealTimeData from "../../hooks/useRealTimeData";
 
 const ActivityComments: React.FC<ActivityCommentsProps> = ({
   activityId,
@@ -81,6 +58,33 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
   useEffect(() => {
     showMsgRef.current = showMessage;
   }, [showMessage]);
+
+  // Real-time polling for comments
+  const { refresh: refreshComments, isPolling } = useRealTimeData({
+    fetchFn: async () => {
+      if (!activityId) return [];
+      const { data } = await apiFetch(
+        `/activity/${encodeURIComponent(String(activityId))}/comments`
+      );
+      if (data?.success && Array.isArray(data.comments)) {
+        const unique = Array.from(
+          new Map(
+            (data.comments ?? []).map((item: Comment) => [
+              item.id,
+              { ...item, replies: item.replies ?? [] },
+            ])
+          )
+        ).map(([, value]) => value as Comment);
+        return unique;
+      }
+      return [];
+    },
+    interval: 8000, // Poll every 8 seconds
+    enabled: !!activityId,
+    onChange: (comments) => {
+      setComments(comments);
+    },
+  });
 
   const load = useCallback(
     (signal?: AbortSignal) => {
@@ -317,7 +321,6 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
             );
           }
         } catch (e: unknown | undefined) {
-           
           console.error("Edit comment error:", e);
           showMsgRef.current?.("Server error", "error");
         }
@@ -443,7 +446,43 @@ const ActivityComments: React.FC<ActivityCommentsProps> = ({
       <ConfirmModal />
       <LoadingOverlay loading={loading} text="Processing..." fullPage={false} />
       <section className="activity-section activity-comments">
-        <h4>Comments</h4>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "1rem",
+          }}
+        >
+          <h4 style={{ margin: 0 }}>Comments</h4>
+          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            {isPolling && (
+              <span
+                className="polling-indicator"
+                title="Checking for updates..."
+              >
+                🔄
+              </span>
+            )}
+            <button
+              className="refresh-btn"
+              onClick={refreshComments}
+              disabled={loading}
+              title="Refresh comments"
+              style={{
+                padding: "6px 12px",
+                fontSize: "13px",
+                background: "var(--accent-color)",
+                color: "white",
+                border: "none",
+                borderRadius: "6px",
+                cursor: "pointer",
+              }}
+            >
+              Refresh
+            </button>
+          </div>
+        </div>
 
         <div className="comment-form">
           <textarea

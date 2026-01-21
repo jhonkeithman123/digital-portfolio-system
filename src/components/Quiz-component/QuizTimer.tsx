@@ -1,12 +1,6 @@
 import React, { useMemo, useEffect, useRef, useState } from "react";
 import "./css/QuizTimer.css";
-
-interface QuizTimerProps {
-  expiresAt?: Date | string | null;
-  onExpire?: () => void;
-  className?: string;
-  size?: "small" | "medium" | "large";
-}
+import type { QuizTimerProps } from "../../types/quiz";
 
 export default function QuizTimer({
   expiresAt = null,

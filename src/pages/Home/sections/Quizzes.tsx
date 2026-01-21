@@ -3,22 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../../../utils/apiClient.js";
 import useMessage from "../../../hooks/useMessage.js";
 import useConfirm from "../../../hooks/useConfirm.js";
+import type { Quiz } from "../../../types/quiz";
 import "../Home.css";
 
 type Role = "teacher" | "student" | string;
-
-type Quiz = {
-  id: string | number;
-  title?: string;
-  description?: string;
-  start_time?: string | null;
-  questions_count?: number;
-  question_count?: number;
-  attempts_allowed?: number;
-  attemptsAllowed?: number;
-  time_limit_seconds?: number | null;
-  [k: string]: any;
-};
 
 interface QuizzesProps {
   role: Role;

@@ -1,31 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
 import { apiFetch } from "../../utils/apiClient";
 import useMessage from "../../hooks/useMessage";
+import type {
+  Submission,
+  ActivitySubmissionsProps as Props,
+} from "../../types/activity";
 import "./css/Activity.css";
-
-export type Submission = {
-  id: number | string;
-  activity_id: number | string;
-  student_id: number | string;
-  original_name?: string | null;
-  file_path?: string | null;
-  mime_type?: string | null;
-  score?: number | null;
-  graded_at?: string | null;
-  graded_by?: number | null;
-  created_at?: string;
-  username: string;
-  email?: string;
-  section?: string | null;
-};
-
-interface Props {
-  submissions: Submission[];
-  loading: boolean;
-  maxScore: number;
-  activityId: string | number;
-  onScoreUpdate?: (submissionId: string | number, newScore: number) => void;
-}
 
 const ActivitySubmissions: React.FC<Props> = ({
   submissions,

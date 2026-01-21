@@ -1,23 +1,12 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { apiFetch } from "../../utils/apiClient";
 import useMessage from "../../hooks/useMessage";
-import "./css/AnswerSubmission.css";
 import useConfirm from "../../hooks/useConfirm";
-
-interface AnswerSubmissionProps {
-  activityId: string | number;
-  onSubmitted?: () => void;
-}
-
-interface ExistingSubmission {
-  id: number | string;
-  file_path?: string | null;
-  original_name?: string | null;
-  score?: number | null;
-  graded_at?: string | null;
-  created_at?: string;
-  updated_at?: string;
-}
+import type {
+  AnswerSubmissionProps,
+  ExistingSubmission,
+} from "../../types/activity";
+import "./css/AnswerSubmission.css";
 
 export default function AnswerSubmission({
   activityId,
@@ -38,6 +27,33 @@ export default function AnswerSubmission({
   useEffect(() => {
     showMsgRef.current = showMessage;
   }, [showMessage]);
+
+  // Real-time polling for submission status (optional - can be enabled if needed)
+  // const { refresh: refreshSubmission, isPolling } = useRealTimeData({
+  //   fetchFn: async () => {
+  //     if (!activityId) return null;
+  //     const url = `/activity/${encodeURIComponent(
+  //       String(activityId)
+  //     )}/my-submission`;
+  //     const { data, unauthorized } = await apiFetch<{
+  //       success?: boolean;
+  //       submission?: ExistingSubmission;
+  //       error?: string;
+  //     }>(url);
+
+  //     if (unauthorized) {
+  //       return null;
+  //     }
+
+  //     return data?.success && data.submission ? data.submission : null;
+  //   },
+  //   interval: 15000, // Poll every 15 seconds for score updates
+  //   enabled: !!activityId,
+  //   onChange: (submission) => {
+  //     setExistingSubmission(submission);
+  //     setLoading(false);
+  //   },
+  // });
 
   const loadSubmission = useCallback(async () => {
     setLoading(true);

@@ -1,8 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { broadcastAuthState, clearGlobalAuthState } from "../utils/tabAuth";
 
 type SessionData = {
   success?: boolean;
   expiresInMs?: number;
+  user?: {
+    id?: string | number;
+    [k: string]: any;
+  };
   [k: string]: any;
 };
 
@@ -31,14 +36,10 @@ export default function useTokenStatus(): {
     }, wait);
   }, []);
 
-  // keep checkNow declaration hoisted so schedule can call it
   const checkNow = useCallback(async (): Promise<void> => {
-    // Build backend URL from env (fallback to same-origin). Ensure credentials are sent.
     const API_BASE = "http://localhost:5000";
     const url = `${API_BASE}/auth/session`;
 
-    // Use fetch directly with credentials to ensure cookie is sent/checked by server.
-    // Treat non-200 / 401 responses or explicit success:false as expired.
     const controller = new AbortController();
     const timeout = window.setTimeout(() => controller.abort(), 8000);
 
@@ -54,10 +55,14 @@ export default function useTokenStatus(): {
       clearTimeout(timeout);
 
       if (!resp.ok) {
-        // 401/403/other errors -> treat as expired
+        console.warn(`[useTokenStatus] Session check failed: ${resp.status}`);
         setExpired(true);
         setReady(true);
         setRemainingMs(0);
+
+        // Broadcast logout to all tabs
+        clearGlobalAuthState();
+
         try {
           window.dispatchEvent(
             new CustomEvent("app:tokenExpired", {
@@ -72,12 +77,15 @@ export default function useTokenStatus(): {
 
       const data = (await resp.json()) as SessionData;
 
-      // server can indicate success:false or missing success -> treat as unauthorized
       if (data?.success === false || data == null) {
         console.warn("[useTokenStatus] Session invalid:", data);
         setExpired(true);
         setReady(true);
         setRemainingMs(0);
+
+        // Broadcast logout to all tabs
+        clearGlobalAuthState();
+
         try {
           window.dispatchEvent(
             new CustomEvent("app:tokenExpired", {
@@ -90,20 +98,27 @@ export default function useTokenStatus(): {
         return;
       }
 
-      // valid session
+      // Valid session - broadcast to all tabs
       console.log("[useTokenStatus] Session valid:", data.user);
       setExpired(false);
       setReady(true);
 
-      const next = 5 * 50 * 1000;
+      const userId = data.user?.id;
+      broadcastAuthState(true, userId);
+
+      const next = 5 * 60 * 1000; // 5 minutes
       setRemainingMs(next);
       schedule(next);
     } catch (err) {
       clearTimeout(timeout);
-      // network error or fetch aborted -> treat as expired for UX safety
+      console.error("[useTokenStatus] Session check error:", err);
       setExpired(true);
       setReady(true);
       setRemainingMs(0);
+
+      // Broadcast logout to all tabs
+      clearGlobalAuthState();
+
       try {
         window.dispatchEvent(
           new CustomEvent("app:tokenExpired", { detail: { reason: "error" } })
@@ -116,18 +131,19 @@ export default function useTokenStatus(): {
 
   useEffect(() => {
     mountedRef.current = true;
-    // initial check
     void checkNow();
 
     const onStorage = (ev: StorageEvent) => {
-      // react to auth-related localStorage changes across tabs (user, role, token etc.)
       const key = ev.key;
       if (!key) {
-        // full storage clear -> recheck
         void checkNow();
         return;
       }
-      if (["user", "role", "token", "justLoggedIn"].includes(key)) {
+      if (
+        ["user", "role", "token", "justLoggedIn", "globalAuthState"].includes(
+          key
+        )
+      ) {
         void checkNow();
       }
     };
@@ -138,7 +154,10 @@ export default function useTokenStatus(): {
       if (document.visibilityState === "visible") void checkNow();
     };
 
-    const onAppLogout = () => void checkNow();
+    const onAppLogout = () => {
+      clearGlobalAuthState();
+      void checkNow();
+    };
     const onAppLogin = () => void checkNow();
 
     window.addEventListener("storage", onStorage);

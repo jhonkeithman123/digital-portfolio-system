@@ -5,25 +5,12 @@ declare global {
   }
 }
 
+import type { Comment } from "./activity";
+
 const validRoles = ["student", "teacher"] as const;
 export type Role = (typeof validRoles)[number];
 export type MessageType = "info" | "success" | "error";
 export type ShowMessageFn = (text: string, kind?: MessageType) => void;
-
-export interface Reply {
-  id: string;
-  username?: string;
-  reply?: string;
-  created_at?: string;
-}
-
-export interface Comment {
-  id: string;
-  username?: string;
-  comment?: string;
-  created_at?: string;
-  replies?: Reply[];
-}
 
 export interface ShowcaseItem {
   id: string;
@@ -42,10 +29,17 @@ export interface Student {
   section?: string | null;
 }
 
-export interface Quiz {
-  id: string;
-  title?: string;
-}
+// Re-export Quiz types from quiz.d.ts
+export type { Quiz, QuizAttempt, Question, Page } from "./quiz";
+
+// Re-export Activity types from activity.d.ts
+export type {
+  Activity,
+  Instruction,
+  Submission,
+  Comment,
+  Reply,
+} from "./activity";
 
 export interface User {
   id: string;

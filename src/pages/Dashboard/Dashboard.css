@@ -36,7 +36,8 @@
 
 /* Student dashboard header: blue / cyan aurora */
 .dashboard-header.student-role {
-  background: radial-gradient(
+  background:
+    radial-gradient(
       circle at -10% -10%,
       rgba(248, 250, 252, 0.45),
       transparent 55%
@@ -46,7 +47,8 @@
 
 /* Teacher dashboard header: pink / coral aurora */
 .dashboard-header.teacher-role {
-  background: radial-gradient(
+  background:
+    radial-gradient(
       circle at -10% -10%,
       rgba(248, 250, 252, 0.45),
       transparent 55%
@@ -56,7 +58,8 @@
 
 /* Slightly softer in dark mode */
 :root[data-theme="dark"] .dashboard-header.student-role {
-  background: radial-gradient(
+  background:
+    radial-gradient(
       circle at -10% -10%,
       rgba(15, 23, 42, 0.9),
       transparent 55%
@@ -64,7 +67,8 @@
     linear-gradient(135deg, #3b82f6, #22d3ee);
 }
 :root[data-theme="dark"] .dashboard-header.teacher-role {
-  background: radial-gradient(
+  background:
+    radial-gradient(
       circle at -10% -10%,
       rgba(15, 23, 42, 0.9),
       transparent 55%
@@ -84,7 +88,8 @@
   text-transform: capitalize;
   background: linear-gradient(180deg, #ffffff, #f1f5f9);
   color: var(--accent-color);
-  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.35),
+  box-shadow:
+    0 10px 30px rgba(15, 23, 42, 0.35),
     0 0 0 1px rgba(255, 255, 255, 0.8) inset;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -92,22 +97,16 @@
 
 /* Role‑aware welcome pill (same idea as Home) */
 .dashboard-welcome.student-role {
-  background: radial-gradient(
-        circle at 0% 0%,
-        rgba(255, 255, 255, 0.95),
-        transparent 70%
-      )
+  background:
+    radial-gradient(circle at 0% 0%, rgba(255, 255, 255, 0.95), transparent 70%)
       padding-box,
     linear-gradient(180deg, #dbeafe, #eff6ff) border-box;
   color: #1d4ed8;
 }
 
 .dashboard-welcome.teacher-role {
-  background: radial-gradient(
-        circle at 0% 0%,
-        rgba(255, 255, 255, 0.95),
-        transparent 70%
-      )
+  background:
+    radial-gradient(circle at 0% 0%, rgba(255, 255, 255, 0.95), transparent 70%)
       padding-box,
     linear-gradient(180deg, #ffe4f1, #fee2e2) border-box;
   color: #be123c;
@@ -115,22 +114,16 @@
 
 /* Dark‑mode variants */
 :root[data-theme="dark"] .dashboard-welcome.student-role {
-  background: radial-gradient(
-        circle at 0% 0%,
-        rgba(15, 23, 42, 0.96),
-        transparent 70%
-      )
+  background:
+    radial-gradient(circle at 0% 0%, rgba(15, 23, 42, 0.96), transparent 70%)
       padding-box,
     linear-gradient(180deg, #1d4ed8, #0f172a) border-box;
   color: #e5e7eb;
 }
 
 :root[data-theme="dark"] .dashboard-welcome.teacher-role {
-  background: radial-gradient(
-        circle at 0% 0%,
-        rgba(15, 23, 42, 0.96),
-        transparent 70%
-      )
+  background:
+    radial-gradient(circle at 0% 0%, rgba(15, 23, 42, 0.96), transparent 70%)
       padding-box,
     linear-gradient(180deg, #be185d, #0f172a) border-box;
   color: #fee2e2;
@@ -145,17 +138,15 @@
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.7);
   font-weight: 700;
-  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.35),
+  box-shadow:
+    0 2px 10px rgba(15, 23, 42, 0.35),
     0 0 0 1px rgba(255, 255, 255, 0.8) inset;
 }
 
 /* Student pill */
 .role-badge.student {
-  background: radial-gradient(
-        circle at 0% 0%,
-        rgba(255, 255, 255, 0.95),
-        transparent 70%
-      )
+  background:
+    radial-gradient(circle at 0% 0%, rgba(255, 255, 255, 0.95), transparent 70%)
       padding-box,
     linear-gradient(135deg, #2563eb, #38bdf8) border-box;
   color: #0f172a;
@@ -163,11 +154,8 @@
 
 /* Teacher pill */
 .role-badge.teacher {
-  background: radial-gradient(
-        circle at 0% 0%,
-        rgba(255, 255, 255, 0.95),
-        transparent 70%
-      )
+  background:
+    radial-gradient(circle at 0% 0%, rgba(255, 255, 255, 0.95), transparent 70%)
       padding-box,
     linear-gradient(135deg, #ec4899, #fb7185) border-box;
   color: #0f172a;
@@ -203,8 +191,11 @@
   cursor: pointer;
   border-radius: 999px;
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.28);
-  transition: background 0.15s ease, transform 0.12s ease,
-    border-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    background 0.15s ease,
+    transform 0.12s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 .pill-btn:hover {
   background: linear-gradient(180deg, #ffffff, #ffffffc0);
@@ -284,6 +275,12 @@
   margin: 0 auto;
 }
 
+.polling-indicator {
+  display: inline-block;
+  animation: spin 1s linear infinite;
+  font-size: 14px;
+}
+
 /* Buttons */
 .dashboard-button {
   background: linear-gradient(135deg, var(--accent-color), #38bdf8);
@@ -293,12 +290,21 @@
   border-radius: 8px;
   cursor: pointer;
   margin-bottom: 0.5rem;
-  transition: background 0.2s ease, transform 0.12s ease, box-shadow 0.2s ease;
+  transition:
+    background 0.2s ease,
+    transform 0.12s ease,
+    box-shadow 0.2s ease;
   box-shadow: 0 12px 28px rgba(37, 99, 235, 0.55);
 }
 .dashboard-button:hover {
   transform: translateY(-1px) scale(1.02);
   box-shadow: 0 18px 40px rgba(37, 99, 235, 0.75);
+}
+
+.btn-small {
+  padding: 6px 12px;
+  font-size: 13px;
+  min-width: auto;
 }
 
 /* Section manager layout */
@@ -715,4 +721,28 @@
   100% {
     transform: scale(1);
   }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Real-time polling indicator */
+.polling-indicator {
+  display: inline-block;
+  animation: spin 1s linear infinite;
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+/* Small button variant */
+.btn-small {
+  padding: 6px 12px;
+  font-size: 13px;
+  min-width: auto;
 }

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./css/useLogout.css";
+import { clearGlobalAuthState, removeTabAuth } from "../utils/tabAuth";
 
 type TriggerLogoutFn = (opts?: { confirm?: boolean }) => void;
 type UseLogoutReturn = [TriggerLogoutFn, () => React.ReactElement | null];
@@ -15,18 +16,79 @@ type UseLogoutReturn = [TriggerLogoutFn, () => React.ReactElement | null];
  *  logout({ confirm: false }) - skip confirmation dialog
  *  useLogout({ redirectTo: '/login' }) - change redirect target
  */
-export default function useLogout({ redirectTo = "/" } = {}): UseLogoutReturn {
+export default function useLogout({
+  redirectTo = "/login",
+} = {}): UseLogoutReturn {
   const navigate = useNavigate();
   const [open, setOpen] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
 
-  const performLogout = (): void => {
+  const performLogout = async (): Promise<void> => {
     setLoading(true);
+
     try {
-      // perform any cleanup you want here
-      window.localStorage.clear();
-      // navigate after clearing storage
+      // 1. Call server logout endpoint FIRST to clear HTTP-only cookie
+      try {
+        await fetch("/auth/logout", {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        console.log("[useLogout] Server logout successful");
+      } catch (err) {
+        console.error("[useLogout] Server logout failed:", err);
+        // Continue with client-side logout even if server call fails
+      }
+
+      // 2. Clear global auth state (broadcasts to all tabs)
+      clearGlobalAuthState();
+      console.log("[useLogout] Cleared global auth state");
+
+      // 3. Clear tab-specific auth marker
+      removeTabAuth();
+      console.log("[useLogout] Removed tab auth");
+
+      // 4. Clear localStorage
+      try {
+        localStorage.clear(); // Clear everything to be safe
+        console.log("[useLogout] Cleared localStorage");
+      } catch (err) {
+        console.error("[useLogout] Error clearing localStorage:", err);
+      }
+
+      // 5. Clear sessionStorage
+      try {
+        sessionStorage.clear();
+        console.log("[useLogout] Cleared sessionStorage");
+      } catch (err) {
+        console.error("[useLogout] Error clearing sessionStorage:", err);
+      }
+
+      // 6. Dispatch logout event for other components to listen
+      try {
+        window.dispatchEvent(new Event("app:logout"));
+        console.log("[useLogout] Dispatched logout event");
+      } catch (err) {
+        console.error("[useLogout] Error dispatching logout event:", err);
+      }
+
+      // 7. Small delay to ensure all cleanup completes
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      // 8. Navigate to redirect target
+      console.log("[useLogout] Navigating to:", redirectTo);
       navigate(redirectTo, { replace: true });
+
+      // 9. Force reload after navigation to clear any cached state
+      setTimeout(() => {
+        window.location.replace(redirectTo);
+      }, 100);
+    } catch (error) {
+      console.error("[useLogout] Logout error:", error);
+      // Force navigation even if there were errors
+      window.location.replace(redirectTo);
     } finally {
       setLoading(false);
       setOpen(false);
@@ -35,13 +97,13 @@ export default function useLogout({ redirectTo = "/" } = {}): UseLogoutReturn {
 
   const triggerLogout: TriggerLogoutFn = ({ confirm = true } = {}) => {
     if (!confirm) {
-      performLogout();
+      void performLogout();
       return;
     }
     setOpen(true);
   };
 
-  const logoutModal = (): React.ReactElement | null => {
+  const LogoutModal = (): React.ReactElement | null => {
     if (!open) return null;
 
     return (
@@ -59,13 +121,14 @@ export default function useLogout({ redirectTo = "/" } = {}): UseLogoutReturn {
               onClick={() => setOpen(false)}
               className="cancel-button"
               type="button"
+              disabled={loading}
             >
               Cancel
             </button>
             <button
               className="logout-button"
               disabled={loading}
-              onClick={performLogout}
+              onClick={() => void performLogout()}
               type="button"
             >
               {loading ? "Logging out..." : "Logout"}
@@ -76,5 +139,5 @@ export default function useLogout({ redirectTo = "/" } = {}): UseLogoutReturn {
     );
   };
 
-  return [triggerLogout, logoutModal];
+  return [triggerLogout, LogoutModal];
 }

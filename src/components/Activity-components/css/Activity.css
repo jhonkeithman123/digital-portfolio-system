@@ -43,7 +43,9 @@
   background: rgba(15, 23, 42, 0.8);
   color: #e5e7eb;
   cursor: pointer;
-  transition: transform 0.5s ease, box-shadow 0.5s ease;
+  transition:
+    transform 0.5s ease,
+    box-shadow 0.5s ease;
 }
 
 .activity-back:hover {
@@ -73,8 +75,9 @@
 }
 
 .activity-code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
-    "Liberation Mono", "Courier New", monospace;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
   padding: 2px 8px;
   border-radius: 999px;
   background: rgba(30, 64, 175, 0.18);
@@ -406,4 +409,42 @@
   font-size: 1rem;
   color: var(--text-primary, #0f172a);
   font-weight: 600;
+}
+
+/* Real-time polling indicator */
+.polling-indicator {
+  display: inline-block;
+  animation: spin 1s linear infinite;
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Refresh button */
+.refresh-btn {
+  padding: 6px 12px;
+  fontsize: 13px;
+  background: var(--accent-color);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.refresh-btn:hover {
+  opacity: 0.9;
+}
+
+.refresh-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }

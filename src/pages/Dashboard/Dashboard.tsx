@@ -22,13 +22,19 @@ import NotificationBell from "../../components/Component-elements/NotificationBe
 import LoadingOverlay from "../../components/Component-elements/loading_overlay";
 import useLoadingState from "../../hooks/useLoading";
 import "./Dashboard.css";
+import useRealTimeData from "../../hooks/useRealTimeData";
+import {
+  setTabAuth,
+  broadcastAuthState,
+  getGlobalAuthState,
+} from "../../utils/tabAuth";
 
 const roleColors = {
   student: "#007bff",
   teacher: "#dc3545",
 };
 
-const Dashboard = () => {
+const Dashboard: React.FC = (): React.ReactElement => {
   const navigate = useNavigate();
   const [logout, LogoutModal] = useLogout();
   const [confirm, ConfirmModal] = useConfirm();
@@ -37,7 +43,6 @@ const Dashboard = () => {
   // For safegurading the useEffects to prevent infinite loops
   const didInit = useRef<boolean>(false);
   const enrollmentChecked = useRef<boolean>(false);
-  const quizzesLoadChecked = useRef<boolean>(false);
   const teacherChecked = useRef<boolean>(false);
   const studentsLoadedRef = useRef<boolean>(false);
 
@@ -48,7 +53,6 @@ const Dashboard = () => {
     null
   );
   const [studentQuizzes, setStudentQuizzes] = useState<Quiz[]>([]);
-  const [loadingQuizzes, setLoadingQuizzes] = useState<boolean>(false);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [inviteOpen, setInviteOpen] = useState<boolean>(false);
   const [unreadCount, setUnreadCount] = useState<number>(0);
@@ -64,8 +68,7 @@ const Dashboard = () => {
   const [savingMySection, setSavingMySection] = useState<boolean>(false); // for students
 
   const [showcaseItems, setShowcaseItems] = useState<ShowcaseItem[]>([]);
-  const { loading: loadingShowcase, wrap: wrapShowcase } =
-    useLoadingState(false);
+  const { loading: loadingShowcase } = useLoadingState(false);
 
   // Make showMessage stable for effects
   const showMsgRef = useRef<ShowMessageFn | undefined>(undefined);
@@ -73,51 +76,33 @@ const Dashboard = () => {
     showMsgRef.current = showMessage;
   }, [showMessage]);
 
-  const loadShowcase = useCallback(
-    () =>
-      wrapShowcase(async () => {
-        try {
-          const { data } = await apiFetch("/showcase");
-          if (data?.success && Array.isArray(data.items)) {
-            setShowcaseItems(data.items as ShowcaseItem[]);
-          } else {
-            setShowcaseItems((data?.items as ShowcaseItem[]) ?? []);
-          }
-        } catch (e) {
-          // use the direct showMessage (stable ref handled elsewhere)
-          showMsgRef.current?.("Failed to load showcase", "error");
-        }
-      }),
-    [wrapShowcase]
-  );
+  // // post a public comment on a showcased item
+  // const postShowcaseComment = async (
+  //   showcaseId: string,
+  //   comment: string
+  // ): Promise<void> => {
+  //   if (!comment?.trim()) return;
+  //   try {
+  //     const { data } = await apiFetch(`/showcase/${showcaseId}/comments`, {
+  //       method: "POST",
+  //       body: JSON.stringify({ comment }),
+  //     });
 
-  // post a public comment on a showcased item
-  const postShowcaseComment = async (
-    showcaseId: string,
-    comment: string
-  ): Promise<void> => {
-    if (!comment?.trim()) return;
-    try {
-      const { data } = await apiFetch(`/showcase/${showcaseId}/comments`, {
-        method: "POST",
-        body: JSON.stringify({ comment }),
-      });
-
-      if (data?.success && data.comment) {
-        setShowcaseItems((prev: ShowcaseItem[]) =>
-          prev.map((it) =>
-            it.id === showcaseId
-              ? { ...it, comments: [data.comment, ...(it.comments || [])] }
-              : it
-          )
-        );
-      } else {
-        showMsgRef.current?.("Failed to post comment", "error");
-      }
-    } catch {
-      showMsgRef.current?.("Server error", "error");
-    }
-  };
+  //     if (data?.success && data.comment) {
+  //       setShowcaseItems((prev: ShowcaseItem[]) =>
+  //         prev.map((it) =>
+  //           it.id === showcaseId
+  //             ? { ...it, comments: [data.comment, ...(it.comments || [])] }
+  //             : it
+  //         )
+  //       );
+  //     } else {
+  //       showMsgRef.current?.("Failed to post comment", "error");
+  //     }
+  //   } catch {
+  //     showMsgRef.current?.("Server error", "error");
+  //   }
+  // };
 
   //* post a reply to a comment on a showcased item (Will be enabled in the future)
   // const postShowcaseReply = async (
@@ -156,7 +141,47 @@ const Dashboard = () => {
   //   } catch {
   //     showMsgRef.current?.("Server error", "error");
   //   }
-  // };
+  // ;
+
+  // Showcase real-time data (disabled for now)
+  // const {
+  //   data: showCaseData,
+  //   refresh: refreshShowcase,
+  //   isPolling: isPollingShowcase,
+  // } = useRealTimeData({
+  //   fetchFn: async () => {
+  //     const { data } = await apiFetch("/showcase");
+  //     if (data?.success && Array.isArray(data.items)) {
+  //       return data.items as ShowcaseItem[];
+  //     }
+  //     return [];
+  //   },
+  //   interval: 5000, // Poll every 5 seconds
+  //   enabled: !!user, // Only poll when user is loaded
+  //   onChange: (items) => {
+  //     setShowcaseItems(items);
+  //   },
+  //   onError: (error) => {
+  //     console.error("Showcase polling error:", error);
+  //   },
+  // });
+
+  // Real-time quizzes for students
+  const { refresh: refreshQuizzes, isPolling: loadingQuizzes } =
+    useRealTimeData({
+      fetchFn: async () => {
+        if (!classroomInfo?.code) return [];
+        const { data } = await apiFetch(
+          `/quizzes/${classroomInfo.code}/quizzes`
+        );
+        return Array.isArray(data?.quizzes) ? data.quizzes : [];
+      },
+      interval: 5000, // Poll every 5 seconds
+      enabled: user?.role === "student" && !!classroomInfo?.code, // Only poll when the user is student and when the classroom code is loaded
+      onChange: (quizzes) => {
+        setStudentQuizzes(quizzes);
+      },
+    });
 
   useTamperGuard(user?.role, showMsgRef.current);
 
@@ -166,6 +191,16 @@ const Dashboard = () => {
     didInit.current = true;
 
     (async () => {
+      // Clear the justLoggedIn marker once we reach dashboard
+      try {
+        sessionStorage.removeItem("justLoggedIn");
+      } catch {
+        // ignore
+      }
+
+      // Check global auth state first
+      const globalAuth = getGlobalAuthState();
+
       const cachedUser = localStorage.getItem("user");
       if (cachedUser) {
         try {
@@ -175,6 +210,12 @@ const Dashboard = () => {
           const accent =
             roleColors[parsed.role as keyof typeof roleColors] ?? "#6c757d";
           document.documentElement.style.setProperty("--accent-color", accent);
+
+          // If user exists in cache and global auth is valid, set tab auth immediately
+          if (globalAuth?.authenticated && globalAuth.userId === parsed.id) {
+            setTabAuth();
+            console.log("[Dashboard] restored tab auth from global state");
+          }
         } catch {
           localStorage.removeItem("user");
         }
@@ -195,9 +236,11 @@ const Dashboard = () => {
         localStorage.setItem("user", JSON.stringify(data.user));
         if ((data.user as User).section)
           setMySection((data.user as User).section!);
-      }
 
-      // Allow enrollment effect to proceed
+        // Broadcast authenticated state to all tabs
+        setTabAuth();
+        broadcastAuthState(true, (data.user as User).id);
+      }
     })();
   }, [navigate]);
 
@@ -208,11 +251,11 @@ const Dashboard = () => {
     }
   }, [user, mySection]);
 
-  // load showcase when user is available
-  useEffect(() => {
-    if (!user) return;
-    loadShowcase();
-  }, [user, loadShowcase]);
+  // // load showcase when user is available
+  // useEffect(() => {
+  //   if (!user) return;
+  //   loadShowcase();
+  // }, [user, loadShowcase]);
 
   //* Teacher: load students
   useEffect(() => {
@@ -268,6 +311,16 @@ const Dashboard = () => {
       showMsgRef.current?.("Failed to save section", "error");
     }
   };
+
+  // Navigate to quiz based on user role
+  function openQuiz(q: Quiz): void {
+    if (!classroomInfo?.code) return;
+    if (user?.role === "teacher") {
+      navigate(`/quizzes/${classroomInfo.code}/quizzes/${q.id}/manage`);
+    } else {
+      navigate(`/quizzes/${classroomInfo.code}/quizzes/${q.id}`);
+    }
+  }
 
   //* Enrollment effect
   useEffect(() => {
@@ -425,30 +478,6 @@ const Dashboard = () => {
       showMsgRef.current?.(errMsg, "error");
     }
   };
-
-  //* Quizzes effect
-  useEffect(() => {
-    if (user?.role !== "student" || !classroomInfo?.code) return;
-    if (quizzesLoadChecked.current) return;
-    quizzesLoadChecked.current = true;
-
-    setLoadingQuizzes(true);
-    apiFetch(`/quizzes/${classroomInfo.code}/quizzes`)
-      .then(({ data }) => {
-        if (Array.isArray(data?.quizzes)) setStudentQuizzes(data.quizzes);
-      })
-      .catch((err) => console.error("Error loading quizzes:", err))
-      .finally(() => setLoadingQuizzes(false));
-  }, [user?.role, classroomInfo?.code]);
-
-  function openQuiz(q: Quiz): void {
-    if (!classroomInfo?.code) return;
-    navigate(`/quizzes/${classroomInfo.code}/quizzes/${q.id}`);
-  }
-
-  useEffect(() => {
-    if (user?.role === "student") setHasActivity(true);
-  }, [user]);
 
   const onExpire = useCallback(() => {
     showMsgRef.current?.("Session expired. Please sign in again.", "error");
@@ -612,12 +641,12 @@ const Dashboard = () => {
                         <input
                           className="section-input"
                           placeholder={
-                            hasSection ? s.section ?? "" : "Enter section"
+                            hasSection ? (s.section ?? "") : "Enter section"
                           }
                           value={
                             hasSection
-                              ? s.section ?? ""
-                              : editSections[s.id] ?? ""
+                              ? (s.section ?? "")
+                              : (editSections[s.id] ?? "")
                           }
                           onChange={(e) =>
                             setEditSections((prev) => ({
@@ -661,21 +690,78 @@ const Dashboard = () => {
 
           {user?.role === "student" && (
             <section className="dashboard-card">
-              <h2>Available Quizzes</h2>
-              {loadingQuizzes ? (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: "1rem",
+                }}
+              >
+                <h2 style={{ margin: 0 }}>Available Quizzes</h2>
+                <div
+                  style={{ display: "flex", gap: "8px", alignItems: "center" }}
+                >
+                  {loadingQuizzes && (
+                    <span
+                      className="polling-indicator"
+                      title="Loading quizzes..."
+                    >
+                      🔄
+                    </span>
+                  )}
+                  <button
+                    className="dashboard-button btn-small"
+                    onClick={refreshQuizzes}
+                    title="Refresh quizzes"
+                    disabled={loadingQuizzes}
+                  >
+                    Refresh
+                  </button>
+                </div>
+              </div>
+
+              {loadingQuizzes && studentQuizzes.length === 0 ? (
                 <p>Loading quizzes…</p>
               ) : studentQuizzes.length ? (
-                <ul>
+                <ul style={{ listStyle: "none", padding: 0 }}>
                   {studentQuizzes.map((q) => (
-                    <li key={q.id} style={{ marginBottom: 8 }}>
-                      <strong>{q.title}</strong>{" "}
-                      <button
-                        className="dashboard-button"
-                        style={{ marginLeft: 8 }}
-                        onClick={() => openQuiz(q)}
+                    <li
+                      key={q.id}
+                      style={{
+                        marginBottom: 12,
+                        padding: "12px",
+                        background: "rgba(0,0,0,0.02)",
+                        borderRadius: "8px",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                        }}
                       >
-                        Start
-                      </button>
+                        <div>
+                          <strong>{q.title}</strong>
+                          <div
+                            style={{
+                              fontSize: "13px",
+                              color: "#64748b",
+                              marginTop: "4px",
+                            }}
+                          >
+                            {q.questions_count || 0} questions ·{" "}
+                            {q.pages_count || 0} pages
+                          </div>
+                        </div>
+                        <button
+                          className="dashboard-button"
+                          onClick={() => openQuiz(q)}
+                        >
+                          Start
+                        </button>
+                      </div>
                     </li>
                   ))}
                 </ul>
@@ -758,7 +844,9 @@ const Dashboard = () => {
                         </div>
                       ))}
 
-                      <div className="showcase-comment-input-row">
+                      {/* disabled for now */}
+
+                      {/* <div className="showcase-comment-input-row">
                         <input
                           className="showcase-comment-input"
                           placeholder="Add a public comment..."
@@ -788,7 +876,7 @@ const Dashboard = () => {
                         >
                           Post
                         </button>
-                      </div>
+                      </div> */}
                     </div>
                   </div>
                 ))}

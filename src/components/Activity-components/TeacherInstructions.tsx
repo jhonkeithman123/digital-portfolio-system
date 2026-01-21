@@ -2,25 +2,13 @@ import React, { useEffect, useRef, useState } from "react";
 import useMessage from "../../hooks/useMessage";
 import useLoadingState from "../../hooks/useLoading";
 import LoadingOverlay from "../Component-elements/loading_overlay";
+import useRealTimeData from "../../hooks/useRealTimeData";
 import { apiFetch } from "../../utils/apiClient";
+import type {
+  Instruction,
+  TeacherInstructionsProps,
+} from "../../types/activity";
 import "./css/TeacherInstructions.css";
-
-export interface Instruction {
-  id: number;
-  activity_id: number;
-  teacher_id: number;
-  instruction_text: string;
-  created_at: string;
-  updated_at: string;
-  username: string;
-  teacher_role: string;
-}
-
-interface TeacherInstructionsProps {
-  activityId: string | number;
-  currentInstructions?: Instruction[];
-  onSaved?: (newInstructions: Instruction[]) => void;
-}
 
 /**
  ** Simple editor to update instructions on an existing activity.
@@ -46,6 +34,23 @@ const TeacherInstructions: React.FC<TeacherInstructionsProps> = ({
   useEffect(() => {
     showMsgRef.current = showMessage;
   }, [showMessage]);
+
+  // Real-time polling for instructions
+  const { refresh: refreshInstructions, isPolling } = useRealTimeData({
+    fetchFn: async () => {
+      if (!activityId) return [];
+      const { data } = await apiFetch(
+        `/activity/${encodeURIComponent(String(activityId))}/instructions`
+      );
+      return Array.isArray(data?.instructions) ? data.instructions : [];
+    },
+    interval: 10000, // Poll every 10 seconds
+    enabled: !!activityId,
+    onChange: (instructions) => {
+      setInstructionHistory(instructions);
+    },
+    skipInitial: true, // Skip initial fetch since we have currentInstructions
+  });
 
   // keep local state in sync when prop changes
   useEffect(() => {
@@ -168,14 +173,41 @@ const TeacherInstructions: React.FC<TeacherInstructionsProps> = ({
       <LoadingOverlay loading={loading} text="Processing..." fullPage={false} />
 
       <section className="activity-section teacher-instructions">
-        <h4>Instructions</h4>
-        <button
-          className="add-instruction-btn"
-          onClick={() => setShowAddForm(!showAddForm)}
-          disabled={loading}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "1rem",
+          }}
         >
-          {showAddForm ? "Cancel" : "+ Add Instruction"}
-        </button>
+          <h4 style={{ margin: 0 }}>Instructions</h4>
+          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            {isPolling && (
+              <span
+                className="polling-indicator"
+                title="Checking for updates..."
+              >
+                🔄
+              </span>
+            )}
+            <button
+              className="refresh-btn"
+              onClick={refreshInstructions}
+              disabled={loading}
+              title="Refresh instructions"
+            >
+              Refresh
+            </button>
+            <button
+              className="add-instruction-btn"
+              onClick={() => setShowAddForm(!showAddForm)}
+              disabled={loading}
+            >
+              {showAddForm ? "Cancel" : "+ Add Instruction"}
+            </button>
+          </div>
+        </div>
 
         {showAddForm && (
           <div className="instruction-edit-form add-form">

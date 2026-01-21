@@ -4,29 +4,7 @@ import { apiFetch } from "../../utils/apiClient";
 import useMessage from "../../hooks/useMessage";
 import QuizEditor from "./quiz";
 import TokenGuard from "../auth/tokenGuard";
-
-type Page = {
-  id: string;
-  title: string;
-  questions: any[];
-};
-
-type QuizInitialData = {
-  quizId?: string | null;
-  title: string;
-  attemptsAllowed: number;
-  timeLimitSeconds: number | null;
-  pages: Page[];
-  mode: "edit" | "create";
-};
-
-type ServerQuiz = {
-  title?: string | null;
-  attempts_allowed?: number | null;
-  time_limit_seconds?: number | null;
-  questions?: any;
-  [k: string]: any;
-};
+import type { Page, QuizInitialData, ServerQuiz } from "../../types/quiz";
 
 function toPagesFromServerQuestions(raw: any) {
   try {

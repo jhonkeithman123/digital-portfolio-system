@@ -3,17 +3,10 @@ import "../Home.css";
 import { apiFetch } from "../../../utils/apiClient";
 import { useNavigate } from "react-router-dom";
 import useConfirm from "../../../hooks/useConfirm";
+import useRealTimeData from "../../../hooks/useRealTimeData";
+import type { Activity, NormalizedActivity } from "../../../types/activity";
 
 type Role = "teacher" | "student" | string;
-
-type Activity = {
-  id: string | number;
-  title?: string;
-  instructions?: string;
-  original_name?: string | null;
-  created_at?: string | null;
-  [k: string]: any;
-};
 
 interface FileUploadProps {
   role: Role;
@@ -45,7 +38,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [creating, setCreating] = useState<boolean>(false);
-  const [activities, setActivities] = useState<Activity[]>([]);
+  const [activities, setActivities] = useState<NormalizedActivity[]>([]);
   const [loadingActivities, setLoadingActivities] = useState<boolean>(false);
   const [maxScore, setMaxScore] = useState<number>(100);
 
@@ -76,19 +69,31 @@ const FileUpload: React.FC<FileUploadProps> = ({
     // console.log("[Upload]", ...args);
   };
 
-  const normalize = (list: any[] = []): Activity[] =>
-    list.map((a) => ({
-      id:
-        a.id ??
-        a._id ??
-        crypto?.randomUUID?.() ??
-        `${Date.now()}-${Math.random()}`,
-      title: a.title ?? "",
-      instructions: a.instructions ?? "",
-      original_name: a.original_name ?? a.fileName ?? null,
-      created_at: a.created_at ?? a.createdAt ?? new Date().toISOString(),
-      ...a,
-    }));
+  const normalize = (list: any[] = []): NormalizedActivity[] =>
+    list.map((a) => {
+      // Normalize instructions to always be a string for display
+      let instructionsText = "";
+      if (typeof a.instructions === "string") {
+        instructionsText = a.instructions;
+      } else if (Array.isArray(a.instructions)) {
+        // Get the most recent instruction text
+        const latest = a.instructions[a.instructions.length - 1];
+        instructionsText = latest?.instruction_text || "";
+      }
+
+      return {
+        id:
+          a.id ??
+          a._id ??
+          crypto?.randomUUID?.() ??
+          `${Date.now()}-${Math.random()}`,
+        title: a.title ?? "",
+        instructions: instructionsText,
+        original_name: a.original_name ?? a.fileName ?? null,
+        created_at: a.created_at ?? a.createdAt ?? new Date().toISOString(),
+        ...a,
+      };
+    });
 
   const validateFile = (f: File | null): boolean => {
     if (!f) return false;
@@ -109,6 +114,25 @@ const FileUpload: React.FC<FileUploadProps> = ({
   const pickFile = (f: File | null) => {
     if (validateFile(f)) setFile(f);
   };
+
+  // Real-time polling for activities
+  const { refresh: refreshActivities, isPolling: pollingActivities } =
+    useRealTimeData({
+      fetchFn: async () => {
+        if (!classroomCode) return [];
+        const path = `/activity/classroom/${encodeURIComponent(
+          String(classroomCode)
+        )}`;
+        const { data } = await apiFetch(path);
+        return data?.success ? normalize(data.activities || []) : [];
+      },
+      interval: 12000, // Poll every 12 seconds
+      enabled: !!classroomCode,
+      onChange: (activities) => {
+        setActivities(activities);
+        setLoadingActivities(false);
+      },
+    });
 
   // fetch activities whenever classroomCode becomes available
   useEffect(() => {
@@ -144,7 +168,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
       } catch (e) {
         if (!ignore)
           showMsgRef.current("Server error loading activities.", "error");
-         
+
         console.error("[Upload] fetch error:", e);
       } finally {
         if (!ignore) setLoadingActivities(false);
@@ -194,7 +218,6 @@ const FileUpload: React.FC<FileUploadProps> = ({
       setActivities((prev) => prev.filter((a) => String(a.id) !== String(id)));
       showMsgRef.current?.("Activity deleted.", "success");
     } catch (e) {
-       
       console.error("Delete activity error:", e);
       showMsgRef.current?.("Server error while deleting activity.", "error");
     }
@@ -298,7 +321,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
       }
     } catch (e) {
       dbg("Submit exception:", e);
-       
+
       console.error("Submit exception:", e);
       showMsgRef.current("Server error.", "error");
     } finally {
@@ -312,7 +335,45 @@ const FileUpload: React.FC<FileUploadProps> = ({
     <>
       <ConfirmModal />
       <section className="home-card">
-        <h2>{role === "teacher" ? "Upload Activity" : "Activities"}</h2>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "1rem",
+          }}
+        >
+          <h2 style={{ margin: 0 }}>
+            {role === "teacher" ? "Upload Activity" : "Activities"}
+          </h2>
+          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            {pollingActivities && (
+              <span
+                className="polling-indicator"
+                title="Checking for updates..."
+              >
+                🔄
+              </span>
+            )}
+            <button
+              className="refresh-btn"
+              onClick={refreshActivities}
+              disabled={loadingActivities}
+              title="Refresh activities"
+              style={{
+                padding: "6px 12px",
+                fontSize: "13px",
+                background: "var(--accent-color)",
+                color: "white",
+                border: "none",
+                borderRadius: "6px",
+                cursor: "pointer",
+              }}
+            >
+              Refresh
+            </button>
+          </div>
+        </div>
         {loadingOuter && <p>Loading classroom...</p>}
 
         {role === "teacher" ? (
@@ -422,8 +483,8 @@ const FileUpload: React.FC<FileUploadProps> = ({
               {creating
                 ? "Submitting"
                 : canSubmit
-                ? "Create Activity"
-                : disabledReason}
+                  ? "Create Activity"
+                  : disabledReason}
             </button>
 
             <hr
@@ -463,8 +524,8 @@ const FileUpload: React.FC<FileUploadProps> = ({
                       <div>
                         <strong>{a.title}</strong>
                         <div className="activity-instructions">
-                          {a.instructions?.slice(0, 160)}
-                          {a.instructions && a.instructions.length > 160 && "…"}
+                          {a.instructions.slice(0, 160)}
+                          {a.instructions.length > 160 && "…"}
                         </div>
                       </div>
 

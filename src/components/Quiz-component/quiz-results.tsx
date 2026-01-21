@@ -6,33 +6,7 @@ import useMessage from "../../hooks/useMessage";
 import Header from "../Component-elements/Header";
 import "./css/quiz-results.css";
 
-interface Question {
-  id: string;
-  type: string;
-  text: string;
-  options?: string[];
-  correctAnswer?: any;
-  requiresManualGrading?: boolean;
-}
-
-interface Attempt {
-  id: number;
-  quiz_id: number;
-  attempt_no: number;
-  status: string;
-  score: number | null;
-  answers: Record<string, any>;
-  grading: Record<string, any>;
-  started_at: string;
-  submitted_at: string | null;
-  comment?: string;
-}
-
-interface Quiz {
-  id: number;
-  title: string;
-  attempts_allowed: number | null;
-}
+import type { Question, QuizAttempt as Attempt, Quiz } from "../../types/quiz";
 
 export default function QuizResults(): React.ReactElement {
   const { classCode, quizId } = useParams<{
@@ -128,7 +102,7 @@ export default function QuizResults(): React.ReactElement {
 
         // Sort by attempt_no descending to get latest
         const latestAttempt = completedAttempts.sort(
-          (a: Attempt, b: Attempt) => b.attempt_no - a.attempt_no
+          (a: Attempt, b: Attempt) => b.attempt_no! - a.attempt_no!
         )[0];
 
         setAttempt(latestAttempt);
@@ -184,7 +158,7 @@ export default function QuizResults(): React.ReactElement {
   const roleClass = user?.role === "teacher" ? "teacher-role" : "student-role";
   const totalQuestions = questions.length;
   const correctCount = questions.filter((q) => {
-    const grading = attempt.grading[q.id];
+    const grading = attempt.grading![q.id];
     return grading?.correct === true || grading?.questionScore === 1;
   }).length;
 
@@ -242,8 +216,8 @@ export default function QuizResults(): React.ReactElement {
             <h3 className="results-section-title">Question Review</h3>
 
             {questions.map((q, idx) => {
-              const studentAnswer = attempt.answers[q.id];
-              const grading = attempt.grading[q.id];
+              const studentAnswer = attempt.answers![q.id];
+              const grading = attempt.grading![q.id];
               const isCorrect =
                 grading?.correct === true || grading?.questionScore === 1;
               const isWrong =
@@ -258,10 +232,10 @@ export default function QuizResults(): React.ReactElement {
                     isCorrect
                       ? "correct"
                       : isWrong
-                      ? "wrong"
-                      : isPartial
-                      ? "partial"
-                      : "pending"
+                        ? "wrong"
+                        : isPartial
+                          ? "partial"
+                          : "pending"
                   }`}
                 >
                   {/* Question Header */}
@@ -373,7 +347,7 @@ export default function QuizResults(): React.ReactElement {
               Back to Dashboard
             </button>
             {quiz.attempts_allowed === null ||
-              (attempt.attempt_no < quiz.attempts_allowed && (
+              (attempt.attempt_no! < quiz.attempts_allowed! && (
                 <button
                   className="results-btn primary"
                   onClick={() =>
