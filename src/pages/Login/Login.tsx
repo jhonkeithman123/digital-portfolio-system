@@ -24,7 +24,9 @@ import {
   getGlobalAuthState,
   broadcastAuthState,
   isTabAuthenticated,
+  clearGlobalAuthState,
 } from "utils/tabAuth";
+import { roleColors } from "../RoleSelect/RoleSelect";
 
 type Role = "teacher" | "student" | string;
 type User = { role?: Role; [k: string]: any };
@@ -43,29 +45,62 @@ const Login: React.FC = (): React.ReactElement => {
   const showMsgRef = useRef<typeof showMessage>(showMessage);
   const role = localStorageGet({ keys: ["role"] })[0] as Role | null;
 
+  // Reset accent color when on login page
+  useEffect(() => {
+    try {
+      if (role && (role === "student" || role === "teacher")) {
+        const accentColor = roleColors[role] ?? "#6c757d";
+        document.documentElement.style.setProperty(
+          "--accentColor",
+          accentColor,
+        );
+        console.log(
+          `[Login] Set accent color to ${accentColor} for role ${role}`,
+        );
+      } else {
+        document.documentElement.style.removeProperty("--accent-color");
+      }
+    } catch {
+      // Ignore
+    }
+  }, [role]);
+
   useEffect(() => {
     showMsgRef.current = showMessage;
   }, [showMessage]);
 
   // Check if user is already authenticated when landing on login page
   useEffect(() => {
-    // Check if user is already authenticated in another tab or this tab
-    const globalAuth = getGlobalAuthState();
-    const isThisTabAuth = isTabAuthenticated();
+    const checkAuth = async () => {
+      const globalAuth = getGlobalAuthState();
+      const isThisTabAuth = isTabAuthenticated();
 
-    if (globalAuth?.authenticated || isThisTabAuth) {
-      console.log(
-        "[Login] User already authenticated, redirecting to dashboard",
-      );
-      showMsgRef.current("You are already logged in!", "info");
-      setTabAuth();
-      navigate("/dash", { replace: true });
-      return;
-    }
+      // Only trust global auth if it's recent (within last 5 minutes)
+      const isGlobalAuthFresh =
+        globalAuth?.timestamp &&
+        Date.now() - globalAuth.timestamp < 5 * 60 * 1000;
 
-    // Only install login page guard if NOT authenticated
-    const cleanup = installLoginPageGuard();
-    return cleanup;
+      if ((globalAuth?.authenticated && isGlobalAuthFresh) || isThisTabAuth) {
+        // Verify with server before redirecting
+        try {
+          const { data } = await apiFetchPublic("/auth/session");
+          if (data?.success) {
+            console.log("[Login] Session valid, redirecting to dashboard");
+            navigate("/dash", { replace: true });
+            return;
+          }
+        } catch {
+          // Session invalid, clear state and stay on login
+          clearGlobalAuthState();
+        }
+      }
+
+      // Only install guard if NOT authenticated
+      const cleanup = installLoginPageGuard();
+      return cleanup;
+    };
+
+    checkAuth();
   }, [navigate]);
 
   // Listen for popstate events (browser back/forward)

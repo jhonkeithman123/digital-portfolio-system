@@ -8,18 +8,31 @@ import {
 } from "utils/modifyFromLocalStorage";
 import "./RoleSelect.css";
 import { apiFetch } from "utils/apiClient";
-import type { Role } from "types/models";
+import type { Role, RoleColors } from "types/models";
 import {
   installLoginPageGuard,
   getGlobalAuthState,
   setTabAuth,
 } from "utils/tabAuth";
 
+// Role colors mapping
+export const roleColors: RoleColors = {
+  student: "#007bff",
+  teacher: "#dc3545",
+};
+
 const RoleSelect: React.FC = (): React.ReactElement => {
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
+    // Reset accent color to default when on role select
+    try {
+      document.documentElement.style.removeProperty("--accent-color");
+    } catch {
+      // Ignore
+    }
+
     // Don't redirect if coming from logout
     const fromLogout = location.state?.fromLogout;
     if (fromLogout) {
@@ -48,8 +61,16 @@ const RoleSelect: React.FC = (): React.ReactElement => {
   const handleSelect = (role: Role): void => {
     try {
       localStorage.setItem("role", role);
+
+      // Set accent color based on role
+      const accentColor =
+        roleColors[role as keyof typeof roleColors] ?? "#6c757d";
+      document.documentElement.style.setProperty("--accent-color", accentColor);
+      console.log(
+        `[RoleSelect] Set accent color to ${accentColor} for role ${role}`,
+      );
     } catch (e) {
-      //* Ignore
+      console.error("[RoleSelect] Error setting role:", e);
     }
     navigate(`/login`);
   };

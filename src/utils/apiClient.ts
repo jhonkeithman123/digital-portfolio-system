@@ -1,3 +1,5 @@
+import { clearGlobalAuthState } from "./tabAuth";
+
 // const REMOTE_API_BASE: string =
 //   (import.meta.env.VITE_API_URL as string | undefined) ??
 //   (typeof window !== "undefined" ? window.location.origin : "");
@@ -71,12 +73,12 @@ async function resolveApiBase(): Promise<string> {
         if (LOCAL_API_BASE) {
           console.warn(
             "[apiClient] remote reports unavailable — using LOCAL_API_BASE:",
-            LOCAL_API_BASE
+            LOCAL_API_BASE,
           );
           return LOCAL_API_BASE;
         }
         console.warn(
-          "[apiClient] remote reports unavailable — using fallback localhost:5000"
+          "[apiClient] remote reports unavailable — using fallback localhost:5000",
         );
         return FALLBACK_LOCALHOST;
       }
@@ -119,7 +121,7 @@ interface ApiResponse<T = any> {
 //* Authed Fetched: with auth-header.
 export async function apiFetch<T = any>(
   path: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
 ): Promise<ApiResponse<T>> {
   const url = await buildUrl(path);
   const headers = new Headers((options as any).headers || {});
@@ -144,7 +146,7 @@ export async function apiFetch<T = any>(
           message: "You don't have permission to access this resource",
           endpoint: path,
         },
-      })
+      }),
     );
 
     return { ok: false, status: 403, data: null, unauthorized: true };
@@ -152,6 +154,7 @@ export async function apiFetch<T = any>(
 
   if (res.status === 401) {
     console.log("[apiFetch] 401 unauthorized => clearing token + returning");
+    clearGlobalAuthState();
     try {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
@@ -177,7 +180,7 @@ export async function apiFetch<T = any>(
 export async function apiFetchPublic<T = any>(
   path: string,
   options: RequestInit = {},
-  { withCredentials = false } = {}
+  { withCredentials = false } = {},
 ): Promise<ApiResponse<T>> {
   const url = await buildUrl(path);
   const headers = new Headers((options as any).headers || {});

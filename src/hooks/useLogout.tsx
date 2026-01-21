@@ -27,7 +27,15 @@ export default function useLogout({
     setLoading(true);
 
     try {
-      // 1. Call server logout endpoint FIRST to clear HTTP-only cookie
+      // 1 Reset CSS accent color to default
+      try {
+        document.documentElement.style.removeProperty("--accent-color");
+        console.log("[useLogout] Reset accent color");
+      } catch (err) {
+        console.error("[useLogout] Error resetting accent color:", err);
+      }
+
+      // 2. Call server logout endpoint FIRST to clear HTTP-only cookie
       try {
         await fetch("/auth/logout", {
           method: "POST",
@@ -42,15 +50,15 @@ export default function useLogout({
         // Continue with client-side logout even if server call fails
       }
 
-      // 2. Clear global auth state (broadcasts to all tabs)
+      // 3. Clear global auth state (broadcasts to all tabs)
       clearGlobalAuthState();
       console.log("[useLogout] Cleared global auth state");
 
-      // 3. Clear tab-specific auth marker
+      // 4. Clear tab-specific auth marker
       removeTabAuth();
       console.log("[useLogout] Removed tab auth");
 
-      // 4. Clear localStorage
+      // 5. Clear localStorage
       try {
         localStorage.clear(); // Clear everything to be safe
         console.log("[useLogout] Cleared localStorage");
@@ -58,7 +66,7 @@ export default function useLogout({
         console.error("[useLogout] Error clearing localStorage:", err);
       }
 
-      // 5. Clear sessionStorage
+      // 6. Clear sessionStorage
       try {
         sessionStorage.clear();
         console.log("[useLogout] Cleared sessionStorage");
@@ -66,7 +74,7 @@ export default function useLogout({
         console.error("[useLogout] Error clearing sessionStorage:", err);
       }
 
-      // 6. Dispatch logout event for other components to listen
+      // 7. Dispatch logout event for other components to listen
       try {
         window.dispatchEvent(new Event("app:logout"));
         console.log("[useLogout] Dispatched logout event");
@@ -74,14 +82,14 @@ export default function useLogout({
         console.error("[useLogout] Error dispatching logout event:", err);
       }
 
-      // 7. Small delay to ensure all cleanup completes
+      // 8. Small delay to ensure all cleanup completes
       await new Promise((resolve) => setTimeout(resolve, 100));
 
-      // 8. Navigate to redirect target
+      // 9. Navigate to redirect target
       console.log("[useLogout] Navigating to:", redirectTo);
       navigate(redirectTo, { replace: true });
 
-      // 9. Force reload after navigation to clear any cached state
+      // 10. Force reload after navigation to clear any cached state
       setTimeout(() => {
         window.location.replace(redirectTo);
       }, 100);

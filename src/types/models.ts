@@ -9,6 +9,11 @@ import type { Comment } from "./activity";
 
 const validRoles = ["student", "teacher"] as const;
 export type Role = (typeof validRoles)[number];
+export interface RoleColors {
+  student: string;
+  teacher: string;
+}
+
 export type MessageType = "info" | "success" | "error";
 export type ShowMessageFn = (text: string, kind?: MessageType) => void;
 
