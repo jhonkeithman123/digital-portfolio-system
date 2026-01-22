@@ -4,12 +4,12 @@
   "version": "1.2.0",
   "type": "module",
   "scripts": {
-    "dev": "bunx --bun vite",
-    "build": "bunx --bun vite build",
+    "dev": "npx vite",
+    "build": "npx vite build",
     "clean": "rm -rf dist/",
-    "lint": "bunx eslint .",
-    "lint-fix": "bunx eslint --fix .",
-    "preview": "bunx --bun vite preview",
+    "lint": "npx eslint .",
+    "lint-fix": "npx eslint --fix .",
+    "preview": "npx vite preview",
     "deploy": "npx gh-pages -d dist"
   },
   "dependencies": {
