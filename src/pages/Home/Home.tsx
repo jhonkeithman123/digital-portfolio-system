@@ -2,7 +2,6 @@ import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import useMessage from "hooks/useMessage";
 import Submissions from "home/sections/Submissions";
-import Quizzes from "home/sections/Quizzes";
 import FileUpload from "home/sections/Upload";
 import Header from "components/Component-elements/Header";
 import useLogout from "hooks/useLogout";
@@ -226,8 +225,6 @@ const Home: React.FC = (): React.ReactElement => {
               classroomCode={classroomInfo?.code}
               loadingOuter={loadingClassroom}
             />
-
-            <Quizzes role={role} classroomCode={classroomInfo?.code} />
 
             <Submissions
               role={role}
