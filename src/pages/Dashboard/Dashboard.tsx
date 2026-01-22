@@ -293,9 +293,25 @@ const Dashboard: React.FC = (): React.ReactElement => {
     return () => abort.abort();
   }, [user?.role, showSections]);
 
+  const validateSectionFormat = (sectionInput: string): boolean => {
+    const trimmed = sectionInput.trim().toUpperCase();
+    // Pattern: STRAND-LETTER+NUMBER
+    const sectionPattern = /^[A-Z]+-[A-Z]\d+$/;
+    return sectionPattern.test(trimmed);
+  };
+
   const saveSection = async (id: string): Promise<void> => {
-    const value = (editSections[id] ?? "").trim();
+    const value = (editSections[id] ?? "").trim().toUpperCase();
     if (!value) return;
+
+    if (!validateSectionFormat(value)) {
+      showMsgRef.current?.(
+        "Section must follow format: STRAND-LETTER+NUMBER (e.g., ICT-A2, STEM-B1)",
+        "error",
+      );
+      return;
+    }
+
     try {
       const { data } = await apiFetch(`/users/${id}/section`, {
         method: "PATCH",
@@ -390,8 +406,17 @@ const Dashboard: React.FC = (): React.ReactElement => {
   }, [user, navigate]);
 
   const saveMySection = async (): Promise<void> => {
-    const value = mySectionDraft.trim();
+    const value = mySectionDraft.trim().toUpperCase();
     if (!value) return;
+
+    if (!validateSectionFormat(value)) {
+      showMsgRef.current?.(
+        "Section must follow format: STRAND-LETTER+NUMBER (e.g., ICT-A2, STEM-B1)",
+        "error",
+      );
+      return;
+    }
+
     setSavingMySection(true);
     try {
       const { data } = await apiFetch("/auth/me/section", {
@@ -421,10 +446,19 @@ const Dashboard: React.FC = (): React.ReactElement => {
   };
 
   const saveClassroomSection = async (): Promise<void> => {
-    const value = classroomSectionDraft.trim();
+    const value = classroomSectionDraft.trim().toUpperCase();
     const code = classroomInfo?.code || null;
 
     if (!value) return;
+
+    if (!validateSectionFormat(value)) {
+      showMsgRef.current?.(
+        "Section must follow format: STRAND-LETTER+NUMBER (e.g., ICT-A2, STEM-B1)",
+        "error",
+      );
+      return;
+    }
+
     try {
       const { data } = await apiFetch("/classrooms/teacher/section", {
         method: "PATCH",
@@ -499,6 +533,17 @@ const Dashboard: React.FC = (): React.ReactElement => {
     );
   }
 
+  // Auto-uppercase section inputs
+  const handleSectionInputChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    studentId?: string,
+  ): void => {
+    const value = e.target.value.toUpperCase();
+    if (studentId) {
+      setEditSections((prev) => ({ ...prev, [studentId]: value }));
+    }
+  };
+
   const roleClass = user.role === "teacher" ? "teacher-role" : "student-role";
 
   const content = (
@@ -568,9 +613,11 @@ const Dashboard: React.FC = (): React.ReactElement => {
                   size="auto"
                   label="Section"
                   name="my-section"
-                  placeholder="e.g., 7-A, STEM-2"
+                  placeholder="e.g., ICT-A2, STEM-B1, ABM-C3"
                   value={mySectionDraft}
-                  onChange={(e) => setMySectionDraft(e.target.value)}
+                  onChange={(e) =>
+                    setMySectionDraft(e.target.value.toUpperCase())
+                  }
                   onEnter={() => !savingMySection && saveMySection()}
                 />
               </div>
@@ -647,19 +694,16 @@ const Dashboard: React.FC = (): React.ReactElement => {
                         <input
                           className="section-input"
                           placeholder={
-                            hasSection ? (s.section ?? "") : "Enter section"
+                            hasSection
+                              ? (s.section ?? "")
+                              : "Enter section (e.g. ICT-A2)"
                           }
                           value={
                             hasSection
                               ? (s.section ?? "")
                               : (editSections[s.id] ?? "")
                           }
-                          onChange={(e) =>
-                            setEditSections((prev) => ({
-                              ...prev,
-                              [s.id]: e.target.value,
-                            }))
-                          }
+                          onChange={(e) => handleSectionInputChange(e, s.id)}
                           disabled={hasSection}
                         />
                         <button

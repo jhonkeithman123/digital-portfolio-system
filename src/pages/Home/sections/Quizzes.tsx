@@ -105,9 +105,17 @@ const Quizzes: React.FC<QuizzesProps> = ({ role, classroomCode }) => {
 
   function openQuiz(q: Quiz): void {
     if (!classCode) return;
-    if (role === "teacher")
-      navigate(`/quizzes/${classCode}/quizzes/${q.id}/manage`);
-    else navigate(`/quizzes/${classCode}/quizzes/${q.id}`);
+    navigate(`/quizzes/${classCode}/quizzes/${q.id}`);
+  }
+
+  function reviewQuiz(q: Quiz): void {
+    if (!classCode) return;
+    navigate(`/quizzes/${classCode}/quizzes/${q.id}/review`);
+  }
+
+  function editQuiz(q: Quiz): void {
+    if (!classCode) return;
+    navigate(`/quizzes/${classCode}/quizzes/${q.id}/edit`);
   }
 
   async function deleteQuiz(q: Quiz): Promise<void> {
@@ -223,9 +231,7 @@ const Quizzes: React.FC<QuizzesProps> = ({ role, classroomCode }) => {
                           className="quiz-action-btn edit"
                           onClick={(e) => {
                             e.stopPropagation();
-                            navigate(
-                              `/quizzes/${classCode}/quizzes/${q.id}/edit`,
-                            );
+                            editQuiz(q);
                           }}
                         >
                           Edit
@@ -234,7 +240,7 @@ const Quizzes: React.FC<QuizzesProps> = ({ role, classroomCode }) => {
                           className="quiz-action-btn view"
                           onClick={(e) => {
                             e.stopPropagation();
-                            navigate(`/quizzes/${classCode}/quizzes/${q.id}`);
+                            openQuiz(q);
                           }}
                         >
                           Attempts
@@ -252,9 +258,7 @@ const Quizzes: React.FC<QuizzesProps> = ({ role, classroomCode }) => {
                           className="quiz-action-btn review"
                           onClick={(e) => {
                             e.stopPropagation();
-                            navigate(
-                              `/quizzes/${classCode}/quizzes/${q.id}/review`,
-                            );
+                            reviewQuiz(q);
                           }}
                         >
                           Review

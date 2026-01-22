@@ -3,11 +3,11 @@
 /* Page wrapper */
 .quiz-attempt-page {
   min-height: 100vh;
-  height: 100vh;
+  max-height: 80vh;
+  height: 80vh;
   display: flex;
   flex-direction: column;
   background: radial-gradient(circle at 50% 0%, #1e2030, #0b0d14 70%);
-  overflow: hidden;
 }
 
 [data-theme="light"] .quiz-attempt-page {
@@ -19,7 +19,7 @@
   top: 0;
   z-index: 100;
   flex-shrink: 0;
-  padding: 14px 24px;
+  padding: 14px clamp(24px, 5vw, 80px);
   box-shadow: 0 14px 30px rgba(15, 23, 42, 0.35);
   display: flex;
   flex-direction: column;
@@ -116,13 +116,21 @@
 
 .quiz-shell {
   flex: 1;
-  padding: clamp(20px, 3vh, 32px) clamp(16px, 4vw, 42px);
-  display: flex;
-  align-items: center;
+  min-height: calc(100vh - 140px) !important;
+  padding: clamp(12px, 2vh, 20px) clamp(16px, 4vw, 42px) clamp(20px, 3vh, 32px) !important;
+  display: flex !important;
+  align-items: flex-start !important;
   justify-content: center;
   box-sizing: border-box;
   overflow-y: auto;
   overflow-x: hidden;
+  transition: padding 0.6s cubic-bezier(0.4s 0, 0.2, 1);
+  max-height: 50vh !important;
+}
+
+.quiz-shell.fullscreen {
+  padding: 0;
+  overflow: hidden;
 }
 
 [data-theme="light"] .quiz-shell {
@@ -139,11 +147,28 @@
   box-shadow:
     0 18px 48px -12px rgba(0, 0, 0, 0.65),
     0 0 0 1px rgba(255, 255, 255, 0.05);
-  padding: 28px 30px 34px;
+  padding: 28px 30px 24px;
   color: var(--text-color, #e5e7eb);
   box-sizing: border-box;
   position: relative;
   margin: auto;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 300px);
+  overflow: hidden;
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.quiz-attempt-card.expanding {
+  max-width: 100%;
+  width: 100%;
+  max-height: 100%;
+  height: 100%;
+  border-radius: 0;
+  margin: 0;
+  padding: 20px 30px 16px;
+  animation: expandCard 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  overflow: hidden;
 }
 
 .quiz-attempt-card.ready::before {
@@ -224,12 +249,15 @@
   justify-content: space-between;
   gap: 28px;
   align-items: flex-start;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
   flex-wrap: wrap;
+  flex-shrink: 0;
+  flex-direction: column;
+  align-items: stretch;
 }
 
 .qa-left {
-  flex: 1 1 420px;
+  /* flex: 1 420px; I removed this */
   min-width: 260px;
 }
 
@@ -427,6 +455,7 @@
   flex-direction: column;
   gap: 8px;
   margin-bottom: 24px;
+  flex-shrink: 0;
 }
 
 .qa-progress-bar-wrapper {
@@ -465,6 +494,38 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1;
+  min-height: 0;
+  padding-right: 6px;
+  margin-bottom: 16px;
+}
+
+.quiz-attempt-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.quiz-attempt-body::-webkit-scrollbar-track {
+  background: rgba(148, 163, 184, 0.1);
+  border-radius: 4px;
+}
+
+.quiz-attempt-body::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3);
+  border-radius: 4px;
+}
+
+.quiz-attempt-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.5);
+}
+
+[data-theme="light"] .quiz-attempt-body::-webkit-scrollbar-track {
+  background: rgba(100, 116, 139, 0.1);
+}
+
+[data-theme="light"] .quiz-attempt-body::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.3);
 }
 
 .quiz-page-title {
@@ -610,7 +671,15 @@
   flex-wrap: wrap;
   gap: 16px;
   border-top: 1px solid rgba(148, 163, 184, 0.15);
-  padding-top: 20px;
+  padding-top: 16px;
+  padding-bottom: 4px;
+  flex-shrink: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(16, 21, 34, 0.95),
+    rgba(13, 18, 29, 0.95)
+  );
+  position: relative;
 }
 
 [data-theme="light"] .quiz-footer {
@@ -765,28 +834,49 @@
   }
 }
 
+@keyframes expandCard {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.02);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .quiz-shell {
-    padding: 16px 12px;
+    padding: 16px 12px !important;
   }
 
   .quiz-attempt-card {
     padding: 20px 18px 24px;
+    max-height: calc(100vh - 120px);
   }
 
-  .qa-top-bar {
+  .quiz-attempt-card.expanding {
+    padding: 16px 18px 12px;
+  }
+
+  .quiz-attempt-body {
+    padding-right: 4px;
+  }
+
+  .quiz-footer {
+    margin-top: 12px;
+    padding-top: 12px;
+    gap: 12px;
     flex-direction: column;
     align-items: stretch;
   }
 
   .qa-right {
     align-items: flex-start;
-  }
-
-  .quiz-footer {
-    flex-direction: column;
-    align-items: stretch;
   }
 
   .qa-nav,

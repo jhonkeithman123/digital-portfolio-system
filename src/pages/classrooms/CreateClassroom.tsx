@@ -25,6 +25,13 @@ const CreateClassroom: React.FC = (): React.ReactElement => {
     showMsgRef.current = showMessage;
   }, [showMessage]);
 
+  const validateSectionFormat = (sectionInput: string): boolean => {
+    const trimmed = sectionInput.trim().toUpperCase();
+    // Pattern: STRAND-LETTER+NUMBER
+    const sectionPattern = /^[A-Z]+-[A-Z]\d+$/;
+    return sectionPattern.test(trimmed);
+  };
+
   const handleCreate = useCallback(
     async (e?: React.FormEvent) => {
       if (e && typeof e.preventDefault === "function") e.preventDefault();
@@ -37,6 +44,13 @@ const CreateClassroom: React.FC = (): React.ReactElement => {
         if (!trimmedName || !trimmedYear) {
           return showMsgRef.current(
             "Please fill all required fields.",
+            "error",
+          );
+        }
+
+        if (trimmedSection && !validateSectionFormat(trimmedSection)) {
+          return showMsgRef.current(
+            "Section must follow format: STRAND-LETTER+NUMBER (e.g., ICT-A2, STEM-B1)",
             "error",
           );
         }
@@ -81,6 +95,13 @@ const CreateClassroom: React.FC = (): React.ReactElement => {
     },
     [name, schoolYear, section, navigate, wrap],
   );
+
+  const handleSectionChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ): void => {
+    const value = e.target.value.toUpperCase();
+    setSection(value);
+  };
 
   return (
     <TokenGuard
@@ -134,8 +155,8 @@ const CreateClassroom: React.FC = (): React.ReactElement => {
               className="create-input"
               type="text"
               value={section}
-              onChange={(e) => setSection(e.target.value)}
-              placeholder="Section (e.g. STEM-2)"
+              onChange={handleSectionChange}
+              placeholder="e.g. ICT-A2, STEM-B1, ABM-C3"
               aria-label="Section (optional)"
             />
             <div className="create-actions">

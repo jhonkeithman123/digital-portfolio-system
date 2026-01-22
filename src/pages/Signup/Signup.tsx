@@ -193,7 +193,7 @@ const Signup: React.FC = (): React.ReactElement => {
               value={section}
               onChange={handleSectionChange}
               placeholder="e.g. STEM-1, ABM-2A, ICT-12"
-              helperText="Format: STRAND-SECTION (e.g., STEM-1, HUMSS-2A)"
+              helperText="Format: STRAND-LETTER+NUMBER (e.g., ICT-A2, HUMSS-B3)"
             />
           )}
 

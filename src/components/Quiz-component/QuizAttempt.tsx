@@ -58,6 +58,7 @@ export default function QuizAttempt(): React.ReactElement {
   const [starting, setStarting] = useState<boolean>(false);
   const [showDetails, setShowDetails] = useState<boolean>(false);
   const [hasActiveAttempt, setHasActiveAttempt] = useState<boolean>(false);
+  const [isExpanding, setIsExpanding] = useState<boolean>(false);
 
   const showMsgRef = useRef(showMessage);
   const autoSaveTimerRef = useRef<number | null>(null);
@@ -246,6 +247,8 @@ export default function QuizAttempt(): React.ReactElement {
     try {
       if (serverAttempt) {
         console.log("[QuizAttempt] Resuming attempt from server");
+        setIsExpanding(true);
+        setTimeout(() => setIsExpanding(false), 600);
         setAttemptId(serverAttempt.attemptId);
         setExpiresAt(new Date(serverAttempt.expiresAt));
         setAnswers(serverAttempt.answers || {});
@@ -259,6 +262,8 @@ export default function QuizAttempt(): React.ReactElement {
         const expiryDate = new Date(storedAttempt.expiresAt);
         if (expiryDate > new Date()) {
           console.log("[QuizAttempt] Resuming attempt from storage");
+          setIsExpanding(true);
+          setTimeout(() => setIsExpanding(false), 600);
           setAttemptId(storedAttempt.attemptId);
           setExpiresAt(expiryDate);
           setAnswers(storedAttempt.answers || {});
@@ -284,6 +289,9 @@ export default function QuizAttempt(): React.ReactElement {
       if (data?.success) {
         const newAttemptId = data.attemptId ?? "";
         const newExpiresAt = data.expiresAt ? new Date(data.expiresAt) : null;
+
+        setIsExpanding(true);
+        setTimeout(() => setIsExpanding(false), 600);
 
         setAttemptId(newAttemptId);
         setExpiresAt(newExpiresAt);
@@ -391,13 +399,33 @@ export default function QuizAttempt(): React.ReactElement {
 
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       e.preventDefault();
-      e.returnValue = "";
-      return "";
+      e.returnValue =
+        "You have an active quiz attempt. Your progress will be saved, but leaving may cause you to lose time.";
+      return e.returnValue;
     };
 
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [attemptId]);
+
+  const handleNavigateAway = useCallback(async () => {
+    if (!attemptId) {
+      navigate("/home");
+      return;
+    }
+
+    const ok = await confirm({
+      title: "Leave Quiz Attempt?",
+      message:
+        "You have an active quiz attempt. Your progress will be saved but you may lose time. Ate you sure you want to leave?",
+      confirmText: "Leave",
+      cancelText: "Stay",
+    });
+
+    if (ok) {
+      navigate("/home");
+    }
+  }, [attemptId, confirm, navigate]);
 
   const roleClass = user?.role === "teacher" ? "teacher-role" : "student-role";
 
@@ -508,8 +536,10 @@ export default function QuizAttempt(): React.ReactElement {
         />
         <ConfirmModal />
 
-        <div className="quiz-shell">
-          <section className="quiz-attempt-card ready">
+        <div className={`quiz-shell ${attemptId ? "fullscreen" : ""}`}>
+          <section
+            className={`quiz-attempt-card ready ${isExpanding || attemptId ? "expanding" : ""}`}
+          >
             <header className="qa-top-bar">
               <div className="qa-left">
                 <h2 className="qa-title">{quiz!.title}</h2>
@@ -557,6 +587,22 @@ export default function QuizAttempt(): React.ReactElement {
                 )}
               </div>
             </header>
+
+            {attemptId && (
+              <div className="qa-progress-bar-container">
+                <div className="qa-progress-bar-wrapper">
+                  <div
+                    className="qa-progress-bar-fill"
+                    style={{
+                      width: `${totalCount > 0 ? (answeredCount / totalCount) * 100 : 0}%`,
+                    }}
+                  />
+                </div>
+                <span className="qa-progress-text">
+                  {answeredCount} / {totalCount} answered
+                </span>
+              </div>
+            )}
 
             {showDetails && !attemptId && (
               <div className="qa-details-box">
@@ -607,20 +653,6 @@ export default function QuizAttempt(): React.ReactElement {
                 </div>
               ) : (
                 <>
-                  <div className="qa-progress-bar-container">
-                    <div className="qa-progress-bar-wrapper">
-                      <div
-                        className="qa-progress-bar-fill"
-                        style={{
-                          width: `${totalCount > 0 ? (answeredCount / totalCount) * 100 : 0}%`,
-                        }}
-                      />
-                    </div>
-                    <span className="qa-progress-text">
-                      {answeredCount} / {totalCount} answered
-                    </span>
-                  </div>
-
                   <div className="quiz-page-title">
                     {page.title || `Page ${pageIndex + 1}`}
                   </div>
@@ -685,50 +717,59 @@ export default function QuizAttempt(): React.ReactElement {
                       </article>
                     ))}
                   </div>
-
-                  <footer className="quiz-footer">
-                    <div className="qa-nav">
-                      <button
-                        className="quiz-btn subtle"
-                        onClick={() => setPageIndex((i) => Math.max(0, i - 1))}
-                        disabled={pageIndex === 0}
-                      >
-                        ← Prev
-                      </button>
-                      <button
-                        className="quiz-btn subtle"
-                        onClick={() =>
-                          setPageIndex((i) =>
-                            Math.min(quiz!.pages.length - 1, i + 1),
-                          )
-                        }
-                        disabled={pageIndex >= quiz!.pages.length - 1}
-                      >
-                        Next →
-                      </button>
-                    </div>
-                    <div className="qa-submit-section">
-                      <button
-                        className="quiz-btn primary"
-                        onClick={submitAttempt}
-                        disabled={!attemptId || !allAnswered}
-                        title={
-                          !attemptId
-                            ? "Start attempt first"
-                            : allAnswered
-                              ? "Submit answers"
-                              : `Answer all ${totalCount - answeredCount} remaining questions to submit`
-                        }
-                      >
-                        {allAnswered
-                          ? "Submit Quiz"
-                          : `${totalCount - answeredCount} left`}
-                      </button>
-                    </div>
-                  </footer>
                 </>
               )}
             </main>
+
+            {attemptId && (
+              <footer className="quiz-footer">
+                <div className="qa-nav">
+                  <button
+                    className="quiz-btn subtle"
+                    onClick={() => setPageIndex((i) => Math.max(0, i - 1))}
+                    disabled={pageIndex === 0}
+                  >
+                    ← Prev
+                  </button>
+                  <button
+                    className="quiz-btn subtle"
+                    onClick={() =>
+                      setPageIndex((i) =>
+                        Math.min(quiz!.pages.length - 1, i + 1),
+                      )
+                    }
+                    disabled={pageIndex >= quiz!.pages.length - 1}
+                  >
+                    Next →
+                  </button>
+                </div>
+                <div className="qa-submit-section">
+                  <button
+                    className="quiz-btn primary"
+                    onClick={submitAttempt}
+                    disabled={!attemptId || !allAnswered}
+                    title={
+                      !attemptId
+                        ? "Start attempt first"
+                        : allAnswered
+                          ? "Submit answers"
+                          : `Answer all ${totalCount - answeredCount} remaining questions to submit`
+                    }
+                  >
+                    {allAnswered
+                      ? "Submit Quiz"
+                      : `${totalCount - answeredCount} left`}
+                  </button>
+                  <button
+                    className="quiz-btn primary"
+                    onClick={handleNavigateAway}
+                    title="Leave the quiz"
+                  >
+                    Leave the Quiz?
+                  </button>
+                </div>
+              </footer>
+            )}
           </section>
         </div>
       </div>
