@@ -10,20 +10,14 @@ import useMessage from "hooks/useMessage";
 import Header from "components/Component-elements/Header";
 import useLoadingState from "hooks/useLoading";
 import LoadingOverlay from "components/Component-elements/loading_overlay";
-import {
-  localStorageRemove,
-  localStorageGet,
-  localStorageSet,
-} from "utils/modifyFromLocalStorage";
+import { localStorageGet, localStorageSet } from "utils/modifyFromLocalStorage";
 import { apiFetchPublic } from "utils/apiClient";
 import InputField from "components/Component-elements/InputField";
 import "./Login.css";
 import {
   installLoginPageGuard,
   setTabAuth,
-  getGlobalAuthState,
   broadcastAuthState,
-  isTabAuthenticated,
   clearGlobalAuthState,
 } from "utils/tabAuth";
 import { roleColors } from "../RoleSelect/RoleSelect";
@@ -33,7 +27,7 @@ type User = { role?: Role; [k: string]: any };
 
 const Login: React.FC = (): React.ReactElement => {
   const [, setUser] = useState<User | null>(null);
-  const [email, setEmail] = useState<string>("");
+  const [emailOrUsername, setEmailOrUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -174,18 +168,23 @@ const Login: React.FC = (): React.ReactElement => {
 
   const validation = useCallback((): Record<string, string> => {
     const newErrors: Record<string, string> = {};
+    const isEmail = emailOrUsername.includes("@");
 
-    if (!email) newErrors.email = "Email is required";
-    else if (!/\S+@\S+\.\S+/.test(email))
+    if (!emailOrUsername) {
+      newErrors.email = "Email or Username is required";
+    } else if (isEmail && !/\S+@\S+\.\S+/.test(emailOrUsername)) {
       newErrors.email = "Invalid email format";
+    }
 
-    if (!password) newErrors.password = "Password is required";
-    else if (password.length < 6)
-      newErrors.password = "Password must be atleast 6 characters long";
+    if (!password) {
+      newErrors.password = "Password is required";
+    } else if (password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters long";
+    }
 
     setErrors(newErrors);
     return newErrors;
-  }, [email, password]);
+  }, [emailOrUsername, password]);
 
   const handleLogin = useCallback(async (): Promise<void> => {
     await wrap(async () => {
@@ -202,7 +201,7 @@ const Login: React.FC = (): React.ReactElement => {
           `/auth/login`,
           {
             method: "POST",
-            body: JSON.stringify({ email, password, role }),
+            body: JSON.stringify({ emailOrUsername, password, role }),
             headers: { "Content-Type": "application/json" },
           },
           { withCredentials: true },
@@ -252,7 +251,7 @@ const Login: React.FC = (): React.ReactElement => {
         showMsgRef.current("Server Error", "error");
       }
     });
-  }, [wrap, email, password, role, navigate, validation]);
+  }, [wrap, emailOrUsername, password, role, navigate, validation]);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -296,13 +295,13 @@ const Login: React.FC = (): React.ReactElement => {
 
           <div className="input-container">
             <InputField
-              label="Email"
+              label="Email or Username"
               name="email"
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={emailOrUsername}
+              onChange={(e) => setEmailOrUsername(e.target.value)}
               autoComplete="email"
-              placeholder="Email"
+              placeholder="Email or Username"
               required
               error={errors.email}
             />

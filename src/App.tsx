@@ -17,11 +17,6 @@ import ForgotPassword from "pages/ForgotPassword/ForgotPassword";
 import Dashboard from "pages/Dashboard/Dashboard.js";
 import JoinClassroom from "pages/classrooms/JoinClassroom";
 import CreateClassroom from "pages/classrooms/CreateClassroom";
-import QuizCreate from "components/Quiz-component/QuizCreate";
-import QuizEditPage from "components/Quiz-component/quiz-edit";
-import QuizReviewPage from "components/Quiz-component/quiz-review";
-import QuizAttempt from "components/Quiz-component/QuizAttempt"; // MERGED: replaces QuizTakePage
-import QuizResults from "components/Quiz-component/quiz-results";
 import ActivityView from "components/Activity-components/ActivityView";
 import NotFoundHandler from "./NotFoundHandler.js";
 
@@ -128,42 +123,6 @@ function App(): React.ReactElement {
             element={
               <ProtectedRoute showMessage={showMessage}>
                 <CreateClassroom />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/quizzes/:code/create"
-            element={
-              <ProtectedRoute showMessage={showMessage}>
-                <QuizCreate />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/quizzes/:classCode/quizzes/:quizId/edit"
-            element={
-              <ProtectedRoute showMessage={showMessage}>
-                <QuizEditPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/quizzes/:classCode/quizzes/:quizId"
-            element={
-              <ProtectedRoute showMessage={showMessage}>
-                <QuizAttempt />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/quizzes/:classCode/quizzes/:quizId/review"
-            element={<QuizReviewPage />}
-          />
-          <Route
-            path="/quizzes/:classCode/quizzes/:quizId/results"
-            element={
-              <ProtectedRoute showMessage={showMessage}>
-                <QuizResults />
               </ProtectedRoute>
             }
           />

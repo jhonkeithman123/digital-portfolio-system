@@ -15,26 +15,28 @@ const MessageContainer: React.FC<MessageContainerProps> = ({
   duration = 3000,
 }) => {
   const [visible, setVisible] = useState<boolean>(false);
-  const [queueMessage, setQueueMessage] = useState<string>("");
 
   useEffect(() => {
-    if (!message || message === queueMessage) return;
+    if (!message) return;
 
-    setQueueMessage(message);
     setVisible(true);
 
     const ms = duration ?? 3000;
-    const timer: ReturnType<typeof setTimeout> = window.setTimeout(() => {
+    const timer = window.setTimeout(() => {
       setVisible(false);
-      if (onClose) onClose();
+      setTimeout(() => {
+        if (onClose) onClose();
+      }, 350);
     }, ms);
 
     return () => window.clearTimeout(timer);
   }, [message, duration, onClose]);
 
+  if (!message) return null;
+
   return (
     <div
-      className={`toast ${type ?? ""} ${visible ? "slide-down" : "slide-up"}`}
+      className={`toast toast-${type} ${visible ? "slide-down" : "slide-up"}`}
     >
       <span className="toast-text">{message}</span>
       <button
@@ -42,7 +44,9 @@ const MessageContainer: React.FC<MessageContainerProps> = ({
         type="button"
         onClick={() => {
           setVisible(false);
-          onClose();
+          setTimeout(() => {
+            onClose();
+          }, 350);
         }}
         aria-label="Close notification"
       >

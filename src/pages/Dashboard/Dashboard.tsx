@@ -5,7 +5,6 @@ import type {
   User,
   ShowcaseItem,
   Student,
-  Quiz,
   ClassroomInfo,
   ShowMessageFn,
 } from "types/models";
@@ -22,7 +21,6 @@ import NotificationBell from "components/Component-elements/NotificationBell";
 import LoadingOverlay from "components/Component-elements/loading_overlay";
 import useLoadingState from "hooks/useLoading";
 import "./Dashboard.css";
-import useRealTimeData from "hooks/useRealTimeData";
 import {
   setTabAuth,
   broadcastAuthState,
@@ -52,7 +50,6 @@ const Dashboard: React.FC = (): React.ReactElement => {
   const [classroomInfo, setClassroomInfo] = useState<ClassroomInfo | null>(
     null,
   );
-  const [studentQuizzes, setStudentQuizzes] = useState<Quiz[]>([]);
   const [menuOpen, setMenuOpen] = useState<boolean>(false);
   const [inviteOpen, setInviteOpen] = useState<boolean>(false);
   const [unreadCount, setUnreadCount] = useState<number>(0);
@@ -67,7 +64,7 @@ const Dashboard: React.FC = (): React.ReactElement => {
   const [mySectionDraft, setMySectionDraft] = useState<string>(""); // for students
   const [savingMySection, setSavingMySection] = useState<boolean>(false); // for students
 
-  const [showcaseItems, setShowcaseItems] = useState<ShowcaseItem[]>([]);
+  const [showcaseItems, setShowcaseItems] = useState<ShowcaseItem[]>([]); // Ignore: Unused variable
   const { loading: loadingShowcase } = useLoadingState(false);
 
   // Make showMessage stable for effects
@@ -167,21 +164,6 @@ const Dashboard: React.FC = (): React.ReactElement => {
   // });
 
   // Real-time quizzes for students
-  const { refresh: refreshQuizzes, isPolling: loadingQuizzes } =
-    useRealTimeData({
-      fetchFn: async () => {
-        if (!classroomInfo?.code) return [];
-        const { data } = await apiFetch(
-          `/quizzes/${classroomInfo.code}/quizzes`,
-        );
-        return Array.isArray(data?.quizzes) ? data.quizzes : [];
-      },
-      interval: 5000, // Poll every 5 seconds
-      enabled: user?.role === "student" && !!classroomInfo?.code, // Only poll when the user is student and when the classroom code is loaded
-      onChange: (quizzes) => {
-        setStudentQuizzes(quizzes);
-      },
-    });
 
   useTamperGuard(user?.role, showMsgRef.current);
 
@@ -293,9 +275,25 @@ const Dashboard: React.FC = (): React.ReactElement => {
     return () => abort.abort();
   }, [user?.role, showSections]);
 
+  const validateSectionFormat = (sectionInput: string): boolean => {
+    const trimmed = sectionInput.trim().toUpperCase();
+    // Pattern: STRAND-LETTER+NUMBER
+    const sectionPattern = /^[A-Z]+-[A-Z]\d+$/;
+    return sectionPattern.test(trimmed);
+  };
+
   const saveSection = async (id: string): Promise<void> => {
-    const value = (editSections[id] ?? "").trim();
+    const value = (editSections[id] ?? "").trim().toUpperCase();
     if (!value) return;
+
+    if (!validateSectionFormat(value)) {
+      showMsgRef.current?.(
+        "Section must follow format: STRAND-LETTER+NUMBER (e.g., ICT-A2, STEM-B1)",
+        "error",
+      );
+      return;
+    }
+
     try {
       const { data } = await apiFetch(`/users/${id}/section`, {
         method: "PATCH",
@@ -311,16 +309,6 @@ const Dashboard: React.FC = (): React.ReactElement => {
       showMsgRef.current?.("Failed to save section", "error");
     }
   };
-
-  // Navigate to quiz based on user role
-  function openQuiz(q: Quiz): void {
-    if (!classroomInfo?.code) return;
-    if (user?.role === "teacher") {
-      navigate(`/quizzes/${classroomInfo.code}/quizzes/${q.id}/manage`);
-    } else {
-      navigate(`/quizzes/${classroomInfo.code}/quizzes/${q.id}`);
-    }
-  }
 
   //* Enrollment effect
   useEffect(() => {
@@ -390,8 +378,17 @@ const Dashboard: React.FC = (): React.ReactElement => {
   }, [user, navigate]);
 
   const saveMySection = async (): Promise<void> => {
-    const value = mySectionDraft.trim();
+    const value = mySectionDraft.trim().toUpperCase();
     if (!value) return;
+
+    if (!validateSectionFormat(value)) {
+      showMsgRef.current?.(
+        "Section must follow format: STRAND-LETTER+NUMBER (e.g., ICT-A2, STEM-B1)",
+        "error",
+      );
+      return;
+    }
+
     setSavingMySection(true);
     try {
       const { data } = await apiFetch("/auth/me/section", {
@@ -421,10 +418,19 @@ const Dashboard: React.FC = (): React.ReactElement => {
   };
 
   const saveClassroomSection = async (): Promise<void> => {
-    const value = classroomSectionDraft.trim();
+    const value = classroomSectionDraft.trim().toUpperCase();
     const code = classroomInfo?.code || null;
 
     if (!value) return;
+
+    if (!validateSectionFormat(value)) {
+      showMsgRef.current?.(
+        "Section must follow format: STRAND-LETTER+NUMBER (e.g., ICT-A2, STEM-B1)",
+        "error",
+      );
+      return;
+    }
+
     try {
       const { data } = await apiFetch("/classrooms/teacher/section", {
         method: "PATCH",
@@ -499,6 +505,17 @@ const Dashboard: React.FC = (): React.ReactElement => {
     );
   }
 
+  // Auto-uppercase section inputs
+  const handleSectionInputChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    studentId?: string,
+  ): void => {
+    const value = e.target.value.toUpperCase();
+    if (studentId) {
+      setEditSections((prev) => ({ ...prev, [studentId]: value }));
+    }
+  };
+
   const roleClass = user.role === "teacher" ? "teacher-role" : "student-role";
 
   const content = (
@@ -568,9 +585,11 @@ const Dashboard: React.FC = (): React.ReactElement => {
                   size="auto"
                   label="Section"
                   name="my-section"
-                  placeholder="e.g., 7-A, STEM-2"
+                  placeholder="e.g., ICT-A2, STEM-B1, ABM-C3"
                   value={mySectionDraft}
-                  onChange={(e) => setMySectionDraft(e.target.value)}
+                  onChange={(e) =>
+                    setMySectionDraft(e.target.value.toUpperCase())
+                  }
                   onEnter={() => !savingMySection && saveMySection()}
                 />
               </div>
@@ -647,19 +666,16 @@ const Dashboard: React.FC = (): React.ReactElement => {
                         <input
                           className="section-input"
                           placeholder={
-                            hasSection ? (s.section ?? "") : "Enter section"
+                            hasSection
+                              ? (s.section ?? "")
+                              : "Enter section (e.g. ICT-A2)"
                           }
                           value={
                             hasSection
                               ? (s.section ?? "")
                               : (editSections[s.id] ?? "")
                           }
-                          onChange={(e) =>
-                            setEditSections((prev) => ({
-                              ...prev,
-                              [s.id]: e.target.value,
-                            }))
-                          }
+                          onChange={(e) => handleSectionInputChange(e, s.id)}
                           disabled={hasSection}
                         />
                         <button
@@ -693,89 +709,6 @@ const Dashboard: React.FC = (): React.ReactElement => {
               </button>
             )}
           </section>
-
-          {user?.role === "student" && (
-            <section className="dashboard-card">
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginBottom: "1rem",
-                }}
-              >
-                <h2 style={{ margin: 0 }}>Available Quizzes</h2>
-                <div
-                  style={{ display: "flex", gap: "8px", alignItems: "center" }}
-                >
-                  {loadingQuizzes && (
-                    <span
-                      className="polling-indicator"
-                      title="Loading quizzes..."
-                    >
-                      🔄
-                    </span>
-                  )}
-                  <button
-                    className="dashboard-button btn-small"
-                    onClick={refreshQuizzes}
-                    title="Refresh quizzes"
-                    disabled={loadingQuizzes}
-                  >
-                    Refresh
-                  </button>
-                </div>
-              </div>
-
-              {loadingQuizzes && studentQuizzes.length === 0 ? (
-                <p>Loading quizzes…</p>
-              ) : studentQuizzes.length ? (
-                <ul style={{ listStyle: "none", padding: 0 }}>
-                  {studentQuizzes.map((q) => (
-                    <li
-                      key={q.id}
-                      style={{
-                        marginBottom: 12,
-                        padding: "12px",
-                        background: "rgba(0,0,0,0.02)",
-                        borderRadius: "8px",
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                        }}
-                      >
-                        <div>
-                          <strong>{q.title}</strong>
-                          <div
-                            style={{
-                              fontSize: "13px",
-                              color: "#64748b",
-                              marginTop: "4px",
-                            }}
-                          >
-                            {q.questions_count || 0} questions ·{" "}
-                            {q.pages_count || 0} pages
-                          </div>
-                        </div>
-                        <button
-                          className="dashboard-button"
-                          onClick={() => openQuiz(q)}
-                        >
-                          Start
-                        </button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p>No quizzes available yet.</p>
-              )}
-            </section>
-          )}
 
           <section className="dashboard-card">
             <h2>Showcase</h2>
