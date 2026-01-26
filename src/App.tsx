@@ -19,6 +19,7 @@ import JoinClassroom from "pages/classrooms/JoinClassroom";
 import CreateClassroom from "pages/classrooms/CreateClassroom";
 import ActivityView from "components/Activity-components/ActivityView";
 import NotFoundHandler from "./NotFoundHandler.js";
+import Portfolio from "pages/Portfolio/Portfolio.js";
 
 type ShowMessageFn = (
   text: string,
@@ -131,6 +132,14 @@ function App(): React.ReactElement {
             element={
               <ProtectedRoute showMessage={showMessage}>
                 <ActivityView />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/portfolio"
+            element={
+              <ProtectedRoute showMessage={showMessage}>
+                <Portfolio />
               </ProtectedRoute>
             }
           />

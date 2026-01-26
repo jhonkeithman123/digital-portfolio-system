@@ -1,3 +1,8 @@
+:root {
+  --signup-accent: var(--accent-color, #2563eb);
+  --signup-accent-2: #06b6d4;
+}
+
 .containerS {
   display: flex;
   flex: 1;
@@ -110,7 +115,11 @@
 .buttonS {
   padding: 12px 18px;
   font-size: 1rem;
-  background: linear-gradient(135deg, #ef4444, #22d3ee);
+  background: linear-gradient(
+    135deg,
+    var(--signup-accent),
+    var(--signup-accent-2)
+  );
   color: white;
   border: none;
   border-radius: 10px;

@@ -7,6 +7,7 @@ import TokenGuard from "components/auth/tokenGuard";
 import LoadingOverlay from "components/Component-elements/loading_overlay";
 import useLoadingState from "hooks/useLoading";
 import Header from "components/Component-elements/Header";
+import InputField from "components/Component-elements/InputField";
 import "./css/CreateClassroom.css";
 
 const CreateClassroom: React.FC = (): React.ReactElement => {
@@ -27,8 +28,8 @@ const CreateClassroom: React.FC = (): React.ReactElement => {
 
   const validateSectionFormat = (sectionInput: string): boolean => {
     const trimmed = sectionInput.trim().toUpperCase();
-    // Pattern: STRAND-LETTER+NUMBER
-    const sectionPattern = /^[A-Z]+-[A-Z]\d+$/;
+    // Updated pattern: XX-YYYY-XY (e.g., 12-ICT-A2)
+    const sectionPattern = /^\d{2}-[A-Z]{2,5}-[A-Z]\d$/;
     return sectionPattern.test(trimmed);
   };
 
@@ -50,7 +51,7 @@ const CreateClassroom: React.FC = (): React.ReactElement => {
 
         if (trimmedSection && !validateSectionFormat(trimmedSection)) {
           return showMsgRef.current(
-            "Section must follow format: STRAND-LETTER+NUMBER (e.g., ICT-A2, STEM-B1)",
+            "Section must follow format: XX-YYYY-XY (e.g., 12-ICT-A2, 11-STEM-B1)",
             "error",
           );
         }
@@ -133,32 +134,33 @@ const CreateClassroom: React.FC = (): React.ReactElement => {
         <div className="create-classroom-container">
           <h1>Create Your Advisory Classroom</h1>
           <form onSubmit={handleCreate} className="create-class-form">
-            <input
-              className="create-input"
-              type="text"
+            <InputField
+              label="Classroom Name"
+              name="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Classroom Name"
-              aria-label="Classroom name"
+              placeholder="Enter classroom name"
               required
             />
-            <input
-              className="create-input"
-              type="text"
+
+            <InputField
+              label="School Year"
+              name="schoolYear"
               value={schoolYear}
               onChange={(e) => setSchoolYear(e.target.value)}
-              placeholder="School Year (e.g. 2025-2026)"
-              aria-label="School year"
+              placeholder="e.g., 2025-2026"
               required
             />
-            <input
-              className="create-input"
-              type="text"
+
+            <InputField
+              label="Grade & Section (Optional)"
+              name="gradeAndSection"
               value={section}
-              onChange={handleSectionChange}
-              placeholder="e.g. ICT-A2, STEM-B1, ABM-C3"
-              aria-label="Section (optional)"
+              onChange={(e) => setSection(e.target.value)}
+              placeholder="Format: XX-YYYY-XY"
+              helperText="Format: XX-YYYY-XY (e.g., 12-ICT-A2, 11-STEM-B1)"
             />
+
             <div className="create-actions">
               <button
                 className="create-button"

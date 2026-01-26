@@ -167,7 +167,7 @@ const Dashboard: React.FC = (): React.ReactElement => {
 
   useTamperGuard(user?.role, showMsgRef.current);
 
-  //* Init effect
+  //* Init effect - Fixed, will waot for enrollment check before rendering
   useEffect(() => {
     if (didInit.current) return;
     didInit.current = true;
@@ -218,6 +218,12 @@ const Dashboard: React.FC = (): React.ReactElement => {
         localStorage.setItem("user", JSON.stringify(data.user));
         if ((data.user as User).section)
           setMySection((data.user as User).section!);
+
+        // Set accent color IMMEDIATELY after setting user
+        const accent =
+          roleColors[(data.user as User).role as keyof typeof roleColors] ??
+          "#6c757d";
+        document.documentElement.style.setProperty("--accent-color", accent);
 
         // Broadcast authenticated state to all tabs
         setTabAuth();
@@ -310,7 +316,7 @@ const Dashboard: React.FC = (): React.ReactElement => {
     }
   };
 
-  //* Enrollment effect
+  //* Enrollment effect - Fixed: Will not show dashboard untill enrollment is checked
   useEffect(() => {
     if (!user) return;
 
@@ -322,25 +328,31 @@ const Dashboard: React.FC = (): React.ReactElement => {
         .then(({ data }) => {
           if (!data?.success) {
             showMsgRef.current?.("Failed to check enrollment", "error");
+            setCheckingEnrollment(false);
           } else if (!data.enrolled || !data.classroomId) {
-            showMsgRef.current?.("Not enrolled. Join a classroom.", "info");
-            navigate("/join");
+            // NOT enrolled - redirect immediately without showing dashboard
+            console.log(
+              "[Dashboard] Student not enrolled, redirecting to /join",
+            );
+            navigate("/join", { replace: true });
           } else {
+            // Enrolled - show dashboard
             setHasActivity(true);
             setClassroomInfo({
               name: data.name,
               code: data.code,
               id: data.classroomId,
             });
+            setCheckingEnrollment(false);
           }
         })
-        .catch(() =>
+        .catch(() => {
           showMsgRef.current?.(
             "Server error while checking classroom",
             "error",
-          ),
-        )
-        .finally(() => setCheckingEnrollment(false));
+          );
+          setCheckingEnrollment(false);
+        });
     } else if (user.role === "teacher") {
       if (teacherChecked.current) return;
       teacherChecked.current = true;
@@ -349,10 +361,15 @@ const Dashboard: React.FC = (): React.ReactElement => {
         .then(({ data }) => {
           if (!data?.success) {
             showMsgRef.current?.("Failed to check classroom", "error");
+            setCheckingEnrollment(false);
           } else if (!(data as any).created) {
-            navigate("/create");
+            // No classroom - redirect immediately without showing dashboard
+            console.log(
+              "[Dashboard] Teacher has no classroom, redirecting to /create",
+            );
+            navigate("/create", { replace: true });
           } else {
-            // Cast to a known shape so TypeScript recognizes `section`
+            // Has classroom - show dashboard
             const info = data as {
               name?: string;
               code?: string;
@@ -365,15 +382,16 @@ const Dashboard: React.FC = (): React.ReactElement => {
               code: info.code,
               section: info.section ?? null,
             });
+            setCheckingEnrollment(false);
           }
         })
-        .catch(() =>
+        .catch(() => {
           showMsgRef.current?.(
             "Server error while checking classroom",
             "error",
-          ),
-        )
-        .finally(() => setCheckingEnrollment(false));
+          );
+          setCheckingEnrollment(false);
+        });
     }
   }, [user, navigate]);
 

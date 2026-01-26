@@ -7,6 +7,7 @@ import useLogout from "hooks/useLogout";
 import LoadingOverlay from "components/Component-elements/loading_overlay";
 import useLoadingState from "hooks/useLoading";
 import Header from "components/Component-elements/Header";
+import InputField from "components/Component-elements/InputField";
 
 import InvNotificationMenu from "./InvNotificationMenu";
 import TokenGuard from "components/auth/tokenGuard";
@@ -192,15 +193,18 @@ const JoinClassroom: React.FC = (): React.ReactElement => {
             Enter a classroom code below or wait for your teacher to invite you.
           </p>
 
-          <input
-            type="text"
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            placeholder="Enter 10-character code"
-            maxLength={10}
-            className="code-input"
-            aria-label="Classroom code"
-          />
+          <div className="join-input-container">
+            <InputField
+              label="Classroom Code"
+              name="code"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              placeholder="Enter 10-character code"
+              maxLength={10}
+              helperText="Ask your teacher for the classroom code"
+              onEnter={() => handleJoin()}
+            />
+          </div>
           <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
             <button className="join-button" onClick={() => handleJoin()}>
               Join Classroom

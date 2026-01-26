@@ -1,9 +1,24 @@
-### Fix the signup email to only accept email
+## Completed Features ✅
 
-### Add a logic to change the username
+- [x] Fix the signup email to only accept email format
+- [x] Add student ID field to signup
+- [x] Add portfolio page to store all activities
 
-### make a portfolio to store all the activities
+## In Progress 🚧
 
-### make a student id field
+- [ ] Add logic to change the username
 
-### make a showcase - For now this is excluded
+## Pending Features 📋
+
+- [ ] Make a showcase (Excluded for now)
+
+## Future Enhancements 💡
+
+- Export portfolio as PDF
+- Activity sharing capabilities
+- Achievement badges system
+- Progress tracking with charts
+- Profile customization
+- Activity comments/feedback
+- Grade analytics dashboard
+- Make the invite improve sorting of students

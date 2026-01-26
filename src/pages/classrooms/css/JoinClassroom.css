@@ -24,34 +24,44 @@
   transition: background 0.3s ease;
 }
 
-/* inputs & buttons */
-.code-input {
-  width: 95%;
-  padding: 0.75rem;
-  font-size: 1rem;
-  margin-top: 1rem;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  box-sizing: border-box;
-  background: var(--input-bg, #fff);
-  color: var(--text, #071422);
+.join-input-container {
+  width: 100%;
+  max-width: 400px;
+  margin: 20px 0;
 }
 
 .join-button {
-  margin-top: 1rem;
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-  background-color: var(--accent-color);
-  color: white;
+  flex: 1;
+  padding: 14px 24px;
+  font-size: 16px;
+  font-weight: 600;
   border: none;
-  border-radius: 6px;
+  border-radius: 10px;
   cursor: pointer;
+  transition: all 0.2s ease;
+  background: linear-gradient(135deg, var(--accent-color, #2563eb), #06b6d4);
+  color: rgb(17, 1, 1);
+  min-width: 150px;
 }
 
-/* secondary styles */
+.join-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
 .join-button:disabled {
   opacity: 0.6;
-  pointer-events: none;
+  cursor: not-allowed;
+}
+
+.join-button:last-child {
+  background: rgba(100, 116, 139, 0.2);
+  color: #01060c;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.join-button:last-child:hover:not(:disabled) {
+  background: rgba(100, 116, 139, 0.3);
 }
 
 .join-message {
@@ -81,7 +91,7 @@
 
 :root[data-theme="dark"] .join-button {
   background: var(--accent-color, #0ea5a4);
-  color: #041422;
+  color: #c9cfd5;
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.4);
 }
 
