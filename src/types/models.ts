@@ -17,6 +17,20 @@ export interface RoleColors {
 export type MessageType = "info" | "success" | "error";
 export type ShowMessageFn = (text: string, kind?: MessageType) => void;
 
+export const ALLOWED_EMAIL_DOMAINS = [
+  "gmail.com",
+  "yahoo.com",
+  "outlook.com",
+  "hotmail.com",
+  "live.com",
+  "icloud.com",
+  "protonmail.com",
+  "aol.com",
+  "zoho.com",
+  "mail.com",
+  "yandex.com",
+];
+
 export interface ShowcaseItem {
   id: string;
   studentName?: string;

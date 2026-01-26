@@ -9,6 +9,7 @@ import { apiFetchPublic } from "utils/apiClient.js";
 import type { Role } from "types/models";
 import "./Signup.css";
 import { installLoginPageGuard } from "utils/tabAuth.js";
+import { ALLOWED_EMAIL_DOMAINS } from "types/models";
 
 const validRoles = ["student", "teacher"] as const;
 
@@ -23,6 +24,10 @@ const Signup: React.FC = (): React.ReactElement => {
   const [password, setPassword] = useState<string>("");
   const [section, setSection] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
+
+  const [showVerification, setShowVerification] = useState<boolean>(false);
+  const [verificationCode, setVerificationCode] = useState<string>("");
+  const [resendCooldown, setResendCooldown] = useState<number>(0);
 
   const roleRaw = localStorage.getItem("role");
   const role = (roleRaw as Role | null) ?? null;
@@ -51,6 +56,16 @@ const Signup: React.FC = (): React.ReactElement => {
     }
   }, [role, navigate]);
 
+  useEffect(() => {
+    if (resendCooldown > 0) {
+      const timer = setTimeout(
+        () => setResendCooldown(resendCooldown - 1),
+        1000,
+      );
+      return () => clearTimeout(timer);
+    }
+  }, [resendCooldown]);
+
   const handleSelect = (page: string = "login"): void => {
     navigate(`/${page}`);
   };
@@ -64,14 +79,41 @@ const Signup: React.FC = (): React.ReactElement => {
     return sectionPattern.test(trimmed);
   };
 
+  const validateEmail = (email: string): { valid: boolean; error?: string } => {
+    const trimmedEmail = email.trim().toLowerCase();
+
+    // Basic email format validation
+    const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!emailRegex.test(trimmedEmail)) {
+      return {
+        valid: false,
+        error: "Please enter a valid email address (e.g., user@example.com)",
+      };
+    }
+
+    // Extract domain from email
+    const domain = trimmedEmail.split("@")[1];
+
+    // Check if domain is in allowed list
+    if (!ALLOWED_EMAIL_DOMAINS.includes(domain)) {
+      return {
+        valid: false,
+        error: `Email domain not supported. Please use: ${ALLOWED_EMAIL_DOMAINS.slice(0, 5).join(", ")}, etc.`,
+      };
+    }
+
+    return { valid: true };
+  };
+
   const validate = (): boolean => {
     if (!username.trim() || !email.trim() || !password) {
       showMsgRef.current?.("All fields are required", "error");
       return false;
     }
 
-    if (!/\S+@\S+\.\S+/.test(email)) {
-      showMsgRef.current?.("Invalid email format", "error");
+    const emailValidation = validateEmail(email);
+    if (!emailValidation.valid) {
+      showMsgRef.current?.(emailValidation.error || "Invalid email", "error");
       return false;
     }
 
@@ -88,7 +130,7 @@ const Signup: React.FC = (): React.ReactElement => {
     if (role === "student" && section.trim()) {
       if (!validateSectionFormat(section)) {
         showMsgRef.current?.(
-          "Section must follow format: STRAND-SECTION (e.g., STEM-1, ABM-2A, ICT-12",
+          "Section must follow format: STRAND-LETTER+NUMBER (e.g., ICT-A2, STEM-B1, ABM-C3)",
           "error",
         );
         return false;
@@ -122,8 +164,16 @@ const Signup: React.FC = (): React.ReactElement => {
         );
 
         if (ok && data?.success) {
-          showMsgRef.current?.("Signup successful! Redirecting...", "success");
-          setTimeout(() => navigate(`/login?role=${role}`), 1500);
+          showMsgRef.current?.(
+            "Account created! Please verify your email.",
+            "success",
+          );
+
+          // Send verification code
+          await requestVerificationCode();
+
+          // Show verification form
+          setShowVerification(true);
         } else {
           showMsgRef.current?.(data?.error || "Signup failed", "error");
         }
@@ -132,11 +182,90 @@ const Signup: React.FC = (): React.ReactElement => {
         showMsgRef.current?.("Server error", "error");
       }
     });
-  }, [wrap, email, password, role, section || null, navigate, validate]);
+  }, [wrap, username, email, password, role, section, validate]);
+
+  const requestVerificationCode = useCallback(async (): Promise<void> => {
+    await wrap(async () => {
+      try {
+        const { ok, data } = await apiFetchPublic(
+          `/auth/request-verification`,
+          {
+            method: "POST",
+            body: JSON.stringify({
+              email: email.trim(),
+              role,
+            }),
+            headers: { "Content-Type": "application/json" },
+          },
+          { withCredentials: false },
+        );
+
+        if (ok && data?.success) {
+          showMsgRef.current?.(
+            data.message || "Verification code sent to your email!",
+            "success",
+          );
+          setResendCooldown(60); // 60 second cooldown
+        } else {
+          showMsgRef.current?.(
+            data?.error || "Failed to send verification code",
+            "error",
+          );
+        }
+      } catch (err) {
+        console.error("Request verification error:", err);
+        showMsgRef.current?.("Server error", "error");
+      }
+    });
+  }, [wrap, email, role]);
+
+  const handleVerifyCode = useCallback(async (): Promise<void> => {
+    await wrap(async () => {
+      if (!verificationCode.trim()) {
+        showMsgRef.current?.("Please enter the verification code", "error");
+        return;
+      }
+
+      try {
+        const { ok, data } = await apiFetchPublic(
+          `/auth/verify-code`,
+          {
+            method: "POST",
+            body: JSON.stringify({
+              email: email.trim(),
+              code: verificationCode.trim(),
+            }),
+            headers: { "Content-Type": "application/json" },
+          },
+          { withCredentials: false },
+        );
+
+        if (ok && data?.success) {
+          showMsgRef.current?.(
+            "Email verified! Redirecting to login...",
+            "success",
+          );
+          setTimeout(() => navigate(`/login?role=${role}`), 1500);
+        } else {
+          showMsgRef.current?.(
+            data?.error || "Invalid verification code",
+            "error",
+          );
+        }
+      } catch (err) {
+        console.error("Verify code error:", err);
+        showMsgRef.current?.("Server error", "error");
+      }
+    });
+  }, [wrap, email, verificationCode, role, navigate]);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
-    void handleSignup();
+    if (showVerification) {
+      void handleVerifyCode();
+    } else {
+      void handleSignup();
+    }
   };
 
   // Auto-uppercase section as user types
@@ -150,10 +279,23 @@ const Signup: React.FC = (): React.ReactElement => {
   return (
     <>
       <Header
-        subtitle={role ? `Sign Up as ${String(role).toUpperCase()}` : "Sign Up"}
+        subtitle={
+          showVerification
+            ? "Verify Your Email"
+            : role
+              ? `Sign Up as ${String(role).toUpperCase()}`
+              : "Sign Up"
+        }
         leftActions={
           <button
-            onClick={() => navigate("/")}
+            onClick={() => {
+              if (showVerification) {
+                setShowVerification(false);
+                setVerificationCode("");
+              } else {
+                navigate("/");
+              }
+            }}
             className="header-link"
             disabled={loading}
           >
@@ -170,87 +312,137 @@ const Signup: React.FC = (): React.ReactElement => {
 
       {messageComponent}
 
-      <LoadingOverlay loading={loading} text="Signing up..." fullPage={false} />
+      <LoadingOverlay
+        loading={loading}
+        text={showVerification ? "Verifying..." : "Signing up..."}
+        fullPage={false}
+      />
 
       <form className="containerS" onSubmit={handleSubmit}>
-        <div className="input-containerS">
-          <InputField
-            label="Username"
-            name="username"
-            value={username}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setUsername(e.target.value)
-            }
-            autoComplete="username"
-            placeholder="Username"
-            required
-          />
+        {!showVerification ? (
+          <>
+            <div className="input-containerS">
+              <InputField
+                label="Username"
+                name="username"
+                value={username}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setUsername(e.target.value)
+                }
+                autoComplete="username"
+                placeholder="Username"
+                required
+              />
 
-          {role === "student" && (
-            <InputField
-              label="Section"
-              name="section"
-              value={section}
-              onChange={handleSectionChange}
-              placeholder="e.g. STEM-1, ABM-2A, ICT-12"
-              helperText="Format: STRAND-LETTER+NUMBER (e.g., ICT-A2, HUMSS-B3)"
-            />
-          )}
+              {role === "student" && (
+                <InputField
+                  label="Section"
+                  name="section"
+                  value={section}
+                  onChange={handleSectionChange}
+                  placeholder="e.g. ICT-A2, STEM-B1"
+                  helperText="Format: STRAND-LETTER+NUMBER (e.g., ICT-A2, HUMSS-B3)"
+                />
+              )}
 
-          <InputField
-            label="Email"
-            name="email"
-            type="email"
-            value={email}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setEmail(e.target.value)
-            }
-            autoComplete="email"
-            placeholder="Email"
-            required
-          />
+              <InputField
+                label="Email"
+                name="email"
+                type="email"
+                value={email}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setEmail(e.target.value)
+                }
+                autoComplete="email"
+                placeholder="e.g., user@gmail.com"
+                helperText="Supported: Gmail, Yahoo, Outlook, Hotmail, iCloud, etc."
+                required
+              />
 
-          <InputField
-            label="Password"
-            name="password"
-            type="password"
-            value={password}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setPassword(e.target.value)
-            }
-            autoComplete="new-password"
-            placeholder="Password"
-            showToggle
-            required
-          />
+              <InputField
+                label="Password"
+                name="password"
+                type="password"
+                value={password}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setPassword(e.target.value)
+                }
+                autoComplete="new-password"
+                placeholder="Password"
+                showToggle
+                required
+              />
 
-          <InputField
-            label="Confirm Password"
-            name="confirm"
-            type="password"
-            value={confirmPassword}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              setConfirmPassword(e.target.value)
-            }
-            autoComplete="new-password"
-            placeholder="Confirm Password"
-            showToggle
-            required
-          />
-        </div>
-        <div className="button-containerS">
-          <button type="submit" className="buttonS" disabled={loading}>
-            Sign up
-          </button>
-          <button
-            type="button"
-            onClick={() => handleSelect()}
-            className="buttonS buttonS-secondary"
-            disabled={loading}
-          >
-            Back to Log in
-          </button>
-        </div>
+              <InputField
+                label="Confirm Password"
+                name="confirm"
+                type="password"
+                value={confirmPassword}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setConfirmPassword(e.target.value)
+                }
+                autoComplete="new-password"
+                placeholder="Confirm Password"
+                showToggle
+                required
+              />
+            </div>
+            <div className="button-containerS">
+              <button type="submit" className="buttonS" disabled={loading}>
+                Sign up
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSelect()}
+                className="buttonS buttonS-secondary"
+                disabled={loading}
+              >
+                Back to Log in
+              </button>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="input-containerS">
+              <div style={{ marginBottom: "16px", textAlign: "center" }}>
+                <p style={{ color: "#64748b", fontSize: "14px" }}>
+                  We've sent a verification code to <strong>{email}</strong>
+                </p>
+                <p style={{ color: "#64748b", fontSize: "14px" }}>
+                  Please check your email and enter the code below.
+                </p>
+              </div>
+
+              <InputField
+                label="Verification Code"
+                name="verification-code"
+                value={verificationCode}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  setVerificationCode(e.target.value)
+                }
+                placeholder="Enter 6-digit code"
+                maxLength={6}
+                required
+                autoComplete="one-time-code"
+              />
+            </div>
+            <div className="button-containerS">
+              <button type="submit" className="buttonS" disabled={loading}>
+                Verify Email
+              </button>
+              <button
+                type="button"
+                onClick={() => void requestVerificationCode()}
+                className="buttonS buttonS-secondary"
+                disabled={loading || resendCooldown > 0}
+              >
+                {resendCooldown > 0
+                  ? `Resend in ${resendCooldown}s`
+                  : "Resend Code"}
+              </button>
+            </div>
+          </>
+        )}
       </form>
     </>
   );
