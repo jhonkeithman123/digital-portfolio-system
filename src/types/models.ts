@@ -46,6 +46,7 @@ export interface Student {
   username?: string;
   email?: string;
   section?: string | null;
+  grade?: string | null;
 }
 
 // Re-export Quiz types from quiz.d.ts
@@ -64,6 +65,7 @@ export interface User {
   id: string;
   role: "student" | "teacher";
   section?: string | null;
+  grade?: string | null;
   username?: string;
   email?: string;
 }
@@ -73,6 +75,7 @@ export interface ClassroomInfo {
   name?: string;
   code?: string | null;
   section?: string | null;
+  grade?: string | null;
 }
 
 export interface TamperGuardOptions {

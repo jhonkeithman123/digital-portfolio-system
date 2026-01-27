@@ -69,7 +69,28 @@
   color: red;
 }
 
+.polling-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-color, #2563eb);
+  opacity: 0.7;
+  transition: opacity 0.3s ease;
+}
+
+.polling-indicator:hover {
+  opacity: 1;
+}
+
+.polling-icon {
+  color: var(--accent-color, #2563eb);
+}
+
 /* Dark theme overrides */
+:root[data-theme="dark"] .polling-icon {
+  color: #60a5fa;
+}
+
 :root[data-theme="dark"] .join-classroom-wrapper {
   --page-bg: #031024;
   background-color: var(--page-bg);

@@ -3,6 +3,7 @@ import useMessage from "hooks/useMessage";
 import { apiFetch } from "utils/apiClient";
 import useLoadingState from "hooks/useLoading";
 import LoadingOverlay from "./Component-elements/loading_overlay";
+import useRealTimeData from "hooks/useRealTimeData";
 import "./css/StudentInvite.css";
 
 interface Student {
@@ -10,6 +11,8 @@ interface Student {
   name?: string | null;
   username?: string | null;
   avatar?: string | null;
+  section?: string | null;
+  grade?: string | null;
   [k: string]: any;
 }
 
@@ -32,50 +35,74 @@ const StudentInvite: React.FC<StudentInviteProps> = ({
   const [students, setStudents] = useState<Student[]>([]);
   const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
   const [invitedIds, setInvitedIds] = useState<Array<string | number>>([]);
+  const [refreshKey, setRefreshKey] = useState<number>(0);
 
   useEffect(() => {
     showMsgRef.current = showMessage;
   }, [showMessage]);
 
-  useEffect(() => {
-    let mounted = true;
-    const ac = new AbortController();
+  // Real-time student list polling
+  const {
+    data: realTimeStudents,
+    isPolling,
+    refresh,
+  } = useRealTimeData<Student[]>({
+    fetchFn: async () => {
+      const { data, unauthorized } = await apiFetch<{
+        success?: boolean;
+        students?: Student[];
+      }>(`/classrooms/${classroomCode}/students`);
 
-    void wrap(async () => {
-      try {
-        const { data, unauthorized } = await apiFetch<{
-          success?: boolean;
-          students?: Student[];
-        }>(`/classrooms/${classroomCode}/students`, { signal: ac.signal });
-
-        if (!mounted) return;
-
-        if (unauthorized) {
-          showMsgRef.current("Session expired. Please sign in.", "error");
-          return;
-        }
-
-        if (data?.success && Array.isArray(data.students)) {
-          setStudents(data.students);
-          setFilteredStudents(data.students);
-        } else {
-          showMsgRef.current("Failed to fetch students", "error");
-          setStudents([]);
-          setFilteredStudents([]);
-        }
-      } catch (err: unknown) {
-        if ((err as any)?.name === "AbortError") return;
-
-        console.error("StudentInvite fetch error:", err);
-        showMsgRef.current("Failed to fetch students", "error");
+      if (unauthorized) {
+        throw new Error("Session expired");
       }
-    });
 
-    return () => {
-      mounted = false;
-      ac.abort();
+      if (data?.success && Array.isArray(data.students)) {
+        return data.students;
+      }
+
+      return [];
+    },
+    interval: 10000, // Poll every 10 seconds
+    enabled: true,
+    onChange: (newStudents) => {
+      setStudents(newStudents);
+      // Clear invitedIds for students that are back in the list
+      // This handles the case where a classroom was deleted and recreated
+      setInvitedIds((prev) => {
+        const currentStudentIds = newStudents.map((s) => s.id);
+        return prev.filter((id) => !currentStudentIds.includes(id));
+      });
+    },
+    onError: (error) => {
+      console.error("StudentInvite fetch error:", error);
+      if (error.message === "Session expired") {
+        showMsgRef.current?.("Session expired. Please sign in.", "error");
+      }
+    },
+  });
+
+  // Initialize students from real-time data
+  useEffect(() => {
+    if (realTimeStudents) {
+      setStudents(realTimeStudents);
+      setFilteredStudents(realTimeStudents);
+    }
+  }, [realTimeStudents]);
+
+  // Refresh on window focus to catch manual database changes
+  useEffect(() => {
+    const handleFocus = () => {
+      console.log("Window focused, refreshing student list...");
+      setRefreshKey((prev) => prev + 1);
+      refresh?.();
+      // Also clear invitedIds to allow re-inviting
+      setInvitedIds([]);
     };
-  }, [classroomCode, wrap]);
+
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
+  }, [refresh]);
 
   useEffect(() => {
     const q = searchTerm.trim().toLowerCase();
@@ -85,8 +112,8 @@ const StudentInvite: React.FC<StudentInviteProps> = ({
     }
 
     const matches = students.filter((student) => {
-      const combined = `${student.name ?? ""} ${
-        student.username ?? ""
+      const combined = `${student.name ?? ""} ${student.username ?? ""} ${
+        student.section ?? ""
       }`.toLowerCase();
       return combined.includes(q);
     });
@@ -110,7 +137,7 @@ const StudentInvite: React.FC<StudentInviteProps> = ({
         );
 
         if (unauthorized) {
-          showMsgRef.current("Session expired. Please sign in.", "error");
+          showMsgRef.current?.("Session expired. Please sign in.", "error");
           return;
         }
 
@@ -119,14 +146,24 @@ const StudentInvite: React.FC<StudentInviteProps> = ({
           setFilteredStudents((prev) => prev.filter((s) => s.id !== studentId));
           setInvitedIds((prev) => [...prev, studentId]);
           if (typeof onInvite === "function") onInvite(studentId);
-          showMsgRef.current("Invite sent", "success");
+          showMsgRef.current?.("Invite sent", "success");
         } else {
-          showMsgRef.current(data?.error || "Invite failed", "error");
+          showMsgRef.current?.(data?.error || "Invite failed", "error");
         }
       } catch (error) {
         console.error("Invite error:", error);
-        showMsgRef.current("Invite error", "error");
+        showMsgRef.current?.("Invite error", "error");
       }
+    });
+  };
+
+  const handleManualRefresh = async (): Promise<void> => {
+    await wrap(async () => {
+      console.log("Manual refresh triggered");
+      setRefreshKey((prev) => prev + 1);
+      setInvitedIds([]); // Clear invited state
+      await refresh?.();
+      showMsgRef.current?.("Student list refreshed", "info");
     });
   };
 
@@ -134,7 +171,7 @@ const StudentInvite: React.FC<StudentInviteProps> = ({
     try {
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(classroomCode);
-        showMsgRef.current("Code copied to clipboard", "info");
+        showMsgRef.current?.("Code copied to clipboard", "info");
       } else {
         // fallback
         const el = document.createElement("textarea");
@@ -145,12 +182,23 @@ const StudentInvite: React.FC<StudentInviteProps> = ({
         el.select();
         document.execCommand("copy");
         document.body.removeChild(el);
-        showMsgRef.current("Code copied to clipboard", "info");
+        showMsgRef.current?.("Code copied to clipboard", "info");
       }
     } catch {
-      showMsgRef.current("Failed to copy code", "error");
+      showMsgRef.current?.("Failed to copy code", "error");
     }
   };
+
+  // Group students by section for better organization
+  const groupedStudents = filteredStudents.reduce(
+    (acc, student) => {
+      const section = student.section || "No Section";
+      if (!acc[section]) acc[section] = [];
+      acc[section].push(student);
+      return acc;
+    },
+    {} as Record<string, Student[]>,
+  );
 
   return (
     <>
@@ -159,10 +207,78 @@ const StudentInvite: React.FC<StudentInviteProps> = ({
         <div className="invite-section" onClick={(e) => e.stopPropagation()}>
           <LoadingOverlay loading={loading} text="" fullPage={false} />
 
-          <h4>Invite Students</h4>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "16px",
+            }}
+          >
+            <h4 style={{ margin: 0 }}>Invite Students</h4>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <button
+                type="button"
+                className="refresh-button"
+                onClick={handleManualRefresh}
+                disabled={loading}
+                title="Refresh student list"
+                aria-label="Refresh student list"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  style={{ width: "16px", height: "16px" }}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
+                </svg>
+              </button>
+              {isPolling && (
+                <div
+                  className="polling-indicator-small"
+                  title="Auto-updating student list..."
+                >
+                  <svg
+                    className="polling-icon"
+                    viewBox="0 0 24 24"
+                    style={{ width: "14px", height: "14px" }}
+                  >
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      opacity="0.3"
+                    />
+                    <path
+                      d="M12 2a10 10 0 0 1 10 10"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    >
+                      <animateTransform
+                        attributeName="transform"
+                        type="rotate"
+                        from="0 12 12"
+                        to="360 12 12"
+                        dur="1.5s"
+                        repeatCount="indefinite"
+                      />
+                    </path>
+                  </svg>
+                </div>
+              )}
+            </div>
+          </div>
+
           <input
             type="text"
-            placeholder="Enter student name or ID"
+            placeholder="Search by name, username, or section..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="invite-input"
@@ -173,32 +289,54 @@ const StudentInvite: React.FC<StudentInviteProps> = ({
             {loading ? (
               <div className="loading-spinner" aria-hidden />
             ) : filteredStudents.length > 0 ? (
-              filteredStudents.map((student) => (
-                <div key={student.id} className="student-card">
-                  <img
-                    src={student.avatar || "/images/dummy_student_1.jpg"}
-                    alt={student.name ? `${student.name} avatar` : "Profile"}
-                    className="student-avatar"
-                  />
-                  <div className="student-info">
-                    <div className="student-name">
-                      {student.name ?? student.username}
-                    </div>
+              Object.entries(groupedStudents).map(
+                ([section, sectionStudents]) => (
+                  <div key={section} className="section-group">
+                    <div className="section-header">{section}</div>
+                    {sectionStudents.map((student) => (
+                      <div key={student.id} className="student-card">
+                        <img
+                          src={student.avatar || "/images/dummy_student_1.jpg"}
+                          alt={
+                            student.name ? `${student.name} avatar` : "Profile"
+                          }
+                          className="student-avatar"
+                        />
+                        <div className="student-info">
+                          <div className="student-name">
+                            {student.name ?? student.username}
+                          </div>
+                          {student.section && (
+                            <div className="student-section">
+                              Grade {student.grade} • {student.section}
+                            </div>
+                          )}
+                        </div>
+                        <div style={{ marginLeft: "auto" }}>
+                          <button
+                            disabled={
+                              invitedIds.includes(student.id) || loading
+                            }
+                            onClick={() => void handleInvite(student.id)}
+                            className="custom-button"
+                            type="button"
+                          >
+                            {invitedIds.includes(student.id)
+                              ? "Invited"
+                              : "Invite"}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                  <div style={{ marginLeft: "auto" }}>
-                    <button
-                      disabled={invitedIds.includes(student.id) || loading}
-                      onClick={() => void handleInvite(student.id)}
-                      className="custom-button"
-                      type="button"
-                    >
-                      {invitedIds.includes(student.id) ? "Invited" : "Invite"}
-                    </button>
-                  </div>
-                </div>
-              ))
+                ),
+              )
             ) : (
-              <p className="no-results">No matching students found.</p>
+              <p className="no-results">
+                {searchTerm
+                  ? "No matching students found."
+                  : "No students available to invite."}
+              </p>
             )}
           </div>
 

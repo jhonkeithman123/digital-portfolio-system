@@ -9,6 +9,7 @@ import useLoadingState from "hooks/useLoading";
 import Header from "components/Component-elements/Header";
 import InputField from "components/Component-elements/InputField";
 import "./css/CreateClassroom.css";
+import { split } from "postcss/lib/list";
 
 const CreateClassroom: React.FC = (): React.ReactElement => {
   const navigate = useNavigate();
@@ -20,17 +21,52 @@ const CreateClassroom: React.FC = (): React.ReactElement => {
 
   const [name, setName] = useState<string>("");
   const [schoolYear, setSchoolYear] = useState<string>("");
-  const [section, setSection] = useState<string>("");
+  const [gradeAndSection, setGradeAndSection] = useState<string>("");
 
   useEffect(() => {
     showMsgRef.current = showMessage;
   }, [showMessage]);
 
-  const validateSectionFormat = (sectionInput: string): boolean => {
-    const trimmed = sectionInput.trim().toUpperCase();
-    // Updated pattern: XX-YYYY-XY (e.g., 12-ICT-A2)
-    const sectionPattern = /^\d{2}-[A-Z]{2,5}-[A-Z]\d$/;
-    return sectionPattern.test(trimmed);
+  const validateGradeAndSection = (
+    gradeAndSec: string,
+  ): { valid: boolean; error?: string } => {
+    const parts = gradeAndSec.split("-");
+
+    if (parts.length !== 3) {
+      return {
+        valid: false,
+        error:
+          "Grade & Section must be in format: XX-YYYY-XY (e.g., 12-ICT-A2)",
+      };
+    }
+
+    const [grade, strand, section] = parts;
+
+    // Validate grade (11 or 12)
+    if (!["11", "12"].includes(grade)) {
+      return {
+        valid: false,
+        error: "Grade must be 11 or 12",
+      };
+    }
+
+    // Validate strand (2-5 letters)
+    if (!/^[A-Z]{2,5}$/.test(strand)) {
+      return {
+        valid: false,
+        error: "Strand must be 2-5 letters (e.g., ICT, STEM, ABM, HUMSS)",
+      };
+    }
+
+    // Validate section (letter + digit)
+    if (!/^[A-Z]\d$/.test(section)) {
+      return {
+        valid: false,
+        error: "Section must be a letter followed by a digit (e.g., A1, B2)",
+      };
+    }
+
+    return { valid: true };
   };
 
   const handleCreate = useCallback(
@@ -40,7 +76,6 @@ const CreateClassroom: React.FC = (): React.ReactElement => {
       await wrap(async () => {
         const trimmedName = name.trim();
         const trimmedYear = schoolYear.trim();
-        const trimmedSection = section.trim();
 
         if (!trimmedName || !trimmedYear) {
           return showMsgRef.current(
@@ -49,18 +84,23 @@ const CreateClassroom: React.FC = (): React.ReactElement => {
           );
         }
 
-        if (trimmedSection && !validateSectionFormat(trimmedSection)) {
-          return showMsgRef.current(
-            "Section must follow format: XX-YYYY-XY (e.g., 12-ICT-A2, 11-STEM-B1)",
-            "error",
-          );
+        let grade: string | null = null;
+        let section: string | null = null;
+
+        if (gradeAndSection.trim()) {
+          const parts = gradeAndSection.trim().toUpperCase().split("-");
+          if (parts.length === 3) {
+            grade = parts[0];
+            section = `${parts[1]}-${parts[2]}`;
+          }
         }
 
-        const payload: Record<string, unknown> = {
+        const payload: Record<string, string | null> = {
           name: trimmedName,
           schoolYear: trimmedYear,
+          section: section || null,
+          grade: grade || null,
         };
-        if (trimmedSection) payload.section = trimmedSection;
 
         const { data, unauthorized } = await apiFetch(`/classrooms/create`, {
           method: "POST",
@@ -94,15 +134,8 @@ const CreateClassroom: React.FC = (): React.ReactElement => {
         }
       });
     },
-    [name, schoolYear, section, navigate, wrap],
+    [name, schoolYear, gradeAndSection, navigate, wrap],
   );
-
-  const handleSectionChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-  ): void => {
-    const value = e.target.value.toUpperCase();
-    setSection(value);
-  };
 
   return (
     <TokenGuard
@@ -153,10 +186,10 @@ const CreateClassroom: React.FC = (): React.ReactElement => {
             />
 
             <InputField
-              label="Grade & Section (Optional)"
+              label="Grade & Section"
               name="gradeAndSection"
-              value={section}
-              onChange={(e) => setSection(e.target.value)}
+              value={gradeAndSection}
+              onChange={(e) => setGradeAndSection(e.target.value)}
               placeholder="Format: XX-YYYY-XY"
               helperText="Format: XX-YYYY-XY (e.g., 12-ICT-A2, 11-STEM-B1)"
             />

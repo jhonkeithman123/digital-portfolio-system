@@ -6,6 +6,7 @@ import useMessage from "hooks/useMessage";
 import useLogout from "hooks/useLogout";
 import LoadingOverlay from "components/Component-elements/loading_overlay";
 import useLoadingState from "hooks/useLoading";
+import useRealTimeData from "hooks/useRealTimeData";
 import Header from "components/Component-elements/Header";
 import InputField from "components/Component-elements/InputField";
 
@@ -31,6 +32,7 @@ const JoinClassroom: React.FC = (): React.ReactElement => {
   const [code, setCode] = useState<string>("");
   const [invites, setInvites] = useState<Invite[]>([]);
   const [inviteOpen, setInviteOpen] = useState<boolean>(false);
+  const [showDismissed, setShowDismissed] = useState<boolean>(false);
 
   const showMsgRef = useRef<typeof showMessage>(showMessage);
   const bellRef = useRef<HTMLDivElement | null>(null);
@@ -39,37 +41,83 @@ const JoinClassroom: React.FC = (): React.ReactElement => {
     showMsgRef.current = showMessage;
   }, [showMessage]);
 
-  useEffect(() => {
-    const ac = new AbortController();
-    let mounted = true;
+  const { data: realTimeInvites, isPolling } = useRealTimeData<Invite[]>({
+    fetchFn: async () => {
+      const { data, unauthorized } = await apiFetch<{
+        success?: boolean;
+        invites?: Invite[];
+      }>("/classrooms/invites");
 
-    apiFetch(`/classrooms/invites`, { signal: ac.signal })
-      .then(({ unauthorized, data }) => {
-        if (!mounted) return;
-        if (unauthorized) {
-          setInvites([]);
-          return;
-        }
-        if (data?.success && Array.isArray(data.invites)) {
-          setInvites(data.invites);
-        } else {
-          setInvites([]);
-        }
-      })
-      .catch((err) => {
-        if (!mounted) return;
-        showMsgRef.current?.("Failed to fetch invites", "error");
-
-        console.error("JoinClassroom invites fetch:", err);
+      console.log("[JoinClassroom] Fetch invites response:", {
+        data,
+        unauthorized,
       });
 
-    return () => {
-      mounted = false;
-      ac.abort();
-    };
-  }, []);
+      if (unauthorized) {
+        return [];
+      }
+
+      if (data?.success && Array.isArray(data.invites)) {
+        console.log("[JoinClassroom] Received invites:", data.invites);
+        return data.invites;
+      }
+
+      console.log("[JoinClassroom] No invites or invalid response");
+      return [];
+    },
+    interval: 5000, // Poll every 5 seconds
+    enabled: true,
+    onChange: (newInvites) => {
+      console.log("[JoinClassroom] Invites changed:", newInvites);
+      const prevCount = invites.length;
+      const newCount = newInvites.length;
+
+      // Show notification if new invites arrive
+      if (newCount > prevCount) {
+        const diff = newCount - prevCount;
+        showMsgRef.current?.(
+          `You have ${diff} new classroom invitation${diff > 1 ? "s" : ""}!`,
+          "info",
+        );
+      }
+
+      setInvites(newInvites);
+    },
+    onError: (error) => {
+      console.error("Failed to fetch invites:", error);
+    },
+  });
+
+  useEffect(() => {
+    if (realTimeInvites) {
+      console.log("[JoinClassroom] Initializing invites:", realTimeInvites);
+      setInvites(realTimeInvites);
+    }
+  }, [realTimeInvites]);
+
+  // Filter invites based on showDismissed toggle
+  const displayedInvites = showDismissed
+    ? invites // Show all invites including dismissed
+    : invites.filter((inv) => !inv.hidden); // Show only active invites
 
   const visibleInvitesCount = invites.filter((inv) => !inv.hidden).length;
+  const dismissedCount = invites.filter((inv) => inv.hidden).length;
+
+  console.log(
+    "[JoinClassroom] Render - invites:",
+    invites,
+    "visible count:",
+    visibleInvitesCount,
+    "dismissed count:",
+    dismissedCount,
+  );
+
+  console.log(
+    "[JoinClassroom] Render - invites:",
+    invites,
+    "visible count:",
+    visibleInvitesCount,
+  );
 
   const handleJoin = async (joinCode?: string) => {
     await wrap(async () => {
@@ -98,11 +146,7 @@ const JoinClassroom: React.FC = (): React.ReactElement => {
         }
         if (data?.success) {
           showMsgRef.current?.("Successfully enrolled", "success");
-          if (data.classroom?.id) {
-            navigate("/dash");
-          } else {
-            navigate("/dash");
-          }
+          navigate("/dash");
         } else {
           showMsgRef.current?.(
             data?.error || "Failed to join classroom",
@@ -111,7 +155,6 @@ const JoinClassroom: React.FC = (): React.ReactElement => {
         }
       } catch (err) {
         showMsgRef.current?.("Server error. Try again later.", "error");
-
         console.error("Join classroom error:", err);
       }
     });
@@ -139,7 +182,49 @@ const JoinClassroom: React.FC = (): React.ReactElement => {
           </button>
         }
         rightActions={
-          <div ref={bellRef} style={{ display: "flex", alignItems: "center" }}>
+          <div
+            ref={bellRef}
+            style={{ display: "flex", alignItems: "center", gap: "8px" }}
+          >
+            {isPolling && (
+              <div
+                className="polling-indicator"
+                title="Checking for new invitations..."
+                aria-label="Polling for updates"
+              >
+                <svg
+                  className="polling-icon"
+                  viewBox="0 0 24 24"
+                  style={{ width: "16px", height: "16px" }}
+                >
+                  <circle
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    opacity="0.3"
+                  />
+                  <path
+                    d="M12 2a10 10 0 0 1 10 10"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  >
+                    <animateTransform
+                      attributeName="transform"
+                      type="rotate"
+                      from="0 12 12"
+                      to="360 12 12"
+                      dur="1s"
+                      repeatCount="indefinite"
+                    />
+                  </path>
+                </svg>
+              </div>
+            )}
             <button
               type="button"
               className="invite-bell"
@@ -174,7 +259,7 @@ const JoinClassroom: React.FC = (): React.ReactElement => {
 
       {inviteOpen && (
         <InvNotificationMenu
-          invites={invites as any}
+          invites={displayedInvites as any}
           setInvites={setInvites}
           anchorRef={bellRef}
           onClose={() => setInviteOpen(false)}
@@ -182,6 +267,9 @@ const JoinClassroom: React.FC = (): React.ReactElement => {
             handleJoin(c);
             setInviteOpen(false);
           }}
+          showDismissed={showDismissed}
+          setShowDismissed={setShowDismissed}
+          dismissedCount={dismissedCount}
         />
       )}
 
