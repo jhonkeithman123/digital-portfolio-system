@@ -21,6 +21,7 @@ type User = {
   id?: string | number;
   role?: Role;
   section?: string | null;
+  grade?: string | null;
   classroomCode?: string | null;
   currentClassroom?: string | null;
   [k: string]: any;
@@ -31,6 +32,7 @@ type ClassroomInfo = {
   code?: string | null;
   name?: string | null;
   section?: string | null;
+  grade?: string | null;
 };
 
 type Submission = {

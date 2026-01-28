@@ -88,9 +88,12 @@
   background: var(--fi-bg);
   backdrop-filter: blur(14px) saturate(160%);
   -webkit-backdrop-filter: blur(14px) saturate(160%);
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.12),
+  box-shadow:
+    0 8px 22px rgba(0, 0, 0, 0.12),
     0 1px 0 rgba(255, 255, 255, 0.6) inset;
-  transition: box-shadow 0.18s ease, border-color 0.18s ease,
+  transition:
+    box-shadow 0.18s ease,
+    border-color 0.18s ease,
     background 0.18s ease;
   overflow: hidden;
 }
@@ -139,9 +142,13 @@
   height: var(--fi-eye);
   border-radius: calc(var(--fi-radius) - 6px);
   cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.18),
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.18),
     0 0 0 1px rgba(255, 255, 255, 0.5) inset;
-  transition: background 0.15s ease, transform 0.12s ease, opacity 0.15s ease;
+  transition:
+    background 0.15s ease,
+    transform 0.12s ease,
+    opacity 0.15s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -159,7 +166,8 @@
   transform: translateY(calc(-50% + 1px));
 }
 .fi-eye.on {
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.22),
+  box-shadow:
+    0 2px 6px rgba(0, 0, 0, 0.22),
     0 0 0 1px rgba(255, 255, 255, 0.55) inset;
 }
 
@@ -176,8 +184,10 @@
 
 .has-error .fi-control {
   border-color: rgba(225, 29, 72, 0.9);
-  box-shadow: 0 8px 22px rgba(225, 29, 72, 0.1),
-    0 0 0 2px rgba(225, 29, 72, 0.12), 0 1px 0 rgba(255, 255, 255, 0.6) inset;
+  box-shadow:
+    0 8px 22px rgba(225, 29, 72, 0.1),
+    0 0 0 2px rgba(225, 29, 72, 0.12),
+    0 1px 0 rgba(255, 255, 255, 0.6) inset;
 }
 
 .fi-input:disabled {
@@ -216,6 +226,135 @@ input.fi-input:-webkit-autofill:focus {
 fi-container {
   container-type: inline-size;
 }
+
+/* Formatted Input Styles for Grade and Section */
+.fi-formatted-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.fi-formatted-container:focus-within {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+[data-theme="light"] .fi-formatted-container {
+  background: #ffffff;
+  border-color: #cbd5e1;
+}
+
+[data-theme="light"] .fi-formatted-container:focus-within {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.fi-formatted-part {
+  background: rgba(30, 41, 59, 0.8);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 8px;
+  padding: 8px 4px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #f1f5f9;
+  text-transform: uppercase;
+  text-align: center;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.fi-formatted-part::placeholder {
+  color: #64748b;
+  font-weight: 500;
+  opacity: 0.6;
+  text-transform: none;
+}
+
+.fi-formatted-part:focus {
+  background: rgba(30, 41, 59, 1);
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+.fi-formatted-part:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+[data-theme="light"] .fi-formatted-part {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #0f172a;
+}
+
+[data-theme="light"] .fi-formatted-part::placeholder {
+  color: #94a3b8;
+}
+
+[data-theme="light"] .fi-formatted-part:focus {
+  background: #ffffff;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+/* Individual part sizing */
+.fi-grade {
+  width: 50px;
+}
+
+.fi-strand {
+  width: 80px;
+}
+
+.fi-section {
+  width: 50px;
+}
+
+.fi-formatted-separator {
+  font-size: 18px;
+  font-weight: 700;
+  color: #6366f1;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+[data-theme="light"] .fi-formatted-separator {
+  color: #2563eb;
+}
+
+@media (max-width: 480px) {
+  .fi-formatted-container {
+    gap: 6px;
+    padding: 10px;
+  }
+
+  .fi-formatted-part {
+    padding: 6px 2px;
+    font-size: 14px;
+  }
+
+  .fi-grade {
+    width: 40px;
+  }
+
+  .fi-strand {
+    width: 65px;
+  }
+
+  .fi-section {
+    width: 40px;
+  }
+
+  .fi-formatted-separator {
+    font-size: 16px;
+  }
+}
+
 @container (max-width: 360px) {
   .fi--auto {
     --fi-font: 14px;

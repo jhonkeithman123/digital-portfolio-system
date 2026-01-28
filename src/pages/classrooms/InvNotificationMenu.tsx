@@ -19,6 +19,9 @@ interface InvNotificationMenuProps {
   onJoin: (code?: string) => void;
   onClose?: () => void;
   anchorRef?: React.RefObject<HTMLElement | null>;
+  showDismissed?: boolean;
+  setShowDismissed?: React.Dispatch<React.SetStateAction<boolean>>;
+  dismissedCount?: number;
 }
 
 const InvNotificationMenu: React.FC<InvNotificationMenuProps> = ({
@@ -27,6 +30,9 @@ const InvNotificationMenu: React.FC<InvNotificationMenuProps> = ({
   onJoin,
   onClose,
   anchorRef,
+  showDismissed = false,
+  setShowDismissed,
+  dismissedCount = 0,
 }): React.ReactElement => {
   const overlayRef = useRef<HTMLDivElement | null>(null);
   const [pos, setPos] = useState<{
@@ -39,6 +45,8 @@ const InvNotificationMenu: React.FC<InvNotificationMenuProps> = ({
     transformOrigin: "top right",
   });
 
+  console.log("[InvNotificationMenu] Rendering with invites:", invites);
+
   useEffect(() => {
     const computePos = () => {
       const anchorEl = anchorRef?.current;
@@ -48,7 +56,6 @@ const InvNotificationMenu: React.FC<InvNotificationMenuProps> = ({
       const overlayW = Math.max(overlayEl.offsetWidth, 240);
       const overlayH = overlayEl.offsetHeight || 200;
 
-      // If anchor provided, position relative to it; otherwise center in viewport
       if (!anchorEl) {
         const left = Math.max(
           8 + window.scrollX,
@@ -70,12 +77,10 @@ const InvNotificationMenu: React.FC<InvNotificationMenuProps> = ({
 
       const anchor = anchorEl.getBoundingClientRect();
 
-      // preferred position: align right edge of overlay with right of anchor, above anchor
       let left = window.scrollX + anchor.right - overlayW;
       let top = window.scrollY + anchor.bottom + 8 - overlayH;
       let transformOrigin = "top right";
 
-      // clamp inside viewport
       left = Math.max(
         8 + window.scrollX,
         Math.min(left, window.scrollX + window.innerWidth - overlayW - 8),
@@ -85,7 +90,6 @@ const InvNotificationMenu: React.FC<InvNotificationMenuProps> = ({
         Math.min(top, window.scrollY + window.innerHeight - overlayH - 8),
       );
 
-      // if there's not enough space above, put below anchor
       if (top + overlayH > window.scrollY + window.innerHeight - 8) {
         top = window.scrollY + anchor.bottom + 8;
         transformOrigin = "top right";
@@ -104,6 +108,7 @@ const InvNotificationMenu: React.FC<InvNotificationMenuProps> = ({
   }, [anchorRef, invites.length]);
 
   const hideInvite = async (inviteId: string | number) => {
+    console.log("[InvNotificationMenu] Hiding invite:", inviteId);
     try {
       const { data, unauthorized } = await apiFetch<{ success?: boolean }>(
         `/classrooms/invites/${encodeURIComponent(String(inviteId))}/hide`,
@@ -111,16 +116,52 @@ const InvNotificationMenu: React.FC<InvNotificationMenuProps> = ({
           method: "POST",
         },
       );
+
+      console.log("[InvNotificationMenu] Hide response:", {
+        data,
+        unauthorized,
+      });
+
       if (unauthorized) return;
       if (!data?.success) return;
 
-      setInvites((prev) => {
-        const next = prev.filter((inv) => inv.id !== inviteId);
-        if (next.length === 0 && typeof onClose === "function") onClose();
-        return next;
-      });
+      // Mark as hidden instead of removing
+      setInvites((prev) =>
+        prev.map((inv) =>
+          inv.id === inviteId ? { ...inv, hidden: true } : inv,
+        ),
+      );
     } catch (err) {
       console.error("Failed to hide invite:", err);
+    }
+  };
+
+  const unhideInvite = async (inviteId: string | number) => {
+    console.log("[InvNotificationMenu] Unhiding invite:", inviteId);
+    try {
+      const { data, unauthorized } = await apiFetch<{ success?: boolean }>(
+        `/classrooms/invites/${encodeURIComponent(String(inviteId))}/unhide`,
+        {
+          method: "POST",
+        },
+      );
+
+      console.log("[InvNotificationMenu] Unhide response:", {
+        data,
+        unauthorized,
+      });
+
+      if (unauthorized) return;
+      if (!data?.success) return;
+
+      // Mark as visible
+      setInvites((prev) =>
+        prev.map((inv) =>
+          inv.id === inviteId ? { ...inv, hidden: false } : inv,
+        ),
+      );
+    } catch (err) {
+      console.error("Failed to unhide invite:", err);
     }
   };
 
@@ -130,6 +171,7 @@ const InvNotificationMenu: React.FC<InvNotificationMenuProps> = ({
       role="dialog"
       aria-modal="true"
       onClick={() => {
+        console.log("[InvNotificationMenu] Overlay clicked, closing");
         onClose?.();
       }}
     >
@@ -144,6 +186,21 @@ const InvNotificationMenu: React.FC<InvNotificationMenuProps> = ({
           transformOrigin: pos.transformOrigin,
         }}
       >
+        {/* Toggle button for dismissed invites */}
+        {dismissedCount > 0 && setShowDismissed && (
+          <div className="inv-toggle-dismissed">
+            <button
+              type="button"
+              className="toggle-dismissed-btn"
+              onClick={() => setShowDismissed((prev) => !prev)}
+            >
+              {showDismissed
+                ? "Hide Dismissed"
+                : `Show Dismissed (${dismissedCount})`}
+            </button>
+          </div>
+        )}
+
         {invites.length === 0 ? (
           <div className="inv-notification empty">
             <div className="inv-content">
@@ -170,10 +227,28 @@ const InvNotificationMenu: React.FC<InvNotificationMenuProps> = ({
               invite.classroomName ?? invite.classroom_name ?? "Classroom";
             const teacherName =
               invite.teacherName ?? invite.teacher_name ?? "Teacher";
+            const isDismissed = !!invite.hidden;
+
+            console.log("[InvNotificationMenu] Rendering invite:", {
+              id: invite.id,
+              classroomName,
+              teacherName,
+              code: invite.code,
+              hidden: isDismissed,
+              raw: invite,
+            });
+
             return (
-              <div key={String(invite.id)} className="inv-notification">
+              <div
+                key={String(invite.id)}
+                className={`inv-notification ${isDismissed ? "dismissed" : ""}`}
+              >
                 <div className="inv-content">
-                  <h3>Classroom Invitation</h3>
+                  <h3>
+                    {isDismissed
+                      ? "Dismissed Invitation"
+                      : "Classroom Invitation"}
+                  </h3>
                   <p>
                     You've been invited to join <strong>{classroomName}</strong>
                   </p>
@@ -182,17 +257,30 @@ const InvNotificationMenu: React.FC<InvNotificationMenuProps> = ({
                     <button
                       className="inv-join"
                       onClick={() => {
+                        console.log(
+                          "[InvNotificationMenu] Join clicked for code:",
+                          invite.code,
+                        );
                         onJoin(invite.code);
                       }}
                     >
                       Join Now
                     </button>
-                    <button
-                      className="inv-dismiss"
-                      onClick={() => hideInvite(invite.id)}
-                    >
-                      Dismiss
-                    </button>
+                    {isDismissed ? (
+                      <button
+                        className="inv-restore"
+                        onClick={() => unhideInvite(invite.id)}
+                      >
+                        Restore
+                      </button>
+                    ) : (
+                      <button
+                        className="inv-dismiss"
+                        onClick={() => hideInvite(invite.id)}
+                      >
+                        Dismiss
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

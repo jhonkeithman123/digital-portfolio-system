@@ -17,6 +17,20 @@ export interface RoleColors {
 export type MessageType = "info" | "success" | "error";
 export type ShowMessageFn = (text: string, kind?: MessageType) => void;
 
+export const ALLOWED_EMAIL_DOMAINS = [
+  "gmail.com",
+  "yahoo.com",
+  "outlook.com",
+  "hotmail.com",
+  "live.com",
+  "icloud.com",
+  "protonmail.com",
+  "aol.com",
+  "zoho.com",
+  "mail.com",
+  "yandex.com",
+];
+
 export interface ShowcaseItem {
   id: string;
   studentName?: string;
@@ -32,6 +46,7 @@ export interface Student {
   username?: string;
   email?: string;
   section?: string | null;
+  grade?: string | null;
 }
 
 // Re-export Quiz types from quiz.d.ts
@@ -50,6 +65,7 @@ export interface User {
   id: string;
   role: "student" | "teacher";
   section?: string | null;
+  grade?: string | null;
   username?: string;
   email?: string;
 }
@@ -59,6 +75,7 @@ export interface ClassroomInfo {
   name?: string;
   code?: string | null;
   section?: string | null;
+  grade?: string | null;
 }
 
 export interface TamperGuardOptions {

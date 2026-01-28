@@ -1,0 +1,97 @@
+.change-username-container {
+  background: var(--card-bg, #fff);
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  padding: 2rem 1.5rem 1.5rem 1.5rem;
+  margin-bottom: 2rem;
+  max-width: 910px;
+  width: 100%;
+}
+
+.change-username-container h2 {
+  font-size: 1.3rem;
+  margin-bottom: 1.2rem;
+  color: var(--accent-color, #2563eb);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.username-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.form-group label {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-secondary, #475569);
+}
+
+.username-form input {
+  padding: 0.7rem 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: var(--input-bg, #f8fafc);
+  color: var(--text-primary, #1e293b);
+  transition: border 0.2s;
+  min-width: 0;
+}
+
+.username-form input:focus {
+  border-color: var(--accent-color, #2563eb);
+  outline: none;
+  background: #fff;
+}
+
+.btn-primary {
+  background: linear-gradient(90deg, #2563eb 60%, #06b6d4 100%);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.8rem 1.2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.08);
+}
+
+.btn-primary:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(90deg, #1d4ed8 60%, #0ea5e9 100%);
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.12);
+}
+
+:root[data-theme="dark"] .change-username-container {
+  background: #1e293b;
+  box-shadow: 0 2px 12px rgba(30, 41, 59, 0.18);
+}
+
+:root[data-theme="dark"] .form-group label {
+  color: #cbd5e1;
+}
+
+:root[data-theme="dark"] .username-form input {
+  background: #334155;
+  color: #e0e7ef;
+  border: 1px solid #475569;
+}
+
+:root[data-theme="dark"] .username-form input:focus {
+  background: #1e293b;
+  border-color: #38bdf8;
+}

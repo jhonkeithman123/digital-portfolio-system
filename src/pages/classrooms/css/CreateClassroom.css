@@ -2,7 +2,8 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  height: calc(100svh - var(--header-height, 64px));
+  max-height: calc(100vh - 80.8px);
+  height: 100%;
   box-sizing: border-box;
   padding-bottom: 1.25rem;
   padding-top: 1.25rem;
@@ -22,34 +23,51 @@
   flex-direction: column;
 }
 
-.create-input {
-  width: 95%;
-  padding: 0.75rem;
-  font-size: 1rem;
-  margin-top: 1rem;
-  border-radius: 6px;
-  border: 1px solid #ccc;
+.create-class-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  max-width: 500px;
 }
 
 .create-button {
-  margin-top: 1rem;
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-  background-color: var(--accent-color);
-  color: white;
+  flex: 1;
+  padding: 14px 24px;
+  font-size: 16px;
+  font-weight: 600;
   border: none;
-  border-radius: 6px;
+  border-radius: 10px;
   cursor: pointer;
-  min-width: 180px;
+  transition: all 0.2s ease;
+  background: linear-gradient(135deg, var(--accent-color, #2563eb), #06b6d4);
+  color: rgb(10, 1, 1);
+}
+
+.create-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.create-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.create-button[type="button"] {
+  background: rgba(100, 116, 139, 0.2);
+  color: #000409;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.create-button[type="button"]:hover:not(:disabled) {
+  background: rgba(100, 116, 139, 0.3);
 }
 
 .create-actions {
   display: flex;
-  gap: 1rem;
-  justify-content: center;
-  align-items: center;
-  margin-top: 1rem;
-  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 8px;
 }
 
 .create-button-secondary {
@@ -83,7 +101,7 @@
 
 :root[data-theme="dark"] .create-button {
   background-color: var(--accent-color, #0ea5a4);
-  color: #071422;
+  color: #c3c6ca;
 }
 
 :root[data-theme="dark"] .create-button-secondary {
