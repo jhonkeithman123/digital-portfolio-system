@@ -36,7 +36,7 @@ export default function ChangeUsername(): React.ReactElement {
     setLoading(true);
     try {
       const { data, unauthorized } = await apiFetch("/auth/change-username", {
-        method: "POST",
+        method: "PATCH",
         body: JSON.stringify({ newUsername, currentPassword }),
       });
 
