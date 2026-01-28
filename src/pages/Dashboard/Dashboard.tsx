@@ -20,6 +20,7 @@ import InputField from "components/Component-elements/InputField";
 import NotificationBell from "components/Component-elements/NotificationBell";
 import LoadingOverlay from "components/Component-elements/loading_overlay";
 import useLoadingState from "hooks/useLoading";
+import ChangeUsername from "components/Component-elements/changeUsername";
 import "./Dashboard.css";
 import {
   setTabAuth,
@@ -591,6 +592,12 @@ const Dashboard: React.FC = (): React.ReactElement => {
           }
         />
         <main className="dashboard-main">
+          {user.role === "student" && user.section && mySection && (
+            <section className="dashboard-card">
+              <ChangeUsername />
+            </section>
+          )}
+
           {/* Student self-serve section (only when null/empty) */}
           {user.role === "student" && !user.section && !mySection && (
             <section className="dashboard-card">

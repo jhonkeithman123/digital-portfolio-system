@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { apiFetch } from "utils/apiClient";
 import useMessage from "hooks/useMessage";
 import useConfirm from "hooks/useConfirm";
+import "./css/changeUsername.css";
 
 export default function ChangeUsername(): React.ReactElement {
   const [newUsername, setNewUsername] = useState("");

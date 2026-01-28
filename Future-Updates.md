@@ -14,11 +14,11 @@
 
 ## Future Enhancements 💡
 
-- Export portfolio as PDF
-- Activity sharing capabilities
-- Achievement badges system
-- Progress tracking with charts
-- Profile customization
-- Activity comments/feedback
-- Grade analytics dashboard
 - Make the invite improve sorting of students
+- Grade analytics dashboard
+  <!-- - Export portfolio as PDF -->
+  <!-- - Activity sharing capabilities -->
+  <!-- - Achievement badges system -->
+  <!-- - Progress tracking with charts -->
+  <!-- - Profile customization -->
+  <!-- - Activity comments/feedback -->
