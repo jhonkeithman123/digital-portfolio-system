@@ -371,10 +371,69 @@
   }
 }
 
+/* Responsive adjustments for burger menu position */
+@media (max-width: 900px) {
+  .burger-menu {
+    top: 8rem;
+  }
+}
+
+@media (max-width: 720px) {
+  .burger-menu {
+    top: 6rem;
+    right: 0.75rem;
+  }
+}
+
 /* Responsive nits */
 @media (max-width: 520px) {
+  .burger-menu {
+    top: 4.5rem;
+    right: 0.5rem;
+  }
+
   .burger-dropdown {
-    width: min(300px, 92vw);
+    width: min(280px, 92vw);
+  }
+}
+
+/* Landscape mode adjustments */
+@media (orientation: landscape) and (max-height: 600px) {
+  .burger-menu {
+    top: 3.5rem;
+    right: 0.75rem;
+  }
+
+  .burger-dropdown {
+    max-height: calc(90vh - 60px);
+    overflow-y: auto;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 450px) {
+  .burger-menu {
+    top: 2.5rem;
+  }
+
+  .burger-dropdown {
+    padding: 12px 14px;
+    max-height: calc(85vh - 50px);
+  }
+
+  .burger-dropdown h3 {
+    font-size: 14px;
+    margin-bottom: 6px;
+  }
+
+  .burger-dropdown p {
+    font-size: 12px;
+    margin: 4px 0;
+  }
+
+  .burger-dropdown .copy-code-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+    min-width: 100px;
   }
 }
 

@@ -34,6 +34,20 @@ const roleColors = {
   teacher: "#dc3545",
 };
 
+type ActivityType = "activity";
+type ActivityStatus = "completed" | "pending" | "graded";
+
+type Activity = {
+  id: string | number;
+  title: string;
+  description?: string;
+  type: ActivityType;
+  score?: number | null;
+  completedAt?: string;
+  status: ActivityStatus;
+  className?: string;
+};
+
 const Dashboard: React.FC = (): React.ReactElement => {
   const navigate = useNavigate();
   const [logout, LogoutModal] = useLogout();
@@ -57,6 +71,12 @@ const Dashboard: React.FC = (): React.ReactElement => {
   const [unreadCount, setUnreadCount] = useState<number>(0);
   const [classroomSectionDraft, setClassroomSectionDraft] =
     useState<string>("");
+
+  const [showPortfolio, setShowPortfolio] = useState<boolean>(false);
+  const [portfolioActivities, setPortfolioActivities] = useState<Activity[]>(
+    [],
+  );
+  const [loadingPortfolio, setLoadingPortfolio] = useState<boolean>(false);
 
   const [showSections, setShowSections] = useState<boolean>(false);
   const [students, setStudents] = useState<Student[]>([]);
@@ -536,6 +556,35 @@ const Dashboard: React.FC = (): React.ReactElement => {
     }
   };
 
+  const loadPortfolioActivities = async (): Promise<void> => {
+    setLoadingPortfolio(true);
+    try {
+      const { data, unauthorized } = await apiFetch("/portfolio/activities");
+
+      if (unauthorized) {
+        showMsgRef.current?.("Session expired. Please sign in again.", "error");
+        return;
+      }
+
+      if (data?.success) {
+        setPortfolioActivities(data.activities || []);
+      } else {
+        showMsgRef.current?.("Failed to load activity history", "error");
+      }
+    } catch {
+      showMsgRef.current?.("Network error loading activity history", "error");
+    } finally {
+      setLoadingPortfolio(false);
+    }
+  };
+
+  const togglePortfolio = (): void => {
+    if (!showPortfolio && portfolioActivities.length === 0) {
+      loadPortfolioActivities();
+    }
+    setShowPortfolio(!showPortfolio);
+  };
+
   const roleClass = user.role === "teacher" ? "teacher-role" : "student-role";
 
   const content = (
@@ -721,18 +770,137 @@ const Dashboard: React.FC = (): React.ReactElement => {
             </section>
           )}
           <section className="dashboard-card">
-            <h2>Recent Activity</h2>
-            <p>No Submission yet. Start by uploading your work!</p>
-
-            {(user.role === "teacher" ||
-              (user.role === "student" && hasActivity)) && (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: "1rem",
+              }}
+            >
+              <h2>Recent Activity</h2>
               <button
-                className="dashboard-button"
-                onClick={() => navigate("/home")}
-                style={{ marginTop: "1rem" }}
+                className="dashboard-button btn-small"
+                onClick={togglePortfolio}
+                style={{
+                  padding: "0.5rem 1rem",
+                  fontSize: "0.875rem",
+                }}
               >
-                Go to Upload Page
+                {showPortfolio ? "Hide History" : "View History"}
               </button>
+            </div>
+
+            {!showPortfolio ? (
+              <>
+                <p>No Submission yet. Start by uploading your work!</p>
+                {(user.role === "teacher" ||
+                  (user.role === "student" && hasActivity)) && (
+                  <button
+                    className="dashboard-button"
+                    onClick={() => navigate("/home")}
+                    style={{ marginTop: "1rem" }}
+                  >
+                    Go to Upload Page
+                  </button>
+                )}
+              </>
+            ) : (
+              <div className="portfolio-history">
+                {loadingPortfolio ? (
+                  <LoadingOverlay
+                    loading={true}
+                    text="Loading activity history..."
+                    fullPage={false}
+                  />
+                ) : portfolioActivities.length === 0 ? (
+                  <div style={{ textAlign: "center", padding: "2rem 0" }}>
+                    <p style={{ color: "#64748b", marginBottom: "1rem" }}>
+                      No completed activities yet.
+                    </p>
+                    {(user.role === "teacher" ||
+                      (user.role === "student" && hasActivity)) && (
+                      <button
+                        className="dashboard-button"
+                        onClick={() => navigate("/home")}
+                      >
+                        Go to Upload Page
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="activity-list">
+                    {portfolioActivities.map((activity) => (
+                      <div key={activity.id} className="activity-list-item">
+                        <div className="activity-list-header">
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "0.75rem",
+                            }}
+                          >
+                            <span className="activity-type-icon">
+                              {activity.type}
+                            </span>
+                            <div>
+                              <h4 className="activity-list-title">
+                                {activity.title}
+                              </h4>
+                              {activity.description && (
+                                <p className="activity-list-desc">
+                                  {activity.description}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "1rem",
+                            }}
+                          >
+                            {activity.score !== null && (
+                              <div className="activity-score-badge">
+                                <strong>{activity.score}%</strong>
+                              </div>
+                            )}
+                            <span
+                              className={`activity-status-badge status-${activity.status}`}
+                            >
+                              {activity.status}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="activity-list-meta">
+                          <span
+                            className={`activity-type-label type-${activity.type}`}
+                          >
+                            {activity.type}
+                          </span>
+                          {activity.className && (
+                            <span className="activity-class-label">
+                              {activity.className}
+                            </span>
+                          )}
+                          {activity.completedAt && (
+                            <span className="activity-date-label">
+                              {new Date(
+                                activity.completedAt,
+                              ).toLocaleDateString("en-US", {
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                              })}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             )}
           </section>
 
