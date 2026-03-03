@@ -41,6 +41,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
   const [activities, setActivities] = useState<NormalizedActivity[]>([]);
   const [loadingActivities, setLoadingActivities] = useState<boolean>(false);
   const [maxScore, setMaxScore] = useState<number>(100);
+  const [dueDate, setDueDate] = useState<string>("");
 
   const showMsgRef = useRef<typeof showMessage>(showMessage);
   useEffect(() => {
@@ -266,13 +267,19 @@ const FileUpload: React.FC<FileUploadProps> = ({
       return;
     }
     setCreating(true);
-    dbg("Submitting new activity", { title, instructions, hasFile: !!file });
+    dbg("Submitting new activity", {
+      title,
+      instructions,
+      hasFile: !!file,
+      dueDate,
+    });
     try {
       const fd = new FormData();
       fd.append("title", title.trim());
       fd.append("instructions", instructions.trim());
       fd.append("classroomCode", String(classroomCode));
       fd.append("maxScore", String(maxScore));
+      if (dueDate) fd.append("due_date", dueDate);
       if (file) fd.append("file", file);
 
       const { data } = await apiFetch("/activity/create", {
@@ -291,37 +298,26 @@ const FileUpload: React.FC<FileUploadProps> = ({
         );
       } else {
         showMsgRef.current("Activity created.", "success");
-        setActivities((prev) => [
-          {
-            id: data.id ?? `${Date.now()}-${Math.random()}`,
-            title: title.trim(),
-            instructions: instructions.trim(),
-            original_name: file?.name ?? null,
-            created_at: new Date().toISOString(),
-          },
-          ...prev,
-        ]);
 
-        // Reload from server to match student view (best-effort)
+        // Clear form
+        setTitle("");
+        setInstructions("");
+        setFile(null);
+        setDueDate("");
+
+        // Reload activities
         try {
-          dbg("Reloading list after create");
           const { data: reload } = await apiFetch(
             `/activity/classroom/${encodeURIComponent(String(classroomCode))}`,
           );
-          dbg("Reload response:", reload);
           if (reload?.success)
             setActivities(normalize(reload.activities || []));
         } catch (e) {
           dbg("Reload failed:", e);
         }
-
-        setTitle("");
-        setInstructions("");
-        setFile(null);
       }
     } catch (e) {
       dbg("Submit exception:", e);
-
       console.error("Submit exception:", e);
       showMsgRef.current("Server error.", "error");
     } finally {
@@ -408,6 +404,21 @@ const FileUpload: React.FC<FileUploadProps> = ({
                   placeholder="100"
                 />
               </div>
+
+              <div className="form-row">
+                <label className="up-label" htmlFor="activity-due-date">
+                  Due Date (Optional)
+                </label>
+                <input
+                  type="datetime-local"
+                  id="activity-due-date"
+                  className="date-input" // Add this class
+                  value={dueDate}
+                  onChange={(e) => setDueDate(e.target.value)}
+                  min={new Date().toISOString().slice(0, 16)}
+                />
+              </div>
+
               <div className="form-row">
                 <label className="up-label" htmlFor="activity-instructions">
                   Instructions

@@ -35,7 +35,12 @@ const roleColors = {
 };
 
 type ActivityType = "activity";
-type ActivityStatus = "completed" | "pending" | "graded";
+type ActivityStatus =
+  | "completed"
+  | "pending"
+  | "graded"
+  | "overdue"
+  | "created";
 
 type Activity = {
   id: string | number;
@@ -46,6 +51,8 @@ type Activity = {
   completedAt?: string;
   status: ActivityStatus;
   className?: string;
+  dueDate?: string | null;
+  createdAt?: string;
 };
 
 const Dashboard: React.FC = (): React.ReactElement => {
@@ -829,9 +836,17 @@ const Dashboard: React.FC = (): React.ReactElement => {
                     )}
                   </div>
                 ) : (
+                  // In the render section, update the activity list item:
                   <div className="activity-list">
                     {portfolioActivities.map((activity) => (
-                      <div key={activity.id} className="activity-list-item">
+                      <div
+                        key={activity.id}
+                        className="activity-list-item"
+                        onClick={() =>
+                          navigate(`/activity/${activity.id}/view`)
+                        }
+                        style={{ cursor: "pointer" }}
+                      >
                         <div className="activity-list-header">
                           <div
                             style={{
@@ -840,9 +855,7 @@ const Dashboard: React.FC = (): React.ReactElement => {
                               gap: "0.75rem",
                             }}
                           >
-                            <span className="activity-type-icon">
-                              {activity.type}
-                            </span>
+                            <span className="activity-type-icon">📋</span>
                             <div>
                               <h4 className="activity-list-title">
                                 {activity.title}
@@ -861,11 +874,12 @@ const Dashboard: React.FC = (): React.ReactElement => {
                               gap: "1rem",
                             }}
                           >
-                            {activity.score !== null && (
-                              <div className="activity-score-badge">
-                                <strong>{activity.score}%</strong>
-                              </div>
-                            )}
+                            {activity.score !== null &&
+                              user?.role === "student" && (
+                                <div className="activity-score-badge">
+                                  <strong>{activity.score}%</strong>
+                                </div>
+                              )}
                             <span
                               className={`activity-status-badge status-${activity.status}`}
                             >
@@ -884,8 +898,32 @@ const Dashboard: React.FC = (): React.ReactElement => {
                               {activity.className}
                             </span>
                           )}
+                          {activity.dueDate && user?.role === "student" && (
+                            <span
+                              className="activity-date-label"
+                              style={{
+                                color:
+                                  new Date(activity.dueDate) < new Date()
+                                    ? "#ef4444"
+                                    : undefined,
+                              }}
+                            >
+                              📅 Due:{" "}
+                              {new Date(activity.dueDate).toLocaleDateString(
+                                "en-US",
+                                {
+                                  year: "numeric",
+                                  month: "short",
+                                  day: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                },
+                              )}
+                            </span>
+                          )}
                           {activity.completedAt && (
                             <span className="activity-date-label">
+                              ✅{" "}
                               {new Date(
                                 activity.completedAt,
                               ).toLocaleDateString("en-US", {

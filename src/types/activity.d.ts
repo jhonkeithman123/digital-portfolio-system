@@ -99,6 +99,25 @@ export type NormalizedActivity = Omit<Activity, "instructions"> & {
   instructions: string;
 };
 
+// Portfolio-specific activity type
+export interface PortfolioActivity {
+  id: string | number;
+  title: string;
+  description?: string;
+  type: "activity";
+  score?: number | null;
+  completedAt?: string;
+  status: "completed" | "pending" | "graded" | "overdue" | "created";
+  className?: string;
+  classSection?: string;
+  dueDate?: string | null; // NEW: Due date field
+  createdAt?: string;
+  // Teacher-specific
+  totalSubmissions?: number;
+  gradedCount?: number;
+  averageScore?: string | null;
+}
+
 // ============================================================================
 // COMPONENT PROPS TYPES
 // ============================================================================
@@ -160,6 +179,13 @@ export interface InstructionApiResponse {
   success?: boolean;
   instruction?: Instruction | null;
   instructions?: Instruction[];
+  message?: string;
+  error?: string;
+}
+
+export interface PortfolioApiResponse {
+  success?: boolean;
+  activities?: PortfolioActivity[];
   message?: string;
   error?: string;
 }

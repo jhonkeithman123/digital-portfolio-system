@@ -49,9 +49,6 @@ export interface Student {
   grade?: string | null;
 }
 
-// Re-export Quiz types from quiz.d.ts
-export type { Quiz, QuizAttempt, Question, Page } from "./quiz";
-
 // Re-export Activity types from activity.d.ts
 export type {
   Activity,

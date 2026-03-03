@@ -200,29 +200,47 @@
   gap: 24px;
 }
 
+.status-overdue {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.status-created {
+  background: rgba(59, 130, 246, 0.2);
+  color: #3b82f6;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.badge-activity {
+  background: rgba(168, 85, 247, 0.2);
+  color: #a855f7;
+  border: 1px solid rgba(168, 85, 247, 0.3);
+}
+
+[data-theme="light"] .status-overdue {
+  background: rgba(220, 38, 38, 0.1);
+  color: #dc2626;
+}
+
+[data-theme="light"] .status-created {
+  background: rgba(37, 99, 235, 0.1);
+  color: #2563eb;
+}
+
 .activity-card {
-  background: linear-gradient(135deg, #161d29, #141a24);
-  border: 1px solid rgba(120, 130, 150, 0.2);
-  border-radius: 16px;
-  padding: 24px;
+  cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
 .activity-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
-  border-color: rgba(99, 102, 241, 0.5);
-}
-
-[data-theme="light"] .activity-card {
-  background: #ffffff;
-  border-color: rgba(0, 0, 0, 0.1);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  transform: translateY(-8px);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+  border-color: rgba(99, 102, 241, 0.6);
 }
 
 [data-theme="light"] .activity-card:hover {
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
 }
 
 .activity-card-header {

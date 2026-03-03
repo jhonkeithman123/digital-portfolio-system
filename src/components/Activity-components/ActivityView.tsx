@@ -272,6 +272,21 @@ const ActivityView: React.FC = (): React.ReactElement => {
                     </span>
                     {" · "}
                     <span>Created {new Date(createdAt).toLocaleString()}</span>
+                    {activity.due_date && (
+                      <>
+                        {" · "}
+                        <span
+                          style={{
+                            color:
+                              new Date(activity.due_date) < new Date()
+                                ? "#ef4444"
+                                : "#94a3b8",
+                          }}
+                        >
+                          Due {new Date(activity.due_date).toLocaleString()}
+                        </span>
+                      </>
+                    )}
                   </p>
 
                   {activity.original_name && activity.file_path && (

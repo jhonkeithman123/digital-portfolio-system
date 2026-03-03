@@ -1,5 +1,7 @@
 :root {
-  transition: brackground-color 0.6s ease-in-out, color 0.6s ease-in-out;
+  transition:
+    brackground-color 0.6s ease-in-out,
+    color 0.6s ease-in-out;
 
   --shadow-sm: 0 2px 4px rgba(15, 23, 42, 0.08);
   --shadow-md: 0 8px 20px rgba(15, 23, 42, 0.18);
@@ -46,6 +48,11 @@
   --role-teacher-main: #ec4899;
   --role-teacher-soft: #fb7185;
   --role-teacher-glow: rgba(236, 72, 153, 0.55);
+
+  /* RGB values for accent colors (for rgba usage) */
+  --accent-color-rgb: 37, 99, 235; /* blue for student */
+  --accent-color-student-rgb: 37, 99, 235;
+  --accent-color-teacher-rgb: 236, 72, 153;
 }
 
 /* dark theme, only when we set data-theme="dark" */
@@ -65,6 +72,8 @@
   --muted-text: #9ca3af;
   --upload-bg: rgba(15, 23, 42, 0.96);
 
+  --accent-color-rgb: 59, 130, 246; /* lighter blue for dark mode */
+
   --role-student-main: #3b82f6;
   --role-student-soft: #22d3ee;
   --role-student-glow: rgba(59, 130, 246, 0.6);
@@ -79,19 +88,23 @@
   --scroll-outline: rgba(96, 165, 250, 0.28);
   --scroll-thumb-hover: rgba(65, 110, 165, 0.32);
 
-  transition: background-color 0.6s ease-in-out, color 0.6s ease-in-out;
+  transition:
+    background-color 0.6s ease-in-out,
+    color 0.6s ease-in-out;
 }
 
 body,
 html {
   margin: 0;
   padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
-    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-    sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
+    "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  transition: background-color 0.6s ease-in-out, color 0.6s ease-in-out,
+  transition:
+    background-color 0.6s ease-in-out,
+    color 0.6s ease-in-out,
     background 0.6s ease-in-out;
 
   background: var(--background-gradient);
@@ -157,6 +170,6 @@ html {
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
-    monospace;
+  font-family:
+    source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
 }

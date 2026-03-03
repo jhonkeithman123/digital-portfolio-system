@@ -602,6 +602,77 @@
   resize: vertical;
 }
 
+/* Date/Time picker styling */
+.form-row input[type="datetime-local"],
+.date-input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  color: var(--text-color);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.25) inset;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.form-row input[type="datetime-local"]:focus,
+.date-input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(var(--accent-color-rgb), 0.1);
+}
+
+/* Date picker icon color */
+.form-row input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+.date-input::-webkit-calendar-picker-indicator {
+  filter: var(--date-picker-filter);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background 0.2s ease;
+}
+
+.form-row input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover,
+.date-input::-webkit-calendar-picker-indicator:hover {
+  background: rgba(var(--accent-color-rgb), 0.1);
+}
+
+/* Light mode date picker */
+:root[data-theme="light"] {
+  --date-picker-filter: invert(0%) sepia(0%) saturate(0%) hue-rotate(0deg)
+    brightness(0%) contrast(100%);
+}
+
+/* Dark mode date picker */
+:root[data-theme="dark"] {
+  --date-picker-filter: invert(100%) sepia(0%) saturate(0%) hue-rotate(0deg)
+    brightness(100%) contrast(100%);
+}
+
+/* Firefox date picker */
+.form-row input[type="datetime-local"]::-moz-calendar-picker-indicator,
+.date-input::-moz-calendar-picker-indicator {
+  filter: var(--date-picker-filter);
+}
+
+/* Number input styling */
+.form-row input[type="number"] {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--card-border);
+  background: var(--card-bg);
+  color: var(--text-color);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.25) inset;
+}
+
+.form-row input[type="number"]:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(var(--accent-color-rgb), 0.1);
+}
+
 .up-label {
   color: #020617;
 }
