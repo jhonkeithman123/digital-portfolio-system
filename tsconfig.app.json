@@ -47,9 +47,9 @@
       "home/*": ["pages/Home/*"],
       "login/*": ["pages/Login/*"],
       "notFound/*": ["pages/NotFound/*"],
-      "roleSelect": ["pages/RoleSelect/*"],
+      "roleSelect/*": ["pages/RoleSelect/*"],
       "signup/*": ["pages/Signup/*"]
     }
   },
-  "include": ["src", "src/types/**/*.d.ts", "src/types/**/*.ts", "server"]
+  "include": ["src", "src/types/**/*.d.ts", "src/types/**/*.ts"]
 }

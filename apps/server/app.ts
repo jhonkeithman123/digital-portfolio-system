@@ -1,0 +1,219 @@
+import express from "express";
+import path from "path";
+import { Server } from "http";
+import { fileURLToPath } from "url";
+import cookieParser from "cookie-parser";
+import type { Express, Request, Response, NextFunction } from "express";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+import activities from "routes/activities";
+import auth from "routes/auth";
+import classrooms from "routes/classrooms";
+import mainRoute from "routes/default";
+import portfolioRoute from "routes/portfolio";
+import security from "routes/security";
+import showcase from "routes/showcase";
+import supabaseRoute from "routes/supabase";
+import uploadStatic from "routes/uploads";
+
+import { checkDbAvailability, requireDb } from "./middleware/dbCheck";
+import {
+  browserHtmlRedirectGuard,
+  createSafeRedirectHandler,
+  renderLandingPage,
+} from "middleware/http/browserGuards";
+import {
+  createCorsPolicy,
+  DEFAULT_CLIENT_ORIGIN,
+} from "middleware/http/corsPolicy";
+import {
+  requestDebugLogger,
+  requestLogger,
+} from "middleware/http/requestLogger";
+import { normalizeTokenSource } from "middleware/http/tokenNormalization";
+import { pingSupabaseConnection } from "./supabase/ping";
+import { loadEnv } from "config/loadEnv";
+import db from "config/db";
+
+loadEnv();
+
+const app: Express = express();
+app.set("trust proxy", 1);
+const supabaseOnly = db.isSupabaseOnlyMode();
+
+const clientUrl = process.env.CLIENT_ORIGIN || DEFAULT_CLIENT_ORIGIN;
+
+app.use(createCorsPolicy(clientUrl));
+
+// ============================================================================
+// MIDDLEWARE
+// ============================================================================
+
+// Static files
+app.use(express.static(path.join(__dirname, "public")));
+
+// Request logging
+app.use(requestLogger);
+
+app.use(express.json());
+app.use(cookieParser());
+
+app.use(requestDebugLogger);
+
+// Normalize token sources for authentication
+app.use(normalizeTokenSource);
+
+if (!supabaseOnly) {
+  app.use(checkDbAvailability);
+}
+
+// ============================================================================
+// ROUTES
+// ============================================================================
+
+// Landing page for browser visits
+app.get(
+  "/",
+  renderLandingPage(
+    path.join(__dirname, "public"),
+    clientUrl,
+    "https://github.com/jhonkeithman123/digital-portfolio-system-client/blob/main/For_Client.md",
+    process.env.ACCENT_COLOR || "#007bff",
+  ),
+);
+
+if (supabaseOnly) {
+  const mysqlDisabled = (_req: Request, res: Response) => {
+    return res.status(501).json({
+      success: false,
+      error:
+        "MySQL-backed routes are disabled. This server is running in Supabase-only mode.",
+    });
+  };
+
+  app.use("/uploads", mysqlDisabled);
+  app.use("/activity", mysqlDisabled);
+  app.use("/auth", mysqlDisabled);
+  app.use("/classrooms", mysqlDisabled);
+  app.use("/portfolio", mysqlDisabled);
+  app.use("/security", mysqlDisabled);
+  app.use("/showcase", mysqlDisabled);
+  app.use("/", mysqlDisabled);
+} else {
+  app.use("/uploads", requireDb, uploadStatic);
+
+  // API routes
+  app.use("/", requireDb, mainRoute);
+  app.use("/activity", requireDb, activities);
+  app.use("/auth", requireDb, auth);
+  app.use("/classrooms", requireDb, classrooms);
+  app.use("/portfolio", requireDb, portfolioRoute);
+  app.use("/security", requireDb, security);
+  app.use("/showcase", requireDb, showcase);
+}
+app.use("/supabase", supabaseRoute);
+
+// ============================================================================
+// BROWSER REDIRECT MIDDLEWARE (must be AFTER API routes)
+// ============================================================================
+
+/**
+ * Redirect all browser HTML requests back to root
+ * This prevents users from accessing API endpoints via browser URL bar
+ */
+app.use(browserHtmlRedirectGuard);
+
+// ============================================================================
+// EXTERNAL REDIRECT HANDLER
+// ============================================================================
+
+/**
+ * Safe redirect endpoint for external links from the landing page
+ * Usage: <a href="/redirect?url=https://github.com/...">
+ */
+app.get("/redirect", createSafeRedirectHandler(clientUrl));
+
+// ============================================================================
+// ERROR HANDLING
+// ============================================================================
+
+// Global error handler
+app.use((err: Error, req: Request, res: Response, next: NextFunction): void => {
+  console.error(
+    `[UNHANDLED ERROR] ${new Date().toISOString()} ${req.method} ${
+      req.originalUrl
+    }`,
+    err?.stack || err,
+  );
+
+  if (!res.headersSent) {
+    res.status(500).json({ error: "Internal Server Error" });
+  } else {
+    next(err);
+  }
+});
+
+// Process-level error handlers
+process.on("unhandledRejection", (reason: unknown) => {
+  console.error("[UNHANDLED REJECTION]", reason);
+});
+
+process.on("uncaughtException", (err: Error) => {
+  console.error("[UNCAUGHT EXCEPTION]", err);
+  process.exit(1);
+});
+
+// ============================================================================
+// SERVER STARTUP
+// ============================================================================
+
+const DEFAULT_PORT = parseInt(process.env.PORT ?? "5000", 10);
+const MAX_ATTEMPTS = 10;
+
+function tryListen(port: number, attemptsLeft: number) {
+  const server: Server = app.listen(port);
+
+  server.on("listening", () => {
+    console.log(`✅ Server listening on port ${port}`);
+    console.log(`📍 Environment: ${process.env.NODE_ENV || "development"}`);
+    console.log(`🔗 Client URL: ${clientUrl}`);
+    console.log(`🗄️ DB Provider: ${supabaseOnly ? "supabase" : "mysql"}`);
+
+    void pingSupabaseConnection().then((result) => {
+      const log = result.ok ? console.log : console.warn;
+      log(`🧪 ${result.message}`);
+    });
+  });
+
+  server.on("error", (err: NodeJS.ErrnoException) => {
+    if (err?.code === "EADDRINUSE") {
+      console.warn(`⚠️  Port ${port} is already in use.`);
+
+      try {
+        server.close();
+      } catch (e) {
+        // Ignore close errors
+      }
+
+      if (attemptsLeft > 0) {
+        const nextPort = port + 1;
+        console.log(
+          `🔄 Trying port ${nextPort} (${attemptsLeft - 1} attempts remaining)`,
+        );
+        tryListen(nextPort, attemptsLeft - 1);
+      } else {
+        console.error(
+          `❌ No available ports after ${MAX_ATTEMPTS} attempts. Exiting.`,
+        );
+        process.exit(1);
+      }
+    } else {
+      console.error("❌ Server error:", err);
+      process.exit(1);
+    }
+  });
+}
+
+tryListen(DEFAULT_PORT, MAX_ATTEMPTS);

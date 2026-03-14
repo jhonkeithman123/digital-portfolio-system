@@ -1,0 +1,138 @@
+.toast {
+  position: fixed;
+  top: 12svh;
+  left: 50%;
+  transform: translateX(-50%);
+  min-height: 32px;
+  max-width: min(640px, 94vw);
+  padding: 12px 18px;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  display: inline-flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  box-sizing: border-box;
+  backdrop-filter: blur(16px) saturate(150%);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  transition: transform 0.35s ease, opacity 0.35s ease, box-shadow 0.35s ease;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.9),
+    0 0 0 1px rgba(15, 23, 42, 0.75);
+}
+
+/* slide in/out */
+.toast.slide-down {
+  transform: translate(-50%, 0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.toast.slide-up {
+  transform: translate(-50%, -40px);
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Base text styling */
+.toast-text {
+  flex: 1;
+  color: #e5e7eb;
+}
+
+/* INFO – cyan/blue glow */
+.toast.toast-info {
+  background: radial-gradient(
+      circle at 0% 0%,
+      rgba(34, 211, 238, 0.4),
+      transparent 60%
+    ),
+    linear-gradient(135deg, #020617, #020617);
+  border: 1px solid rgba(56, 189, 248, 0.7);
+}
+
+/* SUCCESS – green glow */
+.toast.toast-success {
+  background: radial-gradient(
+      circle at 0% 0%,
+      rgba(52, 211, 153, 0.45),
+      transparent 60%
+    ),
+    linear-gradient(135deg, #020617, #020617);
+  border: 1px solid rgba(52, 211, 153, 0.7);
+}
+
+/* ERROR – red glow */
+.toast.toast-error {
+  background: radial-gradient(
+      circle at 0% 0%,
+      rgba(248, 113, 113, 0.45),
+      transparent 60%
+    ),
+    linear-gradient(135deg, #020617, #020617);
+  border: 1px solid rgba(248, 113, 113, 0.75);
+}
+
+/* Light mode variants — softer but same colors */
+:root[data-theme="light"] .toast {
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.25),
+    0 0 0 1px rgba(148, 163, 184, 0.25);
+}
+
+:root[data-theme="light"] .toast.toast-info {
+  background: radial-gradient(
+      circle at 0% 0%,
+      rgba(56, 189, 248, 0.3),
+      transparent 60%
+    ),
+    linear-gradient(135deg, #ecfeff, #e0f2fe);
+  border-color: rgba(56, 189, 248, 0.6);
+  color: #0f172a;
+}
+
+:root[data-theme="light"] .toast.toast-success {
+  background: radial-gradient(
+      circle at 0% 0%,
+      rgba(52, 211, 153, 0.3),
+      transparent 60%
+    ),
+    linear-gradient(135deg, #ecfdf5, #dcfce7);
+  border-color: rgba(52, 211, 153, 0.6);
+  color: #064e3b;
+}
+
+:root[data-theme="light"] .toast.toast-error {
+  background: radial-gradient(
+      circle at 0% 0%,
+      rgba(248, 113, 113, 0.3),
+      transparent 60%
+    ),
+    linear-gradient(135deg, #fef2f2, #fee2e2);
+  border-color: rgba(248, 113, 113, 0.7);
+  color: #7f1d1d;
+}
+
+/* Ensure text color adjusts for light theme */
+:root[data-theme="light"] .toast-text {
+  color: inherit;
+}
+
+/* Close button */
+.toast-close-btn {
+  background: transparent;
+  border: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+  color: inherit;
+  padding: 0 4px;
+  line-height: 1;
+  border-radius: 999px;
+  transition: background 0.2s ease, transform 0.18s ease;
+}
+
+.toast-close-btn:hover {
+  background: rgba(148, 163, 184, 0.25);
+  transform: translateY(-1px);
+}

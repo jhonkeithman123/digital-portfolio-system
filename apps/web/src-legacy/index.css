@@ -1,0 +1,175 @@
+:root {
+  transition:
+    brackground-color 0.6s ease-in-out,
+    color 0.6s ease-in-out;
+
+  --shadow-sm: 0 2px 4px rgba(15, 23, 42, 0.08);
+  --shadow-md: 0 8px 20px rgba(15, 23, 42, 0.18);
+  --shadow-lg: 0 18px 45px rgba(15, 23, 42, 0.24);
+  --transition-standard: all 0.25s ease;
+
+  --accent-color: #007bff;
+  --scroll-track: transparent;
+  --scroll-outline: var(--accent-color);
+  --scroll-outline-hover: color-mix(in oklab, var(--accent-color) 95%, white);
+  --scroll-thumb: color-mix(in oklab, var(--accent-color) 80%, white);
+  --scroll-thumb-hover: color-mix(in oklab, var(--accent-color) 95%, white);
+
+  /* LIGHT THEME (slightly softer than pure white) */
+  --accent-color: #2563eb; /* blue-600 */
+  --accent-soft: #dbeafe;
+  --background-color: #e5e7eb;
+  --background-gradient: radial-gradient(
+    circle at top left,
+    #ffffff 0,
+    #e5e7eb 35%,
+    #cbd5f5 100%
+  );
+  --card-bg: #ffffff;
+  --card-border: rgba(148, 163, 184, 0.35);
+  --text-color: #0f172a;
+  --muted-text: #6b7280;
+  --upload-bg: #f9fafb;
+
+  --hdr-accent: var(--accent-color, #0ea5e9);
+  --hdr-bg: rgba(255, 255, 255, 0.28);
+  --hdr-stroke: rgba(255, 255, 255, 0.55);
+  --hdr-shadow: 0 10px 24px rgba(2, 6, 23, 0.12);
+  --text-dark: #0f172a;
+  --text-dim: #334155;
+  --fluid-pad-y: clamp(8px, 1.2vh, 18px);
+  --fluid-pad-x: clamp(12px, 4vw, 48px);
+  --fluid-gap: clamp(6px, 1.5vw, 22px);
+
+  --role-student-main: #2563eb;
+  --role-student-soft: #38bdf8;
+  --role-student-glow: rgba(56, 189, 248, 0.55);
+
+  --role-teacher-main: #ec4899;
+  --role-teacher-soft: #fb7185;
+  --role-teacher-glow: rgba(236, 72, 153, 0.55);
+
+  /* RGB values for accent colors (for rgba usage) */
+  --accent-color-rgb: 37, 99, 235; /* blue for student */
+  --accent-color-student-rgb: 37, 99, 235;
+  --accent-color-teacher-rgb: 236, 72, 153;
+}
+
+/* dark theme, only when we set data-theme="dark" */
+:root[data-theme="dark"] {
+  --accent-color: #60a5fa; /* blue-400 */
+  --accent-soft: rgba(37, 99, 235, 0.28);
+  --background-color: #020617; /* slate-950 */
+  --background-gradient: radial-gradient(
+    circle at top left,
+    #1f2937 0,
+    #020617 60%,
+    #020617 100%
+  );
+  --card-bg: rgba(15, 23, 42, 0.98); /* slate-900 */
+  --card-border: rgba(148, 163, 184, 0.55);
+  --text-color: #e5e7eb;
+  --muted-text: #9ca3af;
+  --upload-bg: rgba(15, 23, 42, 0.96);
+
+  --accent-color-rgb: 59, 130, 246; /* lighter blue for dark mode */
+
+  --role-student-main: #3b82f6;
+  --role-student-soft: #22d3ee;
+  --role-student-glow: rgba(59, 130, 246, 0.6);
+
+  --role-teacher-main: #f472b6;
+  --role-teacher-soft: #fb7185;
+  --role-teacher-glow: rgba(244, 114, 182, 0.6);
+
+  /* Scrollbar variables for dark theme */
+  --scroll-track: rgba(0, 0, 0, 0.02);
+  --scroll-thumb: rgba(56, 100, 153, 0.16);
+  --scroll-outline: rgba(96, 165, 250, 0.28);
+  --scroll-thumb-hover: rgba(65, 110, 165, 0.32);
+
+  transition:
+    background-color 0.6s ease-in-out,
+    color 0.6s ease-in-out;
+}
+
+body,
+html {
+  margin: 0;
+  padding: 0;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu",
+    "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition:
+    background-color 0.6s ease-in-out,
+    color 0.6s ease-in-out,
+    background 0.6s ease-in-out;
+
+  background: var(--background-gradient);
+  color: var(--text-color);
+}
+
+/* Smooth + stable scrollbars */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scroll-outline) transparent;
+}
+
+/* Webkit (Chrome/Edge/Safari) */
+*::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+  display: none;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: transparent !important;
+  border: 0;
+  border-radius: 9999px;
+  box-shadow: inset 0 0 0 2px var(--scroll-outline);
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: transparent !important;
+  box-shadow: inset 0 0 0 3px var(--scroll-outline-hover);
+}
+
+/* Dark theme scrollbar styling overrides */
+:root[data-theme="dark"] * {
+  /* Firefox */
+  scrollbar-color: var(--scroll-thumb) var(--scroll-track);
+  scrollbar-width: thin;
+}
+
+/* enable and style scrollbars in WebKit when dark theme is active */
+:root[data-theme="dark"] *::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+  display: block; /* ensure visible in dark mode */
+}
+:root[data-theme="dark"] *::-webkit-scrollbar-track {
+  background: var(--scroll-track);
+}
+:root[data-theme="dark"] *::-webkit-scrollbar-thumb {
+  background: var(--scroll-thumb);
+  border-radius: 9999px;
+  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0); /* subtle inset */
+  border: 3px solid transparent; /* preserves padding feel */
+}
+:root[data-theme="dark"] *::-webkit-scrollbar-thumb:hover {
+  background: var(--scroll-thumb-hover);
+  box-shadow: inset 0 0 0 2px var(--scroll-outline);
+}
+
+code {
+  font-family:
+    source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
+}

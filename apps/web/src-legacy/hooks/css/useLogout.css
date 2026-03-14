@@ -1,0 +1,108 @@
+.logout-modal-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.logout-modal {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  min-width: 320px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
+}
+
+.h3-confirm {
+  margin: 0;
+  margin-bottom: 8px;
+}
+
+.p-ask {
+  margin-top: 0;
+  margin-bottom: 16px;
+  color: #444;
+}
+
+.button-container {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.cancel-button {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  background: transparent;
+  cursor: pointer;
+}
+
+.logout-button {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: none;
+  background: #e74c3c;
+  color: #fff;
+  cursor: pointer;
+}
+
+/* Dark theme overrides */
+:root[data-theme="dark"] .logout-modal-overlay {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+:root[data-theme="dark"] .logout-modal {
+  background: #071424;
+  color: #e6eef8;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+:root[data-theme="dark"] .h3-confirm {
+  color: #e6eef8;
+}
+
+:root[data-theme="dark"] .p-ask {
+  color: rgba(230, 238, 248, 0.85);
+}
+
+:root[data-theme="dark"] .button-container {
+  justify-content: flex-end;
+}
+
+/* buttons */
+:root[data-theme="dark"] .cancel-button {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: transparent;
+  color: rgba(230, 238, 248, 0.85);
+  cursor: pointer;
+}
+
+:root[data-theme="dark"] .cancel-button:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+:root[data-theme="dark"] .logout-button {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: none;
+  background: #b91c1c; /* slightly muted red for dark */
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 6px 14px rgba(185, 28, 28, 0.18);
+}
+
+:root[data-theme="dark"] .logout-button:hover {
+  background: #991515;
+}
+
+:root[data-theme="dark"] .logout-button:disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}

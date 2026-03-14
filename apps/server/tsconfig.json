@@ -1,0 +1,43 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "types": ["express"],
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": false,
+    "erasableSyntaxOnly": true,
+
+    /* Path aliasing */
+    "baseUrl": "./",
+    "paths": {
+      /* Root */
+      "@/*": ["*"],
+
+      /* Subfolders of root */
+      "controllers/*": ["controllers/*"],
+      "types/*": ["types/*"],
+      "routes/*": ["routes/*"],
+      "middleware/*": ["middleware/*"],
+      "utils/*": ["utils/*"],
+
+      /* uploads path aliasing */
+      "uploads/*": ["uploads/*"],
+
+      /* Subfolders of uploads */
+      "activity/*": ["activities/*"],
+
+      /* Config path alias */
+      "config/*": ["config/*"],
+
+      /* Subfolders of config */
+      "helpers/*": ["config/helpers/*"]
+    }
+  },
+  "include": ["types/*.d.ts", "./**/*.ts"]
+}

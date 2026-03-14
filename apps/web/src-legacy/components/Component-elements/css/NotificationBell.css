@@ -1,0 +1,84 @@
+.notification-bell-wrapper {
+  position: relative;
+}
+
+.notification-icon {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.96),
+    rgba(255, 255, 255, 0.88)
+  );
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 6px 18px rgba(11, 26, 40, 0.1),
+    0 1px 0 rgba(255, 255, 255, 0.6) inset;
+  cursor: pointer;
+  transition: transform 0.32s, box-shadow 0.12s, background 0.42s;
+  overflow: hidden;
+}
+
+.notification-icon svg {
+  width: 24px;
+  height: 24px;
+  color: var(--accent-color);
+  fill: currentColor;
+}
+
+.notification-icon:hover {
+  transform: scale(1.05);
+  box-shadow: 0 10px 26px rgba(11, 26, 40, 0.14),
+    0 2px 0 rgba(255, 255, 255, 0.6) inset;
+  background: linear-gradient(180deg, #fff, #fafafa);
+}
+
+.notification-icon:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(77, 169, 255, 0.12),
+    0 6px 12px rgba(11, 26, 40, 0.12);
+}
+
+.notification-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 12px;
+  line-height: 18px;
+  text-align: center;
+  box-shadow: 0 0 0 2px #fff;
+}
+
+/* Dark mode */
+:root[data-theme="dark"] .notification-icon {
+  background: linear-gradient(180deg, #020617, #020617);
+  border-color: rgba(148, 163, 184, 0.4);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.8),
+    0 0 0 1px rgba(15, 23, 42, 0.9) inset;
+}
+
+:root[data-theme="dark"] .notification-icon:hover {
+  background: radial-gradient(circle at 0 0, #22d3ee 0, #020617 55%);
+  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.9),
+    0 0 0 1px rgba(148, 163, 184, 0.6) inset;
+}
+
+:root[data-theme="dark"] .notification-icon svg {
+  color: #f9fafb; /* brighter icon in dark mode */
+}
+
+:root[data-theme="dark"] .notification-badge {
+  background: #f97316; /* warmer orange in dark mode */
+  box-shadow: 0 0 0 2px #020617;
+}
