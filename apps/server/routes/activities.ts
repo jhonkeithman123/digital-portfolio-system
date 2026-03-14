@@ -1,9 +1,17 @@
 import express from "express";
 import wrapAsync from "utils/wrapAsync";
 import { verifyToken } from "middleware/auth";
-import controller, { upload } from "controllers/activities";
+import db from "config/db";
+import mysqlController, { upload as mysqlUpload } from "controllers/activities";
+import supabaseController, {
+  upload as supabaseUpload,
+} from "controllers/activitiesSupabase";
 
 const router = express.Router();
+const controller = db.isSupabaseOnlyMode()
+  ? supabaseController
+  : mysqlController;
+const upload = db.isSupabaseOnlyMode() ? supabaseUpload : mysqlUpload;
 
 // Activity routes
 router

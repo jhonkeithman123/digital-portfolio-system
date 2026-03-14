@@ -1,12 +1,17 @@
 import express from "express";
 import dotenv from "dotenv";
+import db from "config/db";
 
 import { verifyToken } from "middleware/auth";
 import wrapAsync from "utils/wrapAsync";
-import controller from "controllers/classroom";
+import mysqlController from "controllers/classroom";
+import supabaseController from "controllers/classroomSupabase";
 
 dotenv.config();
 const router = express.Router();
+const controller = db.isSupabaseOnlyMode()
+  ? supabaseController
+  : mysqlController;
 
 // ============================================================================
 // ROUTE: GET /student - Check student's classroom enrollment

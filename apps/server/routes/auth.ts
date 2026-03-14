@@ -1,13 +1,18 @@
 import express from "express";
 import dotenv from "dotenv";
 import wrapAsync from "utils/wrapAsync";
+import db from "config/db";
 
 import { verifyToken } from "middleware/auth";
-import controller from "controllers/auth";
+import mysqlController from "controllers/auth";
+import supabaseController from "controllers/authSupabase";
 
 dotenv.config();
 
 const router = express.Router();
+const controller = db.isSupabaseOnlyMode()
+  ? supabaseController
+  : mysqlController;
 
 // ============================================================================
 // ROUTE: GET /session - Verify active session and return user data

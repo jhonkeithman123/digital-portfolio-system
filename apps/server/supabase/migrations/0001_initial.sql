@@ -114,7 +114,26 @@ create table if not exists session (
   expires_at timestamptz not null
 );
 
+create table if not exists hidden_invites (
+  id bigint generated always as identity primary key,
+  student_id bigint not null references users(id) on delete cascade,
+  invite_id bigint not null references classroom_members(id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists logging (
+  id bigint generated always as identity primary key,
+  type varchar(100) not null,
+  detected_at timestamptz,
+  role varchar(50),
+  user_id bigint,
+  log text,
+  created_at timestamptz not null default now()
+);
+
 create index if not exists idx_users_section on users(section);
 create index if not exists idx_classrooms_section on classrooms(section);
 create index if not exists idx_activities_due_date on activities(due_date);
 create index if not exists idx_submissions_graded on activity_submissions(graded_at);
+create unique index if not exists uq_classroom_members_class_student on classroom_members(classroom_id, student_id);
+create unique index if not exists uq_hidden_invites_student_invite on hidden_invites(student_id, invite_id);

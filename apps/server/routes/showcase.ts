@@ -4,6 +4,6 @@ import controllers from "controllers/showcase";
 
 const router = express.Router();
 
-router.get("/showcase", verifyToken, controllers.fetchShowcase);
+router.get("/", verifyToken, controllers.fetchShowcase);
 
 export default router;

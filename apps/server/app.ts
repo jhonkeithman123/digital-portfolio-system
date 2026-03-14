@@ -93,13 +93,13 @@ if (supabaseOnly) {
     });
   };
 
+  app.use("/auth", auth);
   app.use("/uploads", mysqlDisabled);
-  app.use("/activity", mysqlDisabled);
-  app.use("/auth", mysqlDisabled);
-  app.use("/classrooms", mysqlDisabled);
-  app.use("/portfolio", mysqlDisabled);
-  app.use("/security", mysqlDisabled);
-  app.use("/showcase", mysqlDisabled);
+  app.use("/activity", activities);
+  app.use("/classrooms", classrooms);
+  app.use("/portfolio", portfolioRoute);
+  app.use("/security", security);
+  app.use("/showcase", showcase);
   app.use("/", mysqlDisabled);
 } else {
   app.use("/uploads", requireDb, uploadStatic);

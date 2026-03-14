@@ -12,7 +12,13 @@ export const verifyToken = (
   res: Response,
   next: NextFunction,
 ): Response | void => {
-  const token = extractToken(req);
+  const cookieToken = extractToken(req);
+  const authHeader = req.headers.authorization;
+  const bearerToken =
+    authHeader && authHeader.startsWith("Bearer ")
+      ? authHeader.slice(7).trim()
+      : null;
+  const token = cookieToken || bearerToken;
 
   console.log("[AUTH] verifyToken called", {
     path: req.path,

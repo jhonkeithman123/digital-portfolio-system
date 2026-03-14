@@ -1,9 +1,14 @@
 import express from "express";
 import wrapAsync from "utils/wrapAsync";
 import { verifyToken } from "middleware/auth";
-import controller from "controllers/portfolio";
+import db from "config/db";
+import mysqlController from "controllers/portfolio";
+import supabaseController from "controllers/portfolioSupabase";
 
 const router = express.Router();
+const controller = db.isSupabaseOnlyMode()
+  ? supabaseController
+  : mysqlController;
 
 // Get all activities for the current user (student or teacher)
 router.get("/activities", verifyToken, wrapAsync(controller.getUserActivities));

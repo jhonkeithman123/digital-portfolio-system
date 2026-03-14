@@ -1,8 +1,13 @@
 import express from "express";
 import wrapAsync from "utils/wrapAsync";
-import controller from "controllers/security";
+import db from "config/db";
+import mysqlController from "controllers/security";
+import supabaseController from "controllers/securitySupabase";
 
 const router = express.Router();
+const controller = db.isSupabaseOnlyMode()
+  ? supabaseController
+  : mysqlController;
 
 router.post(
   "/csp-report",
