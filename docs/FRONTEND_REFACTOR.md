@@ -54,7 +54,7 @@ apps/web/
 ## How backend communication is preserved
 
 - Both Vite and Next clients call the same Express API.
-- Next client uses `NEXT_PUBLIC_API_URL` and `credentials: "include"`.
+- Next client uses `NEXT_PUBLIC_API_BASE_URL` (with legacy fallback support) and `credentials: "include"`.
 - Session restore still uses `/auth/session`.
 - Login still uses `/auth/login`.
 

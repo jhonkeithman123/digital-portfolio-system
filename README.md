@@ -70,9 +70,10 @@ Server (`apps/server/.env`)
 - `JWT_SECRET`
 - `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASS`, `DB_NAME`
 
-Client (`.env`)
+Client (`apps/web/.env.local`)
 
-- `VITE_API_URL`
+- `NEXT_PUBLIC_API_BASE_URL`
+- `NEXT_PUBLIC_API_BASE_LOCAL`
 
 ## Build and checks
 

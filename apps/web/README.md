@@ -20,7 +20,8 @@ pnpm dev
 
 ## Environment
 
-- `NEXT_PUBLIC_API_URL`: Express backend base URL (for example `http://localhost:5000`)
+- `NEXT_PUBLIC_API_BASE_URL`: Express backend base URL (for example `http://localhost:5000`)
+- `NEXT_PUBLIC_API_BASE_LOCAL`: Optional local fallback URL for development
 
 ## Current migrated surfaces
 

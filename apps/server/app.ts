@@ -147,15 +147,19 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction): void => {
   }
 });
 
-// Process-level error handlers
-process.on("unhandledRejection", (reason: unknown) => {
-  console.error("[UNHANDLED REJECTION]", reason);
-});
+const isVercelRuntime = process.env.VERCEL === "1";
 
-process.on("uncaughtException", (err: Error) => {
-  console.error("[UNCAUGHT EXCEPTION]", err);
-  process.exit(1);
-});
+// Process-level error handlers (standalone server only)
+if (!isVercelRuntime) {
+  process.on("unhandledRejection", (reason: unknown) => {
+    console.error("[UNHANDLED REJECTION]", reason);
+  });
+
+  process.on("uncaughtException", (err: Error) => {
+    console.error("[UNCAUGHT EXCEPTION]", err);
+    process.exit(1);
+  });
+}
 
 // ============================================================================
 // SERVER STARTUP
@@ -208,4 +212,8 @@ function tryListen(port: number, attemptsLeft: number) {
   });
 }
 
-tryListen(DEFAULT_PORT, MAX_ATTEMPTS);
+if (!isVercelRuntime) {
+  tryListen(DEFAULT_PORT, MAX_ATTEMPTS);
+}
+
+export default app;
