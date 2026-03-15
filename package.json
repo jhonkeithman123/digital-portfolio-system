@@ -5,10 +5,8 @@
   "packageManager": "pnpm@10.28.2",
   "type": "module",
   "scripts": {
-    "dev": "turbo run dev --parallel --ui=tui --filter=@digital-portfolio/server --filter=@digital-portfolio/web --filter=@digital-portfolio/legacy-web",
-    "dev:web:new": "pnpm --filter @digital-portfolio/web dev",
-    "dev:legacy": "pnpm --filter @digital-portfolio/legacy-web legacy:dev",
-    "dev:web": "turbo run dev --parallel --ui=tui --filter=@digital-portfolio/web --filter=@digital-portfolio/legacy-web",
+    "dev": "turbo run dev --parallel --ui=tui --filter=@digital-portfolio/server --filter=@digital-portfolio/web",
+    "dev:web": "pnpm --filter @digital-portfolio/web dev",
     "dev:server": "pnpm --filter @digital-portfolio/server dev",
     "build": "turbo run build --ui=tui",
     "clean": "node scripts/clean.mjs",

@@ -9,6 +9,18 @@ const isStandard = args.has("--standard") || args.has("--shallow");
 const isDeep = !isStandard;
 const isNuke = args.has("--nuke");
 const platform = process.platform;
+const isTty = Boolean(process.stdout.isTTY);
+const useColor = isTty && !process.env.NO_COLOR;
+
+const color = (code, text) => (useColor ? `\x1b[${code}m${text}\x1b[0m` : text);
+
+const ui = {
+  title: (text) => color("1;36", text),
+  section: (text) => color("1;34", text),
+  ok: (text) => color("1;32", text),
+  warn: (text) => color("1;33", text),
+  muted: (text) => color("2", text),
+};
 
 const artifactTargets = [
   "dist",
@@ -19,9 +31,6 @@ const artifactTargets = [
   "apps/web/tsconfig.tsbuildinfo",
   "apps/server/dist",
   "apps/server/.turbo",
-  "apps/legacy-web/dist",
-  "apps/legacy-web/.turbo",
-  "apps/legacy-web/node_modules/.vite",
   "packages/contracts/dist",
 ];
 
@@ -29,7 +38,6 @@ const deepTargets = [
   "pnpm-lock.yaml",
   "apps/web/node_modules",
   "apps/server/node_modules",
-  "apps/legacy-web/node_modules",
   "packages/contracts/node_modules",
 ];
 
@@ -42,6 +50,12 @@ const targets = isDeep
   ? [...artifactTargets, ...deepTargets, ...(isNuke ? nukeTargets : [])]
   : artifactTargets;
 
+const stats = {
+  removed: 0,
+  missing: 0,
+  failed: 0,
+};
+
 const exists = async (targetPath) => {
   try {
     await access(targetPath, constants.F_OK);
@@ -51,9 +65,14 @@ const exists = async (targetPath) => {
   }
 };
 
+console.log(ui.title("\n=== Workspace Clean ==="));
 console.log(
-  `Cleaning workspace on ${platform} (${isDeep ? "deep" : "standard"} mode)...`,
+  `${ui.section("Mode")}: ${isDeep ? "deep" : "standard"}  ${ui.section("Platform")}: ${platform}`,
 );
+console.log(
+  `${ui.section("Targets")}: ${targets.length}${isNuke ? ` ${ui.warn("(+ root node_modules)")}` : ""}`,
+);
+console.log(ui.muted("-----------------------"));
 
 // Kill any lingering esbuild/tsx service processes that hold native binary
 // file descriptors open — these cause ENOTEMPTY when deleting node_modules.
@@ -81,8 +100,11 @@ if (platform !== "win32") {
 for (const relativePath of targets) {
   const absolutePath = path.join(cwd, relativePath);
   if (!(await exists(absolutePath))) {
+    stats.missing += 1;
     continue;
   }
+
+  console.log(`${ui.muted("->")} ${relativePath}`);
 
   if (platform !== "win32") {
     // On mounted/NTFS drives pnpm's native binary dirs can be undeletable
@@ -102,27 +124,39 @@ for (const relativePath of targets) {
         if (s2.status !== 0) {
           const stderr = s2.stderr?.toString().trim();
           console.warn(
-            `  ⚠ Partial removal of ${relativePath}${stderr ? `: ${stderr.split("\n")[0]}` : ""}`,
+            `${ui.warn("[WARN]")} Partial removal of ${relativePath}${stderr ? `: ${stderr.split("\n")[0]}` : ""}`,
           );
           console.warn(
-            `  → You may need to run: sudo rm -rf "${absolutePath}"`,
+            `${ui.warn("[HINT]")} You may need to run: sudo rm -rf "${absolutePath}"`,
           );
+          stats.failed += 1;
           continue;
         }
       }
     } catch (err) {
-      console.warn(`  ⚠ Could not remove ${relativePath}: ${err.message}`);
+      console.warn(
+        `${ui.warn("[WARN]")} Could not remove ${relativePath}: ${err.message}`,
+      );
+      stats.failed += 1;
       continue;
     }
   } else {
     try {
       await rm(absolutePath, { recursive: true, force: true });
     } catch (err) {
-      console.warn(`  ⚠ Could not remove ${relativePath}: ${err.message}`);
+      console.warn(
+        `${ui.warn("[WARN]")} Could not remove ${relativePath}: ${err.message}`,
+      );
+      stats.failed += 1;
       continue;
     }
   }
-  console.log(`Removed: ${relativePath}`);
+  stats.removed += 1;
+  console.log(`${ui.ok("[OK]")} Removed ${relativePath}`);
 }
 
-console.log("Clean completed.");
+console.log(ui.muted("-----------------------"));
+console.log(ui.title("Clean completed."));
+console.log(
+  `${ui.ok("Removed")}: ${stats.removed}  ${ui.muted("Missing")}: ${stats.missing}  ${ui.warn("Failed")}: ${stats.failed}`,
+);

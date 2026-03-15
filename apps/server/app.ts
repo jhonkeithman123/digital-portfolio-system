@@ -85,22 +85,14 @@ app.get(
 );
 
 if (supabaseOnly) {
-  const mysqlDisabled = (_req: Request, res: Response) => {
-    return res.status(501).json({
-      success: false,
-      error:
-        "MySQL-backed routes are disabled. This server is running in Supabase-only mode.",
-    });
-  };
-
   app.use("/auth", auth);
-  app.use("/uploads", mysqlDisabled);
+  app.use("/uploads", uploadStatic);
   app.use("/activity", activities);
   app.use("/classrooms", classrooms);
   app.use("/portfolio", portfolioRoute);
   app.use("/security", security);
   app.use("/showcase", showcase);
-  app.use("/", mysqlDisabled);
+  app.use("/", mainRoute);
 } else {
   app.use("/uploads", requireDb, uploadStatic);
 

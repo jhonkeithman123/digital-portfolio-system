@@ -259,7 +259,7 @@ const fetchSections = async (req: AuthRequest, res: Response) => {
   }
 };
 
-const editStudentSection = async (req: AuthRequest, res: Response) => {
+const listStudents = async (req: AuthRequest, res: Response) => {
   // Guard: Check database availability
   if (!(req as any).dbAvailable) {
     return res.status(503).json({ ok: false, error: "Database not available" });
@@ -300,10 +300,60 @@ const editStudentSection = async (req: AuthRequest, res: Response) => {
   }
 };
 
+const editStudentSection = async (req: AuthRequest, res: Response) => {
+  if (!(req as any).dbAvailable) {
+    return res.status(503).json({ ok: false, error: "Database not available" });
+  }
+
+  if (req.user!.role !== "teacher") {
+    return res.status(403).json({ success: false, message: "Forbidden" });
+  }
+
+  const rawStudentId = Array.isArray(req.params.id)
+    ? req.params.id[0]
+    : req.params.id;
+  const studentId = Number.parseInt(rawStudentId, 10);
+  if (!Number.isFinite(studentId) || studentId <= 0) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid student id" });
+  }
+
+  const rawSection = req.body?.section;
+  const normalizedSection =
+    typeof rawSection === "string"
+      ? rawSection.trim() || null
+      : rawSection == null
+        ? null
+        : String(rawSection).trim() || null;
+
+  try {
+    const [result] = await db.query<ResultSetHeader>(
+      `UPDATE users SET section = ? WHERE id = ? AND role = 'student'`,
+      [normalizedSection, studentId],
+    );
+
+    if (!result.affectedRows) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Student not found" });
+    }
+
+    return res.json({ success: true, section: normalizedSection });
+  } catch (err) {
+    const error = err as Error;
+    console.error("Error updating student section:", error.message);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
+  }
+};
+
 const controller = {
   editStudentSection,
   fetchAllNotifications,
   fetchSections,
+  listStudents,
   markNotificationAsRead,
   markAllNotificationsAsRead,
   markMultipleNotificationsAsRead,

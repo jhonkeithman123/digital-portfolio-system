@@ -77,8 +77,11 @@ pnpm dev
 
 ## Suggested next migration steps
 
-1. Port `RoleSelect`, `Login`, and `Dashboard` UI parity to `apps/web` routes.
-2. Move shared UI atoms from `apps/web/src-legacy/components/Component-elements` to `apps/web/components`.
-3. Port classroom and activity pages in sequence.
-4. Add route-level guards in Next middleware or server components.
-5. After parity and tests, switch deployment from Vite to Next.
+Migration to `apps/web` is complete. The legacy Vite frontend has been removed.
+
+Current focus should be:
+
+1. Strengthen App Router conventions and reduce React Router compatibility shims.
+2. Improve route-level auth guards and server/client boundary clarity.
+3. Expand test coverage for classroom/activity flows and auth edge cases.
+4. Keep docs/scripts aligned with the Next.js-only workspace.

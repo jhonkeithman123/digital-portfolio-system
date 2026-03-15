@@ -18,7 +18,6 @@ client-vite/
   apps/
     web/                      # Next.js web app
       app/                    # App Router pages
-      src-legacy/             # Migrated legacy Vite source (staging area)
 
     server/                   # Express backend
       app.ts                  # Server bootstrap + route mounting

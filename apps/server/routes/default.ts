@@ -1,9 +1,14 @@
 import express from "express";
 import { verifyToken } from "middleware/auth";
 import wrapAsync from "utils/wrapAsync";
-import controller from "@/controllers/default";
+import db from "config/db";
+import mysqlController from "@/controllers/default";
+import supabaseController from "@/controllers/defaultSupabase";
 
 const router = express.Router();
+const controller = db.isSupabaseOnlyMode()
+  ? supabaseController
+  : mysqlController;
 
 // ============================================================================
 // ROUTE: GET /notifications - Fetch all notifications for current user
@@ -323,7 +328,7 @@ router.get("/users/sections", verifyToken, wrapAsync(controller.fetchSections));
  * - No sensitive password/email filtering
  * - Returns email (needed for teacher reference)
  */
-router.get("/users/students", verifyToken, wrapAsync(controller.fetchSections));
+router.get("/users/students", verifyToken, wrapAsync(controller.listStudents));
 
 // ============================================================================
 // ROUTE: PATCH /users/:id/section - Update a student's section

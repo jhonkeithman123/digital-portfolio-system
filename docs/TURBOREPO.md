@@ -5,7 +5,6 @@ This monorepo uses Turborepo with pnpm workspaces.
 ## Workspace layout
 
 - `apps/web`: Next.js app
-- `apps/legacy-web`: legacy Vite app migrated from `src-legacy`
 - `apps/server`: Express API
 - `packages/contracts`: Shared type contracts
 
@@ -29,7 +28,6 @@ pnpm typecheck
 
 ```bash
 pnpm --filter @digital-portfolio/web dev
-pnpm --filter @digital-portfolio/legacy-web legacy:dev
 pnpm --filter @digital-portfolio/web build
 pnpm --filter @digital-portfolio/server dev
 pnpm --filter @digital-portfolio/server typecheck

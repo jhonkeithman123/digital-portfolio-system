@@ -3,7 +3,6 @@
 This repository no longer uses Create React App. It uses:
 
 - Next.js web app at `apps/web`
-- Legacy Vite source staged at `apps/web/src-legacy`
 - pnpm workspaces for monorepo package management
 
 ## Quick start
@@ -12,20 +11,20 @@ This repository no longer uses Create React App. It uses:
 # install all workspace dependencies
 pnpm install
 
-# run vite client
+# run web + server from root scripts
 pnpm dev
 
 # run server from workspace root
 pnpm --filter @digital-portfolio/server dev
 
-# run next migration client
+# run Next client only
 pnpm --filter @digital-portfolio/web dev
 ```
 
 ## Build
 
 ```bash
-# Vite client build
+# workspace build
 pnpm build
 
 # Server typecheck

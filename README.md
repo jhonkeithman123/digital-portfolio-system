@@ -1,17 +1,16 @@
 # Digital Portfolio System
 
-Full-stack digital portfolio platform with a React client and Express API.
+Full-stack digital portfolio platform with a Next.js client and Express API.
 
 ## Stack
 
-- Client: React + Vite + TypeScript
+- Client: Next.js + React + TypeScript
 - Server: Express + TypeScript + MySQL
 - Auth: JWT + httpOnly cookie sessions
 
 ## Project layout
 
 - `apps/web`: Next.js web app
-- `apps/web/src-legacy`: Migrated legacy React Vite source for incremental porting
 - `apps/server`: API server (routes, controllers, middleware, db helpers)
 - `packages/contracts`: Shared type contracts for web and server
 - `docs/`: Architecture, flowcharts, and refactor notes

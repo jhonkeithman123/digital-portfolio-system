@@ -3,9 +3,9 @@
   "private": true,
   "version": "0.1.0",
   "scripts": {
-    "dev": "next dev",
+    "dev": "NODE_OPTIONS=--no-experimental-webstorage next dev -p 5173",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p 5173",
     "lint": "next lint",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
@@ -13,7 +13,9 @@
     "@digital-portfolio/contracts": "workspace:*",
     "next": "15.3.1",
     "react": "19.1.0",
-    "react-dom": "19.1.0"
+    "react-dom": "19.1.0",
+    "react-router-dom": "^7.9.6",
+    "web-vitals": "^5.1.0"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",
