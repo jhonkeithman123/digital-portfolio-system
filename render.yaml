@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: digital-portfolio-system-server
+    runtime: node
+    plan: free
+    autoDeploy: true
+    buildCommand: corepack enable && corepack prepare pnpm@10.28.2 --activate && pnpm install --frozen-lockfile && pnpm --filter @digital-portfolio/server build
+    startCommand: corepack enable && corepack prepare pnpm@10.28.2 --activate && pnpm --filter @digital-portfolio/server start
+    healthCheckPath: /supabase/health
+    envVars:
+      - key: NODE_VERSION
+        value: 22

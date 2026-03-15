@@ -7,35 +7,35 @@ import cookieParser from "cookie-parser";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-import activities from "routes/activities";
-import auth from "routes/auth";
-import classrooms from "routes/classrooms";
-import mainRoute from "routes/default";
-import portfolioRoute from "routes/portfolio";
-import security from "routes/security";
-import showcase from "routes/showcase";
-import supabaseRoute from "routes/supabase";
-import uploadStatic from "routes/uploads";
+import activities from "./routes/activities.js";
+import auth from "./routes/auth.js";
+import classrooms from "./routes/classrooms.js";
+import mainRoute from "./routes/default.js";
+import portfolioRoute from "./routes/portfolio.js";
+import security from "./routes/security.js";
+import showcase from "./routes/showcase.js";
+import supabaseRoute from "./routes/supabase.js";
+import uploadStatic from "./routes/uploads.js";
 
-import { checkDbAvailability, requireDb } from "./middleware/dbCheck";
+import { checkDbAvailability, requireDb } from "./middleware/dbCheck.js";
 import {
   browserHtmlRedirectGuard,
   createSafeRedirectHandler,
   renderLandingPage,
-} from "middleware/http/browserGuards";
+} from "./middleware/http/browserGuards.js";
 import {
   createCorsPolicy,
   DEFAULT_CLIENT_ORIGIN,
   resolvePrimaryClientOrigin,
-} from "middleware/http/corsPolicy";
+} from "./middleware/http/corsPolicy.js";
 import {
   requestDebugLogger,
   requestLogger,
-} from "middleware/http/requestLogger";
-import { normalizeTokenSource } from "middleware/http/tokenNormalization";
-import { pingSupabaseConnection } from "./supabase/ping";
-import { loadEnv } from "config/loadEnv";
-import db from "config/db";
+} from "./middleware/http/requestLogger.js";
+import { normalizeTokenSource } from "./middleware/http/tokenNormalization.js";
+import { pingSupabaseConnection } from "./supabase/ping.js";
+import { loadEnv } from "./config/loadEnv.js";
+import db from "./config/db.js";
 
 loadEnv();
 

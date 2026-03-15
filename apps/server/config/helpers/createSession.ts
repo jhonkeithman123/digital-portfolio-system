@@ -1,4 +1,4 @@
-import db from "../db";
+import db from "../db.js";
 import type { ResultSetHeader } from "mysql2/promise";
 
 /**

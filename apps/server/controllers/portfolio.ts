@@ -1,6 +1,6 @@
 import type { Response } from "express";
-import { queryAsync } from "helpers/dbHelper";
-import type { AuthRequest } from "middleware/auth";
+import { queryAsync } from "../config/helpers/dbHelper.js";
+import type { AuthRequest } from "../middleware/auth.js";
 import type { RowDataPacket } from "mysql2/promise";
 
 interface ActivityRow extends RowDataPacket {

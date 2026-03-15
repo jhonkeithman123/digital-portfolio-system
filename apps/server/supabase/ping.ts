@@ -3,8 +3,8 @@ import {
   getMissingSupabaseEnvVars,
   getSupabaseClient,
   isSupabaseConfigured,
-} from "./client";
-import { loadEnv } from "../config/loadEnv";
+} from "./client.js";
+import { loadEnv } from "../config/loadEnv.js";
 
 loadEnv();
 

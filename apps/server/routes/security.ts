@@ -1,8 +1,8 @@
 import express from "express";
-import wrapAsync from "utils/wrapAsync";
-import db from "config/db";
-import mysqlController from "controllers/security";
-import supabaseController from "controllers/securitySupabase";
+import wrapAsync from "../utils/wrapAsync.js";
+import db from "../config/db.js";
+import mysqlController from "../controllers/security.js";
+import supabaseController from "../controllers/securitySupabase.js";
 
 const router = express.Router();
 const controller = db.isSupabaseOnlyMode()

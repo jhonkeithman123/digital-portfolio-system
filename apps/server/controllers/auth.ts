@@ -1,20 +1,20 @@
 import bcrypt from "bcrypt";
-import type { UserRow } from "types/db";
+import type { UserRow } from "../types/db.js";
 import type { Response } from "express";
 import type { RowDataPacket } from "mysql2/promise";
-import type { AuthRequest } from "middleware/auth";
-import { findOneUserBy, updateRecord } from "config/helpers/dbHelper";
-import { queryAsync } from "config/helpers/dbHelper";
-import { createSession } from "config/helpers/createSession";
-import { generateToken } from "config/helpers/generateToken";
-import { sendVerificationEmail } from "config/sendVerificationEmail";
+import type { AuthRequest } from "../middleware/auth.js";
+import { findOneUserBy, updateRecord } from "../config/helpers/dbHelper.js";
+import { queryAsync } from "../config/helpers/dbHelper.js";
+import { createSession } from "../config/helpers/createSession.js";
+import { generateToken } from "../config/helpers/generateToken.js";
+import { sendVerificationEmail } from "../config/sendVerificationEmail.js";
 import {
   generateVerificationCode,
   isVerificationCodeValid,
-} from "config/helpers/verification";
-import { setAuthCookie, clearAuthCookie } from "utils/authCookies";
-import db from "config/db";
-import { isAdminUser } from "config/helpers/adminAccess";
+} from "../config/helpers/verification.js";
+import { setAuthCookie, clearAuthCookie } from "../utils/authCookies.js";
+import db from "../config/db.js";
+import { isAdminUser } from "../config/helpers/adminAccess.js";
 
 // ============================================================================
 // TYPE DEFINITIONS

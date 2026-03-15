@@ -1,6 +1,6 @@
 import type { RowDataPacket, ResultSetHeader } from "mysql2/promise";
-import type { DBParams, DBParam } from "../../types/db";
-import db from "../db";
+import type { DBParams, DBParam } from "../../types/db.js";
+import db from "../db.js";
 
 /**
  * Basic identifier validator to avoid SQL injection via field/table names.

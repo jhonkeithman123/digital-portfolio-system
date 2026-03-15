@@ -1,11 +1,11 @@
 import express from "express";
 import dotenv from "dotenv";
-import db from "config/db";
+import db from "../config/db.js";
 
-import { verifyToken } from "middleware/auth";
-import wrapAsync from "utils/wrapAsync";
-import mysqlController from "controllers/classroom";
-import supabaseController from "controllers/classroomSupabase";
+import { verifyToken } from "../middleware/auth.js";
+import wrapAsync from "../utils/wrapAsync.js";
+import mysqlController from "../controllers/classroom.js";
+import supabaseController from "../controllers/classroomSupabase.js";
 
 dotenv.config();
 const router = express.Router();

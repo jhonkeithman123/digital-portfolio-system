@@ -1,6 +1,6 @@
 import { Response } from "express";
-import { AuthRequest } from "middleware/auth";
-import { queryAsync } from "config/helpers/dbHelper";
+import { AuthRequest } from "../middleware/auth.js";
+import { queryAsync } from "../config/helpers/dbHelper.js";
 
 const cspReport = (req: AuthRequest, res: Response) => {
   if (!(req as any).dbAvailable) {

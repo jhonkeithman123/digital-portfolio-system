@@ -1,6 +1,6 @@
 import { Response } from "express";
-import { AuthRequest } from "middleware/auth";
-import { getSupabaseClient } from "../supabase/client";
+import { AuthRequest } from "../middleware/auth.js";
+import { getSupabaseClient } from "../supabase/client.js";
 
 const cspReport = (req: AuthRequest, res: Response) => {
   console.error("CSP Violation", req.body);

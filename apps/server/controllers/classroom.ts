@@ -1,10 +1,10 @@
 import { Response } from "express";
-import { AuthRequest } from "middleware/auth";
+import { AuthRequest } from "../middleware/auth.js";
 import { RowDataPacket } from "mysql2/promise";
-import { queryAsync } from "config/helpers/dbHelper";
+import { queryAsync } from "../config/helpers/dbHelper.js";
 import { ResultSetHeader } from "mysql2/promise";
-import generateCode from "config/code_generator";
-import db from "config/db";
+import generateCode from "../config/code_generator.js";
+import db from "../config/db.js";
 
 // ============================================================================
 // TYPE DEFINITIONS

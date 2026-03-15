@@ -1,11 +1,11 @@
 import express from "express";
 import dotenv from "dotenv";
-import wrapAsync from "utils/wrapAsync";
-import db from "config/db";
+import wrapAsync from "../utils/wrapAsync.js";
+import db from "../config/db.js";
 
-import { verifyToken } from "middleware/auth";
-import mysqlController from "controllers/auth";
-import supabaseController from "controllers/authSupabase";
+import { verifyToken } from "../middleware/auth.js";
+import mysqlController from "../controllers/auth.js";
+import supabaseController from "../controllers/authSupabase.js";
 
 dotenv.config();
 

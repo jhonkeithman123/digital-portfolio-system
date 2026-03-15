@@ -1,6 +1,6 @@
 import type { ResultSetHeader } from "mysql2/promise";
-import type { NotificationType, DBParam } from "types/db";
-import db from "./db";
+import type { NotificationType, DBParam } from "../types/db.js";
+import db from "./db.js";
 
 export interface CreateNotificationInput {
   recipientId: number;

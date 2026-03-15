@@ -1,4 +1,4 @@
-import db from "./db";
+import db from "./db.js";
 import type { RowDataPacket } from "mysql2/promise";
 
 interface TestRow extends RowDataPacket {
