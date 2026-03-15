@@ -319,7 +319,7 @@ const ActivityView: React.FC = (): React.ReactElement => {
                         Attachment
                         <a
                           href={`${
-                            import.meta.env.VITE_API_URL_LOCAL ||
+                            process.env.NEXT_PUBLIC_API_BASE_LOCAL ||
                             "http://localhost:5000"
                           }/uploads/activities/${activity.file_path}`}
                           target="_blank"

@@ -53,7 +53,7 @@ const Signup: React.FC = (): React.ReactElement => {
   const roleRaw = safeStorageGet(getLocalStorage(), "role");
   const role = (roleRaw as Role | null) ?? null;
 
-  const bgUrl = `${(import.meta.env as any).PUBLIC_URL || ""}/classroom.jpg`;
+  const bgUrl = "/classroom.jpg";
 
   useEffect(() => {
     try {

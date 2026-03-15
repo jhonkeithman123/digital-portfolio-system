@@ -117,7 +117,7 @@ const RoleSelect: React.FC = (): React.ReactElement => {
     };
   }, [navigate]);
 
-  const bgUrl = `${import.meta.env.PUBLIC_URL || ""}/classroom.jpg`;
+  const bgUrl = "/classroom.jpg";
 
   return (
     <>

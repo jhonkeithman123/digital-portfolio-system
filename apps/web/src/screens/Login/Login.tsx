@@ -264,7 +264,7 @@ const Login: React.FC = (): React.ReactElement => {
     void handleLogin();
   };
 
-  const bgUrl = `${import.meta.env.PUBLIC_URL || ""}/classroom.jpg`;
+  const bgUrl = "/classroom.jpg";
 
   return (
     <>

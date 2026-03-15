@@ -2,18 +2,14 @@ import { clearGlobalAuthState } from "./tabAuth";
 import { getLocalStorage, safeStorageRemove } from "./safeStorage";
 import type { ApiResult } from "types/api";
 
-// const REMOTE_API_BASE: string =
-//   (import.meta.env.VITE_API_URL as string | undefined) ??
-//   (typeof window !== "undefined" ? window.location.origin : "");
 const REMOTE_API_BASE: string =
-  (import.meta.env.VITE_API_URL as string | undefined) ||
-  "http://localhost:5000";
-const LOCAL_API_BASE: string | undefined = import.meta.env
-  .VITE_API_URL_LOCAL as string | undefined;
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
+const LOCAL_API_BASE: string | undefined =
+  process.env.NEXT_PUBLIC_API_BASE_LOCAL;
 
 //* hard fallback when remote is marked unavailable
 const FALLBACK_LOCALHOST = "http://localhost:5000";
-const DEV_MODE = (import.meta.env.MODE as string | undefined) !== "production";
+const DEV_MODE = process.env.NODE_ENV !== "production";
 
 let last401Time = 0;
 const CLEAR_DEBOUNCE = 5000; // Only clear auth state once per 5 seconds

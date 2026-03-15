@@ -41,7 +41,8 @@ export default function useTamperGuard(
     const serverLogout = () => {
       try {
         const url =
-          logoutUrl ?? `${import.meta.env.REACT_APP_API_URL ?? ""}/auth/logout`;
+          logoutUrl ??
+          `${process.env.NEXT_PUBLIC_API_BASE_URL ?? ""}/auth/logout`;
         // best-effort server call to clear httpOnly cookie/session
         if (url) {
           fetch(url, { method: "POST", credentials: "include" }).catch(

@@ -8,7 +8,7 @@ const NotFoundHandler: React.FC = () => {
   useEffect(() => {
     if (location.pathname.startsWith("/uploads/")) {
       const backendUrl =
-        import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+        process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
       window.location.href = `${backendUrl}${location.pathname}`;
     }
   }, [location]);

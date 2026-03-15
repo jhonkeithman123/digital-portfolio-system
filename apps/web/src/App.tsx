@@ -28,10 +28,7 @@ type ShowMessageFn = (
   kind?: "info" | "success" | "error",
 ) => void;
 
-const routerBase =
-  (import.meta.env.BASE_URL as string) ||
-  ((import.meta.env as any).VITE_BASE as string) ||
-  "/";
+const routerBase = "/";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
