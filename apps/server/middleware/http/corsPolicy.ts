@@ -3,6 +3,25 @@ import type { NextFunction, Request, Response } from "express";
 const DEFAULT_CLIENT_ORIGIN =
   process.env.CLIENT_ORIGIN || "http://localhost:5173";
 
+const DEFAULT_DEPLOYED_ORIGINS = [
+  "https://digital-portfolio-system-web.vercel.app",
+  "https://digital-portfolio-system-server.vercel.app",
+];
+
+function normalizeOrigin(origin: string): string {
+  const trimmed = origin.trim();
+
+  if (!trimmed) {
+    return "";
+  }
+
+  if (/^https?:\/\//i.test(trimmed)) {
+    return trimmed.replace(/\/+$/, "");
+  }
+
+  return `https://${trimmed}`.replace(/\/+$/, "");
+}
+
 function expandLocalhostAliases(originUrl: string): string[] {
   try {
     const parsed = new URL(originUrl);
@@ -27,10 +46,16 @@ function expandLocalhostAliases(originUrl: string): string[] {
 function getAllowedOrigins(clientUrl: string): string[] {
   // Derive preview URL: replace dev port (5173) with preview port (4173)
   const previewUrl = clientUrl.replace(/:5173$/, ":4173");
+  const configuredOrigins = (process.env.ALLOWED_ORIGINS || "")
+    .split(",")
+    .map(normalizeOrigin)
+    .filter(Boolean);
 
   const origins = new Set<string>([
     ...expandLocalhostAliases(clientUrl),
     ...expandLocalhostAliases(previewUrl),
+    ...DEFAULT_DEPLOYED_ORIGINS,
+    ...configuredOrigins,
   ]);
 
   return Array.from(origins);

@@ -7,9 +7,23 @@ const getEnv = () => ({
   serviceRoleKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
 });
 
-export const isSupabaseConfigured = (): boolean => {
+export const getMissingSupabaseEnvVars = (): string[] => {
   const { url, serviceRoleKey } = getEnv();
-  return Boolean(url && serviceRoleKey);
+  const missing: string[] = [];
+
+  if (!url) {
+    missing.push("SUPABASE_URL");
+  }
+
+  if (!serviceRoleKey) {
+    missing.push("SUPABASE_SERVICE_ROLE_KEY");
+  }
+
+  return missing;
+};
+
+export const isSupabaseConfigured = (): boolean => {
+  return getMissingSupabaseEnvVars().length === 0;
 };
 
 export const getSupabaseClient = (): SupabaseClient => {
@@ -20,7 +34,9 @@ export const getSupabaseClient = (): SupabaseClient => {
   const { url, serviceRoleKey } = getEnv();
   if (!url || !serviceRoleKey) {
     throw new Error(
-      "Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY environment variables",
+      `Missing Supabase environment variables: ${getMissingSupabaseEnvVars().join(
+        ", ",
+      )}`,
     );
   }
 

@@ -1,5 +1,9 @@
 import { fileURLToPath } from "url";
-import { getSupabaseClient, isSupabaseConfigured } from "./client";
+import {
+  getMissingSupabaseEnvVars,
+  getSupabaseClient,
+  isSupabaseConfigured,
+} from "./client";
 import { loadEnv } from "../config/loadEnv";
 
 loadEnv();
@@ -32,10 +36,10 @@ const canReachPostgrestWithKey = async (
 
 export const pingSupabaseConnection = async (): Promise<SupabasePingResult> => {
   if (!isSupabaseConfigured()) {
+    const missing = getMissingSupabaseEnvVars();
     return {
       ok: false,
-      message:
-        "Supabase is not configured. Add SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.",
+      message: `Supabase is not configured. Missing: ${missing.join(", ")}.`,
     };
   }
 
