@@ -1,72 +1,92 @@
-# Digital Portfolio — Client (Vite)
+# Digital Portfolio System
 
-This is the Vite + React client for the Digital Portfolio project. It was built for my client and served as an experience for me to grow as a software and web developer.
+Full-stack digital portfolio platform with a Next.js client and Express API.
 
-## Summary
+## Stack
 
-- Project type: Vite + React + TypeScript
-- Purpose: Frontend for the Digital Portfolio system
-- Goal: Deliver a production-ready client and practice real-world full‑stack development
+- Client: Next.js + React + TypeScript
+- Server: Express + TypeScript + MySQL
+- Auth: JWT + httpOnly cookie sessions
 
-## Features
+## Project layout
 
-- Vite dev server and fast HMR
-- Typed code with TypeScript
-- Configured to communicate with a separate backend API server
-- Ready for deployment to GitHub Pages (builds go to `dist/`)
+- `apps/web`: Next.js web app
+- `apps/server`: API server (routes, controllers, middleware, db helpers)
+- `packages/contracts`: Shared type contracts for web and server
+- `docs/`: Architecture, flowcharts, and refactor notes
+
+## Documentation
+
+- Architecture: `docs/ARCHITECTURE.md`
+- Flowcharts: `docs/FLOWCHART.md`
+- Refactor summary: `docs/REFACTOR_NOTES.md`
+- Turborepo guide: `docs/TURBOREPO.md`
+- Frontend refactor: `docs/FRONTEND_REFACTOR.md`
+- Frontend flowcharts: `docs/FRONTEND_FLOWCHART.md`
+- Server feature notes: `apps/server/Features.md`
+- Web app guide: `apps/web/README.md`
 
 ## Local development
 
 1. Install dependencies
 
 ```bash
-# from repo root
-npm install
-cd server
-npm install
-cd ..
+# root
+pnpm install
+
+# server
+cd apps/server
+pnpm install
 ```
 
-2. Start server (run in a separate terminal)
+2. Run the server
 
 ```bash
-# if server is a separate repo/service, run it accordingly
-cd server
-npm run dev
+cd apps/server
+pnpm dev
 ```
 
-3. Start client
+3. Run the client
 
 ```bash
-# from repo root
-npm run dev
+# from repository root
+pnpm --filter @digital-portfolio/web dev
 ```
 
-4. Open the client in a browser (Will be updated in the future):
+4. Run everything via Turborepo (with TUI)
 
+```bash
+# all app dev tasks in turbo UI
+pnpm dev:tui
 ```
-Will be updated in the future
+
+## Environment variables
+
+Server (`apps/server/.env`)
+
+- `PORT`
+- `CLIENT_ORIGIN`
+- `ALLOWED_ORIGINS`
+- `JWT_SECRET`
+- `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASS`, `DB_NAME`
+
+Client (`apps/web/.env.local`)
+
+- `NEXT_PUBLIC_API_BASE_URL`
+- `NEXT_PUBLIC_API_BASE_LOCAL`
+
+## Build and checks
+
+```bash
+# client build
+pnpm build
+
+# server typecheck
+pnpm --filter @digital-portfolio/server typecheck
 ```
 
-## Environment
+## Deployment notes
 
-- Client uses Vite env vars prefixed with `VITE_` (e.g. `VITE_API_URL`).
-- Server keeps runtime secrets in environment variables (do not commit `.env`).
-- Example server env keys:
-  - DB_HOST, DB_PORT, DB_USER, DB_PASS, DB_NAME
-  - JWT_SECRET
-  - CLIENT_ORIGIN
-
-## Deployment
-
-- Client: build with `npm run build` and deploy to GitHub Pages or any static host. Ensure `base` is set in `vite.config.ts` for GH Pages.
-- Server: deploy to a Node host (Render, Railway, Heroku, Vercel serverless). Use a managed database reachable by the server (do not point to a local XAMPP instance from the host).
-
-## Notes
-
-- The server is maintained as a separate repository / submodule.
-- The client and server communicate via REST; the server may serve a small landing page at `/` indicating it is an API service.
-
-## Contact
-
-- This repository was created as a deliverable for a client and a learning project to level up skills in full‑stack web development.
+- Deploy client as static assets (`dist/`) on Vercel, Netlify, or GitHub Pages.
+- Deploy server to a Node runtime with access to a managed MySQL database.
+- Keep cookie and CORS origin settings aligned with deployed client domain.
