@@ -22,6 +22,15 @@ function normalizeOrigin(origin: string): string {
   return `https://${trimmed}`.replace(/\/+$/, "");
 }
 
+function splitOrigins(value: string): string[] {
+  return value.split(",").map(normalizeOrigin).filter(Boolean);
+}
+
+export function resolvePrimaryClientOrigin(clientOriginValue: string): string {
+  const [primaryOrigin] = splitOrigins(clientOriginValue);
+  return primaryOrigin || "http://localhost:5173";
+}
+
 function expandLocalhostAliases(originUrl: string): string[] {
   try {
     const parsed = new URL(originUrl);
@@ -46,13 +55,11 @@ function expandLocalhostAliases(originUrl: string): string[] {
 function getAllowedOrigins(clientUrl: string): string[] {
   // Derive preview URL: replace dev port (5173) with preview port (4173)
   const previewUrl = clientUrl.replace(/:5173$/, ":4173");
-  const configuredOrigins = (process.env.ALLOWED_ORIGINS || "")
-    .split(",")
-    .map(normalizeOrigin)
-    .filter(Boolean);
+  const configuredOrigins = splitOrigins(process.env.ALLOWED_ORIGINS || "");
+  const primaryOrigins = splitOrigins(clientUrl);
 
   const origins = new Set<string>([
-    ...expandLocalhostAliases(clientUrl),
+    ...primaryOrigins.flatMap(expandLocalhostAliases),
     ...expandLocalhostAliases(previewUrl),
     ...DEFAULT_DEPLOYED_ORIGINS,
     ...configuredOrigins,

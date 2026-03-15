@@ -3,7 +3,6 @@ import path from "path";
 import { Server } from "http";
 import { fileURLToPath } from "url";
 import cookieParser from "cookie-parser";
-import type { Express, Request, Response, NextFunction } from "express";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -27,6 +26,7 @@ import {
 import {
   createCorsPolicy,
   DEFAULT_CLIENT_ORIGIN,
+  resolvePrimaryClientOrigin,
 } from "middleware/http/corsPolicy";
 import {
   requestDebugLogger,
@@ -39,11 +39,13 @@ import db from "config/db";
 
 loadEnv();
 
-const app: Express = express();
+const app = express();
 app.set("trust proxy", 1);
 const supabaseOnly = db.isSupabaseOnlyMode();
 
-const clientUrl = process.env.CLIENT_ORIGIN || DEFAULT_CLIENT_ORIGIN;
+const clientUrl = resolvePrimaryClientOrigin(
+  process.env.CLIENT_ORIGIN || DEFAULT_CLIENT_ORIGIN,
+);
 
 app.use(createCorsPolicy(clientUrl));
 
@@ -132,20 +134,22 @@ app.get("/redirect", createSafeRedirectHandler(clientUrl));
 // ============================================================================
 
 // Global error handler
-app.use((err: Error, req: Request, res: Response, next: NextFunction): void => {
-  console.error(
-    `[UNHANDLED ERROR] ${new Date().toISOString()} ${req.method} ${
-      req.originalUrl
-    }`,
-    err?.stack || err,
-  );
+app.use(
+  (err: Error, req: any, res: any, next: (err?: unknown) => void): void => {
+    console.error(
+      `[UNHANDLED ERROR] ${new Date().toISOString()} ${req.method} ${
+        req.originalUrl
+      }`,
+      err?.stack || err,
+    );
 
-  if (!res.headersSent) {
-    res.status(500).json({ error: "Internal Server Error" });
-  } else {
-    next(err);
-  }
-});
+    if (!res.headersSent) {
+      res.status(500).json({ error: "Internal Server Error" });
+    } else {
+      next(err);
+    }
+  },
+);
 
 const isVercelRuntime = process.env.VERCEL === "1";
 
