@@ -3,7 +3,7 @@
   "installCommand": "corepack enable && corepack prepare pnpm@10.28.2 --activate && pnpm install --frozen-lockfile",
   "builds": [
     {
-      "src": "api/index.ts",
+      "src": "app.ts",
       "use": "@vercel/node",
       "config": {
         "includeFiles": ["public/**", "uploads/**"]
@@ -13,7 +13,7 @@
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "api/index.ts"
+      "dest": "app.ts"
     }
   ]
 }
