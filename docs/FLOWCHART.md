@@ -1,87 +1,166 @@
 # Digital Portfolio Flowcharts
 
-This file contains Mermaid diagrams for the most important backend and app flows.
+This file documents end-to-end system flows for the current monorepo (`apps/web` + `apps/server`).
 
-## 1. Authentication and session restore
-
-```mermaid
-flowchart TD
-  A[User opens app] --> B{Has cookie token?}
-  B -- No --> C[Show public auth page]
-  B -- Yes --> D[GET /auth/session]
-
-  D --> E{Token valid + user exists?}
-  E -- No --> F[Clear auth state]
-  F --> C
-  E -- Yes --> G[Set authenticated user]
-  G --> H[Set tabAuth in sessionStorage]
-  H --> I[Enter protected routes]
-
-  I --> J{Navigation event: popstate/pageshow/focus}
-  J --> K{tabAuth exists?}
-  K -- No --> L[Force redirect to /login]
-  K -- Yes --> M[Re-check /auth/session]
-  M --> E
-```
-
-## 2. Classroom invite and join flow
-
-```mermaid
-flowchart TD
-  T[Teacher] --> A[POST /classrooms/:code/invite]
-  A --> B{Student already invited/member?}
-  B -- Yes --> C[409 conflict]
-  B -- No --> D[Insert pending classroom_members]
-  D --> E[Create invite notification]
-  E --> F[Student sees invite]
-
-  F --> G{Student action}
-  G -- Accept invite --> H[POST /classrooms/invites/:inviteId/accept]
-  G -- Join by code --> I[POST /classrooms/join]
-
-  H --> J[Set membership accepted]
-  I --> K{Pending invite exists?}
-  K -- Yes --> J
-  K -- No --> L[Insert accepted membership]
-
-  J --> M[Cleanup hidden invite rows]
-  L --> M
-  M --> N[Student gains classroom access]
-```
-
-## 3. Activity submission and grading flow
-
-```mermaid
-flowchart TD
-  S[Student opens activity] --> A[GET /activity/:id]
-  A --> B{Authorized member?}
-  B -- No --> C[403 forbidden]
-  B -- Yes --> D[View instructions + details]
-
-  D --> E[POST /activity/:id/submit with file]
-  E --> F{File valid type + <= 5MB?}
-  F -- No --> G[Validation error]
-  F -- Yes --> H[Create or update submission]
-  H --> I[Submission visible to teacher]
-
-  T[Teacher opens submissions] --> J[GET /activity/:id/submissions]
-  J --> K[Review student entries]
-  K --> L[PATCH /activity/:id/submissions/:submissionId/score]
-  L --> M[Persist score + graded_at]
-  M --> N[Student portfolio status becomes graded]
-```
-
-## 4. Backend HTTP pipeline
+## 1. High-level system flow
 
 ```mermaid
 flowchart LR
-  A[Incoming request] --> B[CORS policy]
-  B --> C[Request logger]
-  C --> D[JSON + cookie parser]
-  D --> E[Token normalization]
-  E --> F[DB availability check]
-  F --> G[Router + requireDb guard]
-  G --> H[Controller]
-  H --> I[Response]
-  H --> J[Global error handler]
+  U[User Browser] --> W[Web App: apps/web]
+  W -->|Cookie auth calls| S[API Server: apps/server]
+  S -->|Supabase mode| SB[(Supabase)]
+  S -->|MySQL mode| DB[(MySQL)]
+  S --> N[(Notifications)]
+  W --> P[Protected screens: Home Dash Admin Activity Portfolio]
+```
+
+## 2. Web route + protected route flow
+
+```mermaid
+flowchart TD
+  A[Open route in web app] --> B{Public route?}
+  B -- Yes --> C[Render Login Signup Forgot RoleSelect]
+  B -- No --> D[ProtectedRoute calls GET /auth/session]
+
+  D --> E{Session success?}
+  E -- No --> F[Show Unauthorized message]
+  F --> G[Redirect to /login]
+  E -- Yes --> H[Render protected screen]
+
+  H --> I{Route target}
+  I --> J[/home or /dash]
+  I --> K[/admin]
+  I --> L[/join or /create]
+  I --> M[/activity/:id/view]
+  I --> N[/portfolio]
+```
+
+## 3. Authentication lifecycle
+
+```mermaid
+flowchart TD
+  A[User submits login signup verify reset] --> B[/auth endpoints]
+  B --> C[Controller validates payload]
+  C --> D{Valid credentials / code?}
+  D -- No --> E[Error response]
+  D -- Yes --> F[Generate JWT]
+  F --> G[Set httpOnly auth cookie]
+  G --> H[Client stores minimal user state]
+  H --> I[Subsequent GET /auth/session checks]
+  I --> J{Cookie still valid?}
+  J -- Yes --> K[Keep authenticated]
+  J -- No --> L[Clear local auth + force login]
+```
+
+## 4. Server request pipeline
+
+```mermaid
+flowchart TD
+  A[Incoming HTTP request] --> B[createCorsPolicy]
+  B --> C[requestLogger]
+  C --> D[json parser + cookieParser]
+  D --> E[requestDebugLogger]
+  E --> F[normalizeTokenSource]
+  F --> G{Supabase only mode?}
+  G -- Yes --> H[Route handlers]
+  G -- No --> I[checkDbAvailability]
+  I --> J[requireDb-protected routes]
+  J --> H
+  H --> K[Controller]
+  K --> L[JSON/redirect/static response]
+  K --> M[Global error handler]
+```
+
+## 5. Classroom lifecycle
+
+```mermaid
+flowchart TD
+  T[Teacher] --> A[Create classroom]
+  A --> B[Classroom code generated]
+  B --> C[Invite students]
+  C --> D[Notification created]
+
+  S[Student] --> E{Join path}
+  E -- Invite accept --> F[Accept invitation]
+  E -- Class code --> G[Join by code]
+
+  F --> H[Membership set accepted]
+  G --> I{Pending invite exists?}
+  I -- Yes --> H
+  I -- No --> J[Create accepted membership]
+
+  H --> K[Student appears in classroom roster]
+  J --> K
+```
+
+## 6. Activity lifecycle (teacher + student)
+
+```mermaid
+flowchart TD
+  T[Teacher] --> A[Create activity]
+  A --> B[Optional file upload]
+  B --> C[Instructions / due date / max score]
+
+  S[Student] --> D[Open activity view]
+  D --> E{Authorized classroom member?}
+  E -- No --> F[403/404]
+  E -- Yes --> G[View activity + comments + submission state]
+
+  G --> H[Submit activity file]
+  H --> I{File type and size valid?}
+  I -- No --> J[Validation error]
+  I -- Yes --> K[Insert or update submission]
+
+  T --> L[Open submissions]
+  L --> M[Score submission]
+  M --> N[Persist grade + graded metadata]
+  N --> O[Student sees updated portfolio status]
+```
+
+## 7. Notifications flow
+
+```mermaid
+flowchart TD
+  A[System event invite grade message] --> B[Insert notification]
+  B --> C[Client fetches GET /notifications]
+  C --> D[Render notification bell/menu]
+
+  D --> E{User action}
+  E -- Single read --> F[POST /notifications/:id/read]
+  E -- Batch read --> G[POST /notifications/read-batch]
+  E -- Mark all --> H[POST /notifications/mark-all-read]
+  E -- Delete selected --> I[DELETE /notifications/delete-batch]
+  E -- Delete all --> J[DELETE /notifications/delete-all]
+```
+
+## 8. Admin management flow
+
+```mermaid
+flowchart TD
+  A[Teacher opens /admin] --> B[GET /auth/session]
+  B --> C{isAdmin true?}
+  C -- No --> D[Access denied in UI/API]
+  C -- Yes --> E[Load admin student table]
+
+  E --> F[GET /admin/students]
+  F --> G[List students + online status]
+
+  G --> H{Admin edit action}
+  H --> I[PATCH student number]
+  H --> J[PATCH section]
+  H --> K[PATCH email]
+
+  I --> L[Persist + refresh list]
+  J --> L
+  K --> L
+```
+
+## 9. Security/tamper reporting flow
+
+```mermaid
+flowchart TD
+  A[Client detects tamper/security event] --> B[POST /security/tamper-log]
+  B --> C[Server validates and records event]
+  C --> D[Return success/failure]
+  D --> E[Client may force logout if required]
 ```
