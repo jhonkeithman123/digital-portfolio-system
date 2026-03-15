@@ -16,6 +16,7 @@ import RoleSelect from "screens/RoleSelect/RoleSelect";
 import Signup from "screens/Signup/Signup";
 import ForgotPassword from "screens/ForgotPassword/ForgotPassword";
 import Dashboard from "screens/Dashboard/Dashboard";
+import Admin from "screens/Admin/Admin";
 import JoinClassroom from "screens/classrooms/JoinClassroom";
 import CreateClassroom from "screens/classrooms/CreateClassroom";
 import ActivityView from "components/Activity-components/ActivityView";
@@ -102,6 +103,14 @@ function App(): React.ReactElement {
             element={
               <ProtectedRoute showMessage={showMessage}>
                 <Home />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute showMessage={showMessage}>
+                <Admin />
               </ProtectedRoute>
             }
           />

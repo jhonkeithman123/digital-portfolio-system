@@ -167,6 +167,8 @@ const FileUpload: React.FC<FileUploadProps> = ({
             );
         }
       } catch (e) {
+        // Component unmount / dependency change cancellation is expected.
+        if ((e as { name?: string })?.name === "AbortError") return;
         if (!ignore)
           showMsgRef.current("Server error loading activities.", "error");
 
@@ -179,7 +181,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
     void load();
     return () => {
       ignore = true;
-      ac.abort();
+      ac.abort("Upload effect cleanup");
     };
   }, [classroomCode, role]);
 

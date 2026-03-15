@@ -51,6 +51,8 @@
 
   /* RGB values for accent colors (for rgba usage) */
   --accent-color-rgb: 37, 99, 235; /* blue for student */
+  --accent-soft-color: #38bdf8;
+  --accent-shadow-rgb: 37, 99, 235;
   --accent-color-student-rgb: 37, 99, 235;
   --accent-color-teacher-rgb: 236, 72, 153;
 }
@@ -73,6 +75,8 @@
   --upload-bg: rgba(15, 23, 42, 0.96);
 
   --accent-color-rgb: 59, 130, 246; /* lighter blue for dark mode */
+  --accent-soft-color: #22d3ee;
+  --accent-shadow-rgb: 59, 130, 246;
 
   --role-student-main: #3b82f6;
   --role-student-soft: #22d3ee;
@@ -91,6 +95,35 @@
   transition:
     background-color 0.6s ease-in-out,
     color 0.6s ease-in-out;
+}
+
+/* Role-driven accent palette (prevents teacher UI from falling back to student colors) */
+:root[data-role="student"] {
+  --accent-color: #2563eb;
+  --accent-soft-color: #38bdf8;
+  --accent-color-rgb: 37, 99, 235;
+  --accent-shadow-rgb: 37, 99, 235;
+}
+
+:root[data-role="teacher"] {
+  --accent-color: #ec4899;
+  --accent-soft-color: #fb7185;
+  --accent-color-rgb: 236, 72, 153;
+  --accent-shadow-rgb: 236, 72, 153;
+}
+
+:root[data-theme="dark"][data-role="student"] {
+  --accent-color: #3b82f6;
+  --accent-soft-color: #22d3ee;
+  --accent-color-rgb: 59, 130, 246;
+  --accent-shadow-rgb: 59, 130, 246;
+}
+
+:root[data-theme="dark"][data-role="teacher"] {
+  --accent-color: #f472b6;
+  --accent-soft-color: #fb7185;
+  --accent-color-rgb: 244, 114, 182;
+  --accent-shadow-rgb: 244, 114, 182;
 }
 
 body,

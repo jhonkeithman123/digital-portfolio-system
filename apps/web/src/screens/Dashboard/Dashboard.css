@@ -283,7 +283,11 @@
 
 /* Buttons */
 .dashboard-button {
-  background: linear-gradient(135deg, var(--accent-color), #38bdf8);
+  background: linear-gradient(
+    135deg,
+    var(--accent-color),
+    var(--accent-soft-color)
+  );
   color: white;
   border: none;
   padding: 0.55rem 1rem;
@@ -294,11 +298,11 @@
     background 0.2s ease,
     transform 0.12s ease,
     box-shadow 0.2s ease;
-  box-shadow: 0 12px 28px rgba(37, 99, 235, 0.55);
+  box-shadow: 0 12px 28px rgba(var(--accent-shadow-rgb), 0.55);
 }
 .dashboard-button:hover {
   transform: translateY(-1px) scale(1.02);
-  box-shadow: 0 18px 40px rgba(37, 99, 235, 0.75);
+  box-shadow: 0 18px 40px rgba(var(--accent-shadow-rgb), 0.75);
 }
 
 .btn-small {

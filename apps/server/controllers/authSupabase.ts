@@ -5,6 +5,7 @@ import { getSupabaseClient } from "../supabase/client";
 import { generateToken } from "config/helpers/generateToken";
 import { setAuthCookie, clearAuthCookie } from "utils/authCookies";
 import { sendVerificationEmail } from "config/sendVerificationEmail";
+import { isAdminUser } from "config/helpers/adminAccess";
 import {
   generateVerificationCode,
   isVerificationCodeValid,
@@ -118,6 +119,13 @@ const checkSession = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: "User not found." });
     }
 
+    const isAdmin = isAdminUser({
+      userId: user.id,
+      email: user.email,
+      username: user.username,
+      role: user.role,
+    });
+
     return res.json({
       success: true,
       user: {
@@ -128,6 +136,7 @@ const checkSession = async (req: AuthRequest, res: Response) => {
         section: user.section,
         grade: user.grade,
         student_number: user.student_number,
+        isAdmin,
       },
     });
   } catch (err) {

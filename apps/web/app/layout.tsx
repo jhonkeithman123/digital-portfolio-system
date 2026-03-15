@@ -19,6 +19,28 @@ const themeScript = `
     } else {
       document.documentElement.setAttribute('data-theme', 'light');
     }
+
+    var role = null;
+    var rawUser = localStorage.getItem('user');
+    if (rawUser) {
+      try {
+        var parsed = JSON.parse(rawUser);
+        if (parsed && (parsed.role === 'teacher' || parsed.role === 'student')) {
+          role = parsed.role;
+        }
+      } catch (e) {}
+    }
+
+    if (!role) {
+      var storedRole = localStorage.getItem('role');
+      if (storedRole === 'teacher' || storedRole === 'student') {
+        role = storedRole;
+      }
+    }
+
+    if (role) {
+      document.documentElement.setAttribute('data-role', role);
+    }
   } catch (e) {}
 })();
 `;

@@ -47,6 +47,8 @@ export interface Student {
   email?: string;
   section?: string | null;
   grade?: string | null;
+  studentNumber?: string | null;
+  onlineStatus?: "online" | "offline" | "unknown";
 }
 
 // Re-export Activity types from activity.d.ts
@@ -65,6 +67,7 @@ export interface User {
   grade?: string | null;
   username?: string;
   email?: string;
+  isAdmin?: boolean;
 }
 
 export interface ClassroomInfo {

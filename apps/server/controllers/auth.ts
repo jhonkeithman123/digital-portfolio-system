@@ -14,6 +14,7 @@ import {
 } from "config/helpers/verification";
 import { setAuthCookie, clearAuthCookie } from "utils/authCookies";
 import db from "config/db";
+import { isAdminUser } from "config/helpers/adminAccess";
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -109,7 +110,19 @@ const checkSession = async (req: AuthRequest, res: Response) => {
 
     console.info("[AUTH] GET /session responding", { userId });
     console.table(user);
-    return res.json({ success: true, user });
+    const isAdmin = isAdminUser({
+      userId: user.ID,
+      email: user.email,
+      username: user.username,
+      role: user.role,
+    });
+    return res.json({
+      success: true,
+      user: {
+        ...user,
+        isAdmin,
+      },
+    });
   } catch (err) {
     const error = err as Error;
     console.error("[AUTH] GET /session error:", error?.stack || error);

@@ -1,6 +1,11 @@
 import type { Response } from "express";
 import type { AuthRequest } from "middleware/auth";
 import { getSupabaseClient } from "../supabase/client";
+import { isAdminUser } from "config/helpers/adminAccess";
+
+function isLikelyEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
 
 type NotificationRow = {
   id: number;
@@ -225,15 +230,24 @@ const listStudents = async (req: AuthRequest, res: Response) => {
     const supabase = getSupabaseClient();
     const { data, error } = await supabase
       .from("users")
-      .select("id, username, email, section")
+      .select("id, username, email, section, student_number")
       .eq("role", "student")
       .order("username", { ascending: true });
 
     if (error) throw error;
 
-    const students = (data || []).filter((s) =>
-      shouldFilterMissing ? !s.section || !String(s.section).trim() : true,
-    );
+    const students = (data || [])
+      .filter((s) =>
+        shouldFilterMissing ? !s.section || !String(s.section).trim() : true,
+      )
+      .map((s) => ({
+        id: s.id,
+        username: s.username,
+        email: s.email,
+        section: s.section,
+        studentNumber: s.student_number ?? null,
+        onlineStatus: "unknown",
+      }));
 
     return res.json({ success: true, students });
   } catch (err) {
@@ -297,10 +311,163 @@ const editStudentSection = async (req: AuthRequest, res: Response) => {
   }
 };
 
+const editStudentNumber = async (req: AuthRequest, res: Response) => {
+  if (req.user!.role !== "teacher") {
+    return res.status(403).json({ success: false, message: "Forbidden" });
+  }
+
+  const rawStudentId = Array.isArray(req.params.id)
+    ? req.params.id[0]
+    : req.params.id;
+  const studentId = Number.parseInt(rawStudentId, 10);
+  if (!Number.isFinite(studentId) || studentId <= 0) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid student id" });
+  }
+
+  const rawStudentNumber = req.body?.studentNumber;
+  const normalizedStudentNumber =
+    typeof rawStudentNumber === "string"
+      ? rawStudentNumber.trim() || null
+      : rawStudentNumber == null
+        ? null
+        : String(rawStudentNumber).trim() || null;
+
+  try {
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase
+      .from("users")
+      .update({ student_number: normalizedStudentNumber })
+      .eq("id", studentId)
+      .eq("role", "student")
+      .select("id")
+      .limit(1)
+      .maybeSingle();
+
+    if (error) throw error;
+
+    if (!data) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Student not found" });
+    }
+
+    return res.json({ success: true, studentNumber: normalizedStudentNumber });
+  } catch (err) {
+    const error = err as Error;
+    console.error("[DEFAULT SUPABASE] editStudentNumber:", error.message);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
+  }
+};
+
+const editStudentEmail = async (req: AuthRequest, res: Response) => {
+  if (req.user!.role !== "teacher") {
+    return res.status(403).json({ success: false, message: "Forbidden" });
+  }
+
+  const rawStudentId = Array.isArray(req.params.id)
+    ? req.params.id[0]
+    : req.params.id;
+  const studentId = Number.parseInt(rawStudentId, 10);
+  if (!Number.isFinite(studentId) || studentId <= 0) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid student id" });
+  }
+
+  const rawEmail = req.body?.email;
+  const normalizedEmail =
+    typeof rawEmail === "string" ? rawEmail.trim().toLowerCase() : "";
+
+  if (!normalizedEmail || !isLikelyEmail(normalizedEmail)) {
+    return res.status(400).json({ success: false, message: "Invalid email" });
+  }
+
+  try {
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase
+      .from("users")
+      .update({ email: normalizedEmail })
+      .eq("id", studentId)
+      .eq("role", "student")
+      .select("id")
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      if ((error as any).code === "23505") {
+        return res
+          .status(409)
+          .json({ success: false, message: "Email is already in use" });
+      }
+      throw error;
+    }
+
+    if (!data) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Student not found" });
+    }
+
+    return res.json({ success: true, email: normalizedEmail });
+  } catch (err) {
+    const error = err as Error;
+    console.error("[DEFAULT SUPABASE] editStudentEmail:", error.message);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
+  }
+};
+
+const listStudentsAdmin = async (req: AuthRequest, res: Response) => {
+  if (!isAdminUser(req.user)) {
+    return res
+      .status(403)
+      .json({ success: false, message: "Admin access required" });
+  }
+  return listStudents(req, res);
+};
+
+const editStudentNumberAdmin = async (req: AuthRequest, res: Response) => {
+  if (!isAdminUser(req.user)) {
+    return res
+      .status(403)
+      .json({ success: false, message: "Admin access required" });
+  }
+  return editStudentNumber(req, res);
+};
+
+const editStudentSectionAdmin = async (req: AuthRequest, res: Response) => {
+  if (!isAdminUser(req.user)) {
+    return res
+      .status(403)
+      .json({ success: false, message: "Admin access required" });
+  }
+  return editStudentSection(req, res);
+};
+
+const editStudentEmailAdmin = async (req: AuthRequest, res: Response) => {
+  if (!isAdminUser(req.user)) {
+    return res
+      .status(403)
+      .json({ success: false, message: "Admin access required" });
+  }
+  return editStudentEmail(req, res);
+};
+
 const controller = {
+  editStudentEmail,
+  editStudentEmailAdmin,
+  editStudentNumberAdmin,
+  editStudentNumber,
+  editStudentSectionAdmin,
   editStudentSection,
   fetchAllNotifications,
   fetchSections,
+  listStudentsAdmin,
   listStudents,
   markNotificationAsRead,
   markAllNotificationsAsRead,

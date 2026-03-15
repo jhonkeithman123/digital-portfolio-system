@@ -9,6 +9,7 @@ interface User {
   name?: string | null;
   username?: string | null;
   role?: Role;
+  isAdmin?: boolean;
   [k: string]: any;
 }
 
@@ -122,6 +123,12 @@ const Header: React.FC<HeaderProps> = ({
     u?.name || u?.username || "(No Name)";
   const roleClass = user?.role === "teacher" ? "teacher" : "student";
 
+  useEffect(() => {
+    if (variant !== "authed" || !user) return;
+    const role = user.role === "teacher" ? "teacher" : "student";
+    document.documentElement.setAttribute("data-role", role);
+  }, [variant, user]);
+
   return (
     <header
       className={`${
@@ -136,6 +143,11 @@ const Header: React.FC<HeaderProps> = ({
           {user.role}
           {section && <span className="role-sub"> • {section}</span>}
         </span>
+        {user?.isAdmin && (
+          <span className="admin-badge" aria-label="Admin account">
+            ADMIN
+          </span>
+        )}
       </div>
 
       <div className="header-actions">

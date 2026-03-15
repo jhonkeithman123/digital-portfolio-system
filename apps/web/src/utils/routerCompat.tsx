@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import {
   useRouter,
   usePathname,
@@ -59,25 +59,28 @@ function writeState(pathname: string, search: string, state: unknown) {
 export function useNavigate() {
   const router = useRouter();
 
-  return (to: string | number, options?: NavigateOptions) => {
-    if (typeof to === "number") {
-      if (typeof window !== "undefined") {
-        window.history.go(to);
+  return useCallback(
+    (to: string | number, options?: NavigateOptions) => {
+      if (typeof to === "number") {
+        if (typeof window !== "undefined") {
+          window.history.go(to);
+        }
+        return;
       }
-      return;
-    }
 
-    if (options?.state && typeof window !== "undefined") {
-      const url = new URL(to, window.location.origin);
-      writeState(url.pathname, url.search, options.state);
-    }
+      if (options?.state && typeof window !== "undefined") {
+        const url = new URL(to, window.location.origin);
+        writeState(url.pathname, url.search, options.state);
+      }
 
-    if (options?.replace) {
-      router.replace(to);
-    } else {
-      router.push(to);
-    }
-  };
+      if (options?.replace) {
+        router.replace(to);
+      } else {
+        router.push(to);
+      }
+    },
+    [router],
+  );
 }
 
 export function useLocation(): LocationLike {
@@ -116,6 +119,10 @@ export function Route(_: { path?: string; element?: React.ReactNode }) {
 
 export function Navigate({ to, replace }: { to: string; replace?: boolean }) {
   const navigate = useNavigate();
-  navigate(to, { replace });
+
+  useEffect(() => {
+    navigate(to, { replace });
+  }, [navigate, replace, to]);
+
   return null;
 }

@@ -401,4 +401,34 @@ router.patch(
   wrapAsync(controller.editStudentSection),
 );
 
+router.patch(
+  "/users/:id/student-number",
+  verifyToken,
+  wrapAsync(controller.editStudentNumber),
+);
+
+router.get(
+  "/admin/students",
+  verifyToken,
+  wrapAsync(controller.listStudentsAdmin),
+);
+
+router.patch(
+  "/admin/users/:id/student-number",
+  verifyToken,
+  wrapAsync(controller.editStudentNumberAdmin),
+);
+
+router.patch(
+  "/admin/users/:id/section",
+  verifyToken,
+  wrapAsync(controller.editStudentSectionAdmin),
+);
+
+router.patch(
+  "/admin/users/:id/email",
+  verifyToken,
+  wrapAsync(controller.editStudentEmailAdmin),
+);
+
 export default router;

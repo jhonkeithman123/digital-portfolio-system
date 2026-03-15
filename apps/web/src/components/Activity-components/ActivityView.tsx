@@ -63,6 +63,7 @@ const ActivityView: React.FC = (): React.ReactElement => {
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [submissionsLoading, setSubmissionsLoading] = useState<boolean>(false);
   const [maxScore, setMaxScore] = useState<number>(100);
+  const [loadError, setLoadError] = useState<string>("");
 
   const showMsgRef = useRef(showMessage);
   const mountedRef = useRef<boolean>(true);
@@ -91,6 +92,7 @@ const ActivityView: React.FC = (): React.ReactElement => {
     if (!id) return;
 
     await wrap(async () => {
+      setLoadError("");
       try {
         const { data, unauthorized } = await apiFetch<ActivityApiResponse>(
           `/activity/${encodeURIComponent(String(id))}`,
@@ -107,14 +109,16 @@ const ActivityView: React.FC = (): React.ReactElement => {
         if (data?.success) {
           setActivity(data.activity ?? null);
         } else {
-          showMsgRef.current(data?.error || "Failed to load activity", "error");
-          navigate(-1);
+          const msg = data?.error || "Failed to load activity";
+          setLoadError(msg);
+          showMsgRef.current(msg, "error");
         }
       } catch (err) {
         console.error("Activity load error", err);
         if (mountedRef.current) {
-          showMsgRef.current("Server error loading activity", "error");
-          navigate(-1);
+          const msg = "Server error loading activity";
+          setLoadError(msg);
+          showMsgRef.current(msg, "error");
         }
       }
     });
@@ -197,14 +201,32 @@ const ActivityView: React.FC = (): React.ReactElement => {
 
   if (loading) return <div className="activity-view-page">Loading...</div>;
   if (!activity)
-    return <div className="activity-view-page">Activity not found</div>;
+    return (
+      <div className="activity-view-page">
+        <div className="activity-card" style={{ marginTop: "1rem" }}>
+          <h3>
+            {loadError ? "Unable to load activity" : "Activity not found"}
+          </h3>
+          {loadError && <p>{loadError}</p>}
+          <div style={{ display: "flex", gap: "0.75rem", marginTop: "1rem" }}>
+            <button
+              className="activity-back"
+              onClick={() => void loadActivity()}
+            >
+              Retry
+            </button>
+            <button className="activity-back" onClick={() => navigate(-1)}>
+              Back
+            </button>
+          </div>
+        </div>
+      </div>
+    );
 
   const createdAt = activity.created_at || activity.createdAt;
   const instructionList = Array.isArray(activity.instructions)
     ? activity.instructions
     : [];
-  const roleClass = user?.role === "teacher" ? "teacher-role" : "student-role";
-
   return (
     <>
       {messageComponent}
@@ -213,8 +235,8 @@ const ActivityView: React.FC = (): React.ReactElement => {
         variant="authed"
         user={user}
         section={user?.role === "student" ? user.section : null}
-        headerClass={`home-header ${roleClass}`}
-        welcomeClass={`home-welcome ${roleClass}`}
+        headerClass="app-header"
+        welcomeClass="app-welcome"
       />
 
       <div className="activity-view-page">

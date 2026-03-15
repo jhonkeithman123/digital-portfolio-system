@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./css/burger_menu.css";
 
 type ClassroomInfo = {
@@ -15,6 +16,7 @@ interface BurgerMenuProps {
   toggleMenu: React.Dispatch<React.SetStateAction<boolean>>;
   classroomInfo?: ClassroomInfo;
   showMessage: MessageFn;
+  isAdmin?: boolean;
 }
 
 const BurgerMenu: React.FC<BurgerMenuProps> = ({
@@ -22,7 +24,9 @@ const BurgerMenu: React.FC<BurgerMenuProps> = ({
   toggleMenu,
   classroomInfo,
   showMessage,
+  isAdmin = false,
 }): React.ReactElement => {
+  const navigate = useNavigate();
   const [copyCooldown, setCopyCooldown] = useState<boolean>(false);
   const COOLDOWN_MS = 2500;
 
@@ -96,6 +100,18 @@ const BurgerMenu: React.FC<BurgerMenuProps> = ({
             <p>
               <strong>Code:</strong> {hasCode ? classroomInfo.code : "-"}
             </p>
+            {isAdmin && (
+              <button
+                type="button"
+                className="admin-page-btn"
+                onClick={() => {
+                  toggleMenu(false);
+                  navigate("/admin");
+                }}
+              >
+                Open Admin Page
+              </button>
+            )}
             <button
               type="button"
               className={`copy-code-btn ${!hasCode ? "loading" : ""} ${
@@ -108,8 +124,8 @@ const BurgerMenu: React.FC<BurgerMenuProps> = ({
               {!hasCode
                 ? "Waiting Code"
                 : copyCooldown
-                ? "Copied!"
-                : "Copy Code"}
+                  ? "Copied!"
+                  : "Copy Code"}
             </button>
           </>
         ) : (

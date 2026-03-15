@@ -95,7 +95,8 @@ const Dashboard: React.FC = (): React.ReactElement => {
   const [showSections, setShowSections] = useState<boolean>(false);
   const [students, setStudents] = useState<Student[]>([]);
   const [loadingStudents, setLoadingStudents] = useState<boolean>(false);
-  const [editSections, setEditSections] = useState<Record<string, string>>({}); // id -> string
+  const [editSections, setEditSections] = useState<Record<string, string>>({});
+
   const [mySection, setMySection] = useState<string | null>(null); // for students
   const [mySectionDraft, setMySectionDraft] = useState<string>(""); // for students
   const [savingMySection, setSavingMySection] = useState<boolean>(false); // for students
@@ -595,8 +596,6 @@ const Dashboard: React.FC = (): React.ReactElement => {
     setShowPortfolio(!showPortfolio);
   };
 
-  const roleClass = user.role === "teacher" ? "teacher-role" : "student-role";
-
   const content = (
     <>
       {inviteOpen && (
@@ -616,6 +615,7 @@ const Dashboard: React.FC = (): React.ReactElement => {
         toggleMenu={setMenuOpen}
         classroomInfo={classroomInfo}
         showMessage={showMessage}
+        isAdmin={!!user.isAdmin}
       />
 
       <ConfirmModal />
@@ -629,14 +629,24 @@ const Dashboard: React.FC = (): React.ReactElement => {
               ? classroomInfo?.section
               : user.section || mySection
           }
-          headerClass={`dashboard-header ${roleClass}`}
-          welcomeClass={`dashboard-welcome ${roleClass}`}
+          headerClass="app-header"
+          welcomeClass="app-welcome"
           rightActions={
             <>
               <NotificationBell
                 unreadCount={unreadCount}
                 setUnreadCount={setUnreadCount}
               />
+
+              {user.role === "teacher" && user.isAdmin && (
+                <button
+                  className="pill-btn"
+                  onClick={() => navigate("/admin")}
+                  title="Open student admin panel"
+                >
+                  Admin Panel
+                </button>
+              )}
 
               {user.role === "teacher" && (
                 <button
@@ -652,11 +662,19 @@ const Dashboard: React.FC = (): React.ReactElement => {
           }
         />
         <main className="dashboard-main">
-          {user.role === "student" && user.section && mySection && (
-            <section className="dashboard-card">
-              <ChangeUsername />
+          {user.role === "teacher" && (
+            <section
+              className="dashboard-card"
+              style={{ padding: "12px 16px" }}
+            >
+              <strong>Admin access:</strong>{" "}
+              {user.isAdmin ? "Enabled" : "Disabled"}
             </section>
           )}
+
+          <section className="dashboard-card">
+            <ChangeUsername />
+          </section>
 
           {/* Student self-serve section (only when null/empty) */}
           {user.role === "student" && !user.section && !mySection && (

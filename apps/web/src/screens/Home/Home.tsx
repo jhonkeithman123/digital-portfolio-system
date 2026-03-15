@@ -202,8 +202,6 @@ const Home: React.FC = (): React.ReactElement => {
     );
   }
 
-  const roleClass = user?.role === "teacher" ? "teacher-role" : "student-role";
-
   return (
     <TokenGuard
       redirectInfo="/login"
@@ -219,8 +217,8 @@ const Home: React.FC = (): React.ReactElement => {
             variant="authed"
             user={user}
             section={user.role === "student" ? user.section : null}
-            headerClass={`home-header ${roleClass}`}
-            welcomeClass={`home-welcome ${roleClass}`}
+            headerClass="app-header"
+            welcomeClass="app-welcome"
           />
 
           <main className="home-main">

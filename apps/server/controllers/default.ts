@@ -4,6 +4,7 @@ import { RowDataPacket } from "mysql2/promise";
 import { queryAsync } from "config/helpers/dbHelper";
 import db from "config/db";
 import { ResultSetHeader } from "mysql2/promise";
+import { isAdminUser } from "config/helpers/adminAccess";
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -27,10 +28,16 @@ interface StudentRow extends RowDataPacket {
   username: string;
   email: string;
   section: string | null;
+  studentNumber: string | null;
+  onlineStatus: "online" | "offline";
 }
 
 interface SectionRow extends RowDataPacket {
   section: string;
+}
+
+function isLikelyEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
 const fetchAllNotifications = async (req: AuthRequest, res: Response) => {
@@ -276,8 +283,25 @@ const listStudents = async (req: AuthRequest, res: Response) => {
     const shouldFilterMissing = missing === "1" || missing === "true";
 
     // Step 3: Build dynamic SQL
-    let sql =
-      "SELECT id, username, email, COALESCE(NULLIF(section,''), NULL) AS section FROM users WHERE role='student'";
+    let sql = `
+      SELECT
+        u.id,
+        u.username,
+        u.email,
+        COALESCE(NULLIF(u.section,''), NULL) AS section,
+        COALESCE(NULLIF(u.student_number,''), NULL) AS studentNumber,
+        CASE
+          WHEN EXISTS (
+            SELECT 1
+            FROM session s
+            WHERE s.user_id = u.id
+              AND s.expires_at > NOW()
+          ) THEN 'online'
+          ELSE 'offline'
+        END AS onlineStatus
+      FROM users u
+      WHERE u.role='student'
+    `;
     const params: any[] = [];
 
     if (shouldFilterMissing) {
@@ -349,10 +373,176 @@ const editStudentSection = async (req: AuthRequest, res: Response) => {
   }
 };
 
+const editStudentNumber = async (req: AuthRequest, res: Response) => {
+  if (!(req as any).dbAvailable) {
+    return res.status(503).json({ ok: false, error: "Database not available" });
+  }
+
+  if (req.user!.role !== "teacher") {
+    return res.status(403).json({ success: false, message: "Forbidden" });
+  }
+
+  const rawStudentId = Array.isArray(req.params.id)
+    ? req.params.id[0]
+    : req.params.id;
+  const studentId = Number.parseInt(rawStudentId, 10);
+  if (!Number.isFinite(studentId) || studentId <= 0) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid student id" });
+  }
+
+  const rawStudentNumber = req.body?.studentNumber;
+  const normalizedStudentNumber =
+    typeof rawStudentNumber === "string"
+      ? rawStudentNumber.trim() || null
+      : rawStudentNumber == null
+        ? null
+        : String(rawStudentNumber).trim() || null;
+
+  try {
+    const [result] = await db.query<ResultSetHeader>(
+      `UPDATE users SET student_number = ? WHERE id = ? AND role = 'student'`,
+      [normalizedStudentNumber, studentId],
+    );
+
+    if (!result.affectedRows) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Student not found" });
+    }
+
+    return res.json({ success: true, studentNumber: normalizedStudentNumber });
+  } catch (err) {
+    const error = err as Error;
+    console.error("Error updating student number:", error.message);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
+  }
+};
+
+const editStudentEmail = async (req: AuthRequest, res: Response) => {
+  if (!(req as any).dbAvailable) {
+    return res.status(503).json({ ok: false, error: "Database not available" });
+  }
+
+  if (req.user!.role !== "teacher") {
+    return res.status(403).json({ success: false, message: "Forbidden" });
+  }
+
+  const rawStudentId = Array.isArray(req.params.id)
+    ? req.params.id[0]
+    : req.params.id;
+  const studentId = Number.parseInt(rawStudentId, 10);
+  if (!Number.isFinite(studentId) || studentId <= 0) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Invalid student id" });
+  }
+
+  const rawEmail = req.body?.email;
+  const normalizedEmail =
+    typeof rawEmail === "string" ? rawEmail.trim().toLowerCase() : "";
+
+  if (!normalizedEmail || !isLikelyEmail(normalizedEmail)) {
+    return res.status(400).json({ success: false, message: "Invalid email" });
+  }
+
+  try {
+    const [result] = await db.query<ResultSetHeader>(
+      `UPDATE users SET email = ? WHERE id = ? AND role = 'student'`,
+      [normalizedEmail, studentId],
+    );
+
+    if (!result.affectedRows) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Student not found" });
+    }
+
+    return res.json({ success: true, email: normalizedEmail });
+  } catch (err) {
+    const error = err as Error;
+    if (/duplicate|unique|ER_DUP_ENTRY/i.test(error.message)) {
+      return res
+        .status(409)
+        .json({ success: false, message: "Email is already in use" });
+    }
+
+    console.error("Error updating student email:", error.message);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
+  }
+};
+
+const listStudentsAdmin = async (req: AuthRequest, res: Response) => {
+  if (!(req as any).dbAvailable) {
+    return res.status(503).json({ ok: false, error: "Database not available" });
+  }
+
+  if (!isAdminUser(req.user)) {
+    return res
+      .status(403)
+      .json({ success: false, message: "Admin access required" });
+  }
+
+  return listStudents(req, res);
+};
+
+const editStudentNumberAdmin = async (req: AuthRequest, res: Response) => {
+  if (!(req as any).dbAvailable) {
+    return res.status(503).json({ ok: false, error: "Database not available" });
+  }
+
+  if (!isAdminUser(req.user)) {
+    return res
+      .status(403)
+      .json({ success: false, message: "Admin access required" });
+  }
+
+  return editStudentNumber(req, res);
+};
+
+const editStudentSectionAdmin = async (req: AuthRequest, res: Response) => {
+  if (!(req as any).dbAvailable) {
+    return res.status(503).json({ ok: false, error: "Database not available" });
+  }
+
+  if (!isAdminUser(req.user)) {
+    return res
+      .status(403)
+      .json({ success: false, message: "Admin access required" });
+  }
+
+  return editStudentSection(req, res);
+};
+
+const editStudentEmailAdmin = async (req: AuthRequest, res: Response) => {
+  if (!(req as any).dbAvailable) {
+    return res.status(503).json({ ok: false, error: "Database not available" });
+  }
+
+  if (!isAdminUser(req.user)) {
+    return res
+      .status(403)
+      .json({ success: false, message: "Admin access required" });
+  }
+
+  return editStudentEmail(req, res);
+};
+
 const controller = {
+  editStudentEmail,
+  editStudentEmailAdmin,
+  editStudentNumberAdmin,
+  editStudentNumber,
+  editStudentSectionAdmin,
   editStudentSection,
   fetchAllNotifications,
   fetchSections,
+  listStudentsAdmin,
   listStudents,
   markNotificationAsRead,
   markAllNotificationsAsRead,

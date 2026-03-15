@@ -3,10 +3,36 @@ import type { NextFunction, Request, Response } from "express";
 const DEFAULT_CLIENT_ORIGIN =
   process.env.CLIENT_ORIGIN || "http://localhost:5173";
 
+function expandLocalhostAliases(originUrl: string): string[] {
+  try {
+    const parsed = new URL(originUrl);
+    const host = parsed.hostname;
+    const port = parsed.port ? `:${parsed.port}` : "";
+    const protocol = parsed.protocol;
+
+    const aliases = new Set<string>([originUrl]);
+
+    if (host === "localhost" || host === "127.0.0.1" || host === "::1") {
+      aliases.add(`${protocol}//localhost${port}`);
+      aliases.add(`${protocol}//127.0.0.1${port}`);
+      aliases.add(`${protocol}//[::1]${port}`);
+    }
+
+    return Array.from(aliases);
+  } catch {
+    return [originUrl];
+  }
+}
+
 function getAllowedOrigins(clientUrl: string): string[] {
   // Derive preview URL: replace dev port (5173) with preview port (4173)
   const previewUrl = clientUrl.replace(/:5173$/, ":4173");
-  const origins = new Set([clientUrl, previewUrl]);
+
+  const origins = new Set<string>([
+    ...expandLocalhostAliases(clientUrl),
+    ...expandLocalhostAliases(previewUrl),
+  ]);
+
   return Array.from(origins);
 }
 
