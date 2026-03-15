@@ -1,6 +1,6 @@
 import express, { type Request, type Response } from "express";
-import wrapAsync from "utils/wrapAsync";
-import { pingSupabaseConnection } from "../supabase/ping";
+import wrapAsync from "../utils/wrapAsync.js";
+import { pingSupabaseConnection } from "../supabase/ping.js";
 
 const router = express.Router();
 

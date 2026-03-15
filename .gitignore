@@ -23,5 +23,13 @@ dist-ssr
 *.sln
 *.sw?
 .fuse_hidden*
-.turbo/
+.turbo/*
 .env
+bun.lock
+bun.lockb
+
+# app-scoped env files
+apps/**/.env
+apps/**/.env.local
+apps/**/.env.*.local
+!apps/**/.env.example

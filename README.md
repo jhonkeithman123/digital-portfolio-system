@@ -87,6 +87,6 @@ pnpm --filter @digital-portfolio/server typecheck
 
 ## Deployment notes
 
-- Deploy client as static assets (`dist/`) on Vercel, Netlify, or GitHub Pages.
-- Deploy server to a Node runtime with access to a managed MySQL database.
+- Deploy client on your preferred static/Next hosting.
+- Deploy server on Render using `render.yaml` at the repository root.
 - Keep cookie and CORS origin settings aligned with deployed client domain.

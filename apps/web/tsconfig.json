@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "lib": [
+      "DOM",
+      "DOM.Iterable",
+      "ES2022"
+    ],
     "allowJs": false,
     "skipLibCheck": true,
     "strict": true,
@@ -11,25 +15,63 @@
     "moduleResolution": "Bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "incremental": true,
-    "plugins": [{ "name": "next" }],
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"],
-      "components/*": ["src/components/*"],
-      "hooks/*": ["src/hooks/*"],
-      "screens/*": ["src/screens/*"],
-      "utils/*": ["src/utils/*"],
-      "types/*": ["src/types/*"],
-      "security/*": ["src/security/*"],
-      "assets/*": ["src/assets/*"],
-      "contexts/*": ["src/contexts/*"],
-      "home/*": ["src/screens/Home/*"],
-      "notFound/*": ["src/screens/NotFound/*"],
-      "react-router-dom": ["src/utils/routerCompat.tsx"]
+      "@/*": [
+        "./*"
+      ],
+      "components/*": [
+        "src/components/*"
+      ],
+      "hooks/*": [
+        "src/hooks/*"
+      ],
+      "screens/*": [
+        "src/screens/*"
+      ],
+      "utils/*": [
+        "src/utils/*"
+      ],
+      "types/*": [
+        "src/types/*"
+      ],
+      "security/*": [
+        "src/security/*"
+      ],
+      "assets/*": [
+        "src/assets/*"
+      ],
+      "contexts/*": [
+        "src/contexts/*"
+      ],
+      "home/*": [
+        "src/screens/Home/*"
+      ],
+      "notFound/*": [
+        "src/screens/NotFound/*"
+      ],
+      "react-router-dom": [
+        "src/utils/routerCompat.tsx"
+      ]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules", "src/**/*.test.ts", "src/**/*.test.tsx"]
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx"
+  ]
 }

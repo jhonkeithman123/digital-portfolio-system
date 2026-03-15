@@ -1,5 +1,5 @@
 import { Response } from "express";
-import { AuthRequest } from "middleware/auth";
+import { AuthRequest } from "../middleware/auth.js";
 
 const fetchShowcase = async (req: AuthRequest, res: Response) => {
   try {

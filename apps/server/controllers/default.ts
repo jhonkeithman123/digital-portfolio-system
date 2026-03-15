@@ -1,10 +1,10 @@
-import { AuthRequest } from "middleware/auth";
+import { AuthRequest } from "../middleware/auth.js";
 import type { Response } from "express";
 import { RowDataPacket } from "mysql2/promise";
-import { queryAsync } from "config/helpers/dbHelper";
-import db from "config/db";
+import { queryAsync } from "../config/helpers/dbHelper.js";
+import db from "../config/db.js";
 import { ResultSetHeader } from "mysql2/promise";
-import { isAdminUser } from "config/helpers/adminAccess";
+import { isAdminUser } from "../config/helpers/adminAccess.js";
 
 // ============================================================================
 // TYPE DEFINITIONS

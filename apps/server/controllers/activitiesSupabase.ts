@@ -2,8 +2,8 @@ import type { Request, Response } from "express";
 import path from "path";
 import fs from "fs/promises";
 import multer, { type FileFilterCallback } from "multer";
-import type { AuthRequest } from "middleware/auth";
-import { getSupabaseClient } from "../supabase/client";
+import type { AuthRequest } from "../middleware/auth.js";
+import { getSupabaseClient } from "../supabase/client.js";
 
 interface AuthResult {
   ok: boolean;

@@ -1,11 +1,11 @@
 import express from "express";
-import wrapAsync from "utils/wrapAsync";
-import { verifyToken } from "middleware/auth";
-import db from "config/db";
-import mysqlController, { upload as mysqlUpload } from "controllers/activities";
+import wrapAsync from "../utils/wrapAsync.js";
+import { verifyToken } from "../middleware/auth.js";
+import db from "../config/db.js";
+import mysqlController, { upload as mysqlUpload } from "../controllers/activities.js";
 import supabaseController, {
   upload as supabaseUpload,
-} from "controllers/activitiesSupabase";
+} from "../controllers/activitiesSupabase.js";
 
 const router = express.Router();
 const controller = db.isSupabaseOnlyMode()

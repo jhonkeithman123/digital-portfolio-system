@@ -1,16 +1,16 @@
 import type { Request, Response } from "express";
 import path from "path";
-import type { AuthRequest } from "middleware/auth";
-import db from "config/db";
-import { queryAsync } from "helpers/dbHelper";
+import type { AuthRequest } from "../middleware/auth.js";
+import db from "../config/db.js";
+import { queryAsync } from "../config/helpers/dbHelper.js";
 import type {
   ActivityRow,
   CommentRow,
   CommentReplyRow,
   InstructionEntry,
   ActivitySubmission,
-} from "types/db";
-import createNotification from "config/createNotification";
+} from "../types/db.js";
+import createNotification from "../config/createNotification.js";
 import type { RowDataPacket } from "mysql2/promise";
 import fs from "fs/promises";
 import multer, { type FileFilterCallback } from "multer";

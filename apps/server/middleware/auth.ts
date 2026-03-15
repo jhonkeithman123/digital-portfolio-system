@@ -1,7 +1,7 @@
 import jwt from "jsonwebtoken";
-import { extractToken } from "utils/authCookies";
+import { extractToken } from "../utils/authCookies.js";
 import type { Request, Response, NextFunction } from "express";
-import type { TokenPayload } from "helpers/generateToken";
+import type { TokenPayload } from "../config/helpers/generateToken.js";
 
 export interface AuthRequest extends Request {
   user?: TokenPayload;

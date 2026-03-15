@@ -257,7 +257,7 @@ export default function AnswerSubmission({
                 <div className="submitted-file">
                   <a
                     href={`${
-                      import.meta.env.VITE_API_BASE_URL ||
+                      process.env.NEXT_PUBLIC_API_BASE_URL ||
                       "http://localhost:5000"
                     }/uploads/activities/${existingSubmission.file_path}`}
                     target="_blank"

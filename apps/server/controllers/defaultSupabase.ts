@@ -1,7 +1,7 @@
 import type { Response } from "express";
-import type { AuthRequest } from "middleware/auth";
-import { getSupabaseClient } from "../supabase/client";
-import { isAdminUser } from "config/helpers/adminAccess";
+import type { AuthRequest } from "../middleware/auth.js";
+import { getSupabaseClient } from "../supabase/client.js";
+import { isAdminUser } from "../config/helpers/adminAccess.js";
 
 function isLikelyEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);

@@ -1,6 +1,10 @@
 import { fileURLToPath } from "url";
-import { getSupabaseClient, isSupabaseConfigured } from "./client";
-import { loadEnv } from "../config/loadEnv";
+import {
+  getMissingSupabaseEnvVars,
+  getSupabaseClient,
+  isSupabaseConfigured,
+} from "./client.js";
+import { loadEnv } from "../config/loadEnv.js";
 
 loadEnv();
 
@@ -32,50 +36,37 @@ const canReachPostgrestWithKey = async (
 
 export const pingSupabaseConnection = async (): Promise<SupabasePingResult> => {
   if (!isSupabaseConfigured()) {
+    const missing = getMissingSupabaseEnvVars();
     return {
       ok: false,
-      message:
-        "Supabase is not configured. Add SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.",
+      message: `Supabase is not configured. Missing: ${missing.join(", ")}.`,
     };
   }
 
   try {
-    const supabase = getSupabaseClient();
     const supabaseUrl = process.env.SUPABASE_URL;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    const { data, error } = await supabase.auth.admin.listUsers({
-      page: 1,
-      perPage: 1,
-    });
+    getSupabaseClient();
 
-    if (error) {
-      // Some projects intentionally use anon/limited keys in development.
-      // In that case admin APIs fail even though Supabase is reachable.
-      if (supabaseUrl && serviceRoleKey) {
-        const reachable = await canReachPostgrestWithKey(
-          supabaseUrl,
-          serviceRoleKey,
-        );
-        if (reachable) {
-          return {
-            ok: true,
-            message:
-              "Supabase connection OK (REST reachable with provided key; admin scope not granted)",
-          };
-        }
+    if (supabaseUrl && serviceRoleKey) {
+      const reachable = await canReachPostgrestWithKey(
+        supabaseUrl,
+        serviceRoleKey,
+      );
+      if (reachable) {
+        return {
+          ok: true,
+          message: "Supabase connection OK (REST reachable with provided key)",
+          checkedUsers: 0,
+        };
       }
-
-      return {
-        ok: false,
-        message: `Supabase admin API failed: ${error.message}`,
-      };
     }
 
     return {
-      ok: true,
-      message: "Supabase connection OK (auth admin reachable)",
-      checkedUsers: data?.users?.length ?? 0,
+      ok: false,
+      message:
+        "Supabase connection failed: REST endpoint not reachable with provided key.",
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

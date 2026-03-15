@@ -7,8 +7,8 @@ import type {
   FieldPacket,
   SslOptions,
 } from "mysql2/promise";
-import type { DBParams } from "types/db";
-import { loadEnv } from "config/loadEnv";
+import type { DBParams } from "../types/db.js";
+import { loadEnv } from "./loadEnv.js";
 
 loadEnv();
 

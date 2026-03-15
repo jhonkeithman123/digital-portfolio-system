@@ -1,4 +1,4 @@
-import type { UserRow } from "../../types/db";
+import type { UserRow } from "../../types/db.js";
 
 type VerificationUser = Pick<
   UserRow,

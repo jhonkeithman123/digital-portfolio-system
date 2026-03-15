@@ -1,7 +1,7 @@
 import { Response } from "express";
-import { AuthRequest } from "middleware/auth";
-import generateCode from "config/code_generator";
-import { getSupabaseClient } from "../supabase/client";
+import { AuthRequest } from "../middleware/auth.js";
+import generateCode from "../config/code_generator.js";
+import { getSupabaseClient } from "../supabase/client.js";
 
 type StudentRow = {
   id: number;

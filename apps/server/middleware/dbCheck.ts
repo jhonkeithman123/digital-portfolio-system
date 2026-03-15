@@ -1,14 +1,13 @@
-import type { Request, Response, NextFunction } from "express";
-import db from "config/db";
+import db from "../config/db.js";
 
-export interface DbRequest extends Request {
+export interface DbRequest {
   dbAvailable: boolean;
 }
 
 export const checkDbAvailability = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
+  req: any,
+  res: any,
+  next: () => void,
 ): Promise<void> => {
   try {
     await db.query("SELECT 1");
@@ -21,16 +20,14 @@ export const checkDbAvailability = async (
   next();
 };
 
-export const requireDb = (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-): void | Response => {
+export const requireDb = (req: any, res: any, next: () => void): void => {
   if (!(req as DbRequest).dbAvailable) {
-    return res.status(503).json({
+    res.status(503).json({
       success: false,
       error: "Database not available",
     });
+    return;
   }
+
   next();
 };

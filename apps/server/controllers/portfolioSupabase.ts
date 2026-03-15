@@ -1,6 +1,6 @@
 import type { Response } from "express";
-import type { AuthRequest } from "middleware/auth";
-import { getSupabaseClient } from "../supabase/client";
+import type { AuthRequest } from "../middleware/auth.js";
+import { getSupabaseClient } from "../supabase/client.js";
 
 type ClassroomRow = {
   id: number;

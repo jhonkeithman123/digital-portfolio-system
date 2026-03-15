@@ -1,15 +1,15 @@
 import bcrypt from "bcrypt";
 import type { Response } from "express";
-import type { AuthRequest } from "middleware/auth";
-import { getSupabaseClient } from "../supabase/client";
-import { generateToken } from "config/helpers/generateToken";
-import { setAuthCookie, clearAuthCookie } from "utils/authCookies";
-import { sendVerificationEmail } from "config/sendVerificationEmail";
-import { isAdminUser } from "config/helpers/adminAccess";
+import type { AuthRequest } from "../middleware/auth.js";
+import { getSupabaseClient } from "../supabase/client.js";
+import { generateToken } from "../config/helpers/generateToken.js";
+import { setAuthCookie, clearAuthCookie } from "../utils/authCookies.js";
+import { sendVerificationEmail } from "../config/sendVerificationEmail.js";
+import { isAdminUser } from "../config/helpers/adminAccess.js";
 import {
   generateVerificationCode,
   isVerificationCodeValid,
-} from "config/helpers/verification";
+} from "../config/helpers/verification.js";
 
 interface SupabaseUserRow {
   id: number;
