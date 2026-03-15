@@ -207,10 +207,10 @@ interface ActivityRow extends RowDataPacket {
 
 ### Backend
 
-- ✅ `server/controllers/portfolio.ts` - New controller with 3 endpoints
-- ✅ `server/routes/portfolio.ts` - New route definitions
-- ✅ `server/routes/index.ts` - Registered portfolio routes
-- ✅ `server/types/db.d.ts` - Added due_date to ActivityRow
+- ✅ `apps/server/controllers/portfolio.ts` - New controller with 3 endpoints
+- ✅ `apps/server/routes/portfolio.ts` - New route definitions
+- ✅ `apps/server/routes/index.ts` - Registered portfolio routes
+- ✅ `apps/server/types/db.d.ts` - Added due_date to ActivityRow
 
 ### Frontend
 
