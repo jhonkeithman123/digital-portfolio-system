@@ -23,7 +23,7 @@ dist-ssr
 *.sln
 *.sw?
 .fuse_hidden*
-.turbo/*
+.turbo
 .env
 bun.lock
 bun.lockb

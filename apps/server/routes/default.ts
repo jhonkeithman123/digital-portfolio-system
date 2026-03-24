@@ -408,7 +408,7 @@ router.patch(
 );
 
 router.get(
-  "/admin/students",
+  "/admin/users",
   verifyToken,
   wrapAsync(controller.listStudentsAdmin),
 );

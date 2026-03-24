@@ -49,6 +49,7 @@ export interface Student {
   grade?: string | null;
   studentNumber?: string | null;
   onlineStatus?: "online" | "offline" | "unknown";
+  role?: string; // Added for admin UI to distinguish teachers
 }
 
 // Re-export Activity types from activity.d.ts

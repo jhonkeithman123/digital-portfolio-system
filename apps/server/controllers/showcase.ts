@@ -5,21 +5,11 @@ const fetchShowcase = async (req: AuthRequest, res: Response) => {
   try {
     // TODO: Will be replaced in the future updates
     // For now, return empty array
-    return res.json({
-      success: true,
-      data: [],
-    });
+    // Showcase controller removed
   } catch (error) {
     console.error("[SHOWCASE] Error:", error);
-    return res.status(500).json({
-      success: false,
-      error: "Internal server error",
-    });
+    // Showcase controller removed
   }
 };
 
-const controllers = {
-  fetchShowcase,
-};
-
-export default controllers;
+// Showcase controller removed

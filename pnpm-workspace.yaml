@@ -6,3 +6,4 @@ ignoredBuiltDependencies:
   - bcrypt
   - esbuild
   - sharp
+  - supabase
