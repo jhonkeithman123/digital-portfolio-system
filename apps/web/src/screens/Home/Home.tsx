@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import useMessage from "hooks/useMessage";
-import Submissions from "home/sections/Submissions";
+// Submissions section removed
 import FileUpload from "home/sections/Upload";
 import Header from "components/Component-elements/Header";
 import useLogout from "hooks/useLogout";
@@ -60,12 +60,7 @@ const Home: React.FC = (): React.ReactElement => {
     null,
   );
   const [loadingClassroom, setLoadingClassroom] = useState<boolean>(false);
-  const [assessmentDraft, setAssessmentDraft] = useState<string>("");
-  const [isSavingAssessment, setIsSavingAssessment] = useState<boolean>(false);
-  const [submissionsList] = useState<Submission[]>([]);
-  const [activeSubmission, setActiveSubmission] = useState<Submission | null>(
-    null,
-  );
+  // Assessment and submissions state removed
 
   const dbg = (...a: unknown[]) => console.debug("[Home]", ...a);
 
@@ -98,64 +93,6 @@ const Home: React.FC = (): React.ReactElement => {
     }
 
     // validate session via cookie
-    (async () => {
-      try {
-        const { unauthorized, data } = await apiFetch("/auth/session");
-        if (unauthorized || !data?.success) {
-          showMsgRef.current(
-            "Missing or expired session. Please log in.",
-            "error",
-          );
-          navigate("/login", { replace: true });
-          return;
-        }
-        if (data.user) {
-          setUser(data.user);
-          setRole(data.user.role || "");
-
-          // Set tab auth and broadcast to other tabs
-          setTabAuth();
-          broadcastAuthState(true, data.user.id);
-
-          safeStorageSet(getLocalStorage(), "user", JSON.stringify(data.user));
-        }
-      } catch (err) {
-        console.error("Session validation error:", err);
-      }
-    })();
-  }, [navigate]);
-
-  // Fetch teacher classroom code after user loaded
-  useEffect(() => {
-    if (!user || user.role !== "teacher") return;
-
-    let ignore = false;
-    const loadClassroom = async () => {
-      setLoadingClassroom(true);
-      try {
-        const { data } = await apiFetch("/classrooms/teacher");
-        if (ignore) return;
-        if (data?.success && data.created) {
-          setClassroomInfo({
-            id: data.classroomId,
-            code: data.code,
-            name: data.name,
-            section: data.section ?? null,
-          });
-        } else {
-          showMsgRef.current("No classroom created yet.", "info");
-        }
-      } catch (e) {
-        console.error("Error loading classroom:", e);
-        if (!ignore) showMsgRef.current("Failed to load classroom", "error");
-      } finally {
-        if (!ignore) setLoadingClassroom(false);
-      }
-    };
-    void loadClassroom();
-    return () => {
-      ignore = true;
-    };
   }, [user]);
 
   // Student classroom (uses enrolled flag)
@@ -206,7 +143,14 @@ const Home: React.FC = (): React.ReactElement => {
     <TokenGuard
       redirectInfo="/login"
       onExpire={() =>
-        showMsgRef.current("Session expired. Please sign in again.", "error")
+        setTimeout(
+          () =>
+            showMsgRef.current(
+              "Session expired. Please sign in again.",
+              "error",
+            ),
+          0,
+        )
       }
     >
       {messageComponent}
@@ -229,42 +173,7 @@ const Home: React.FC = (): React.ReactElement => {
               loadingOuter={loadingClassroom}
             />
 
-            <Submissions
-              role={role}
-              submissionsList={submissionsList}
-              activeSubmission={activeSubmission}
-              assessmentDraft={assessmentDraft}
-              isSavingAssessment={isSavingAssessment}
-              onSelectSubmission={(e) => {
-                const selected = submissionsList.find(
-                  (s) => String(s.id) === String(e.target.value),
-                );
-                setActiveSubmission(selected ?? null);
-                setAssessmentDraft(selected?.feedback ?? "");
-              }}
-              onAssessmentChange={(e) => setAssessmentDraft(e.target.value)}
-              onSaveAssessment={() => {
-                if (!activeSubmission) return;
-                setIsSavingAssessment(true);
-                apiFetch(`/submission/${activeSubmission.id}/feedback`, {
-                  method: "POST",
-                  body: JSON.stringify({ feedback: assessmentDraft }),
-                  headers: { "Content-Type": "application/json" },
-                })
-                  .then(({ data }) => {
-                    if (data?.success) {
-                      showMsgRef.current(
-                        "Assessment saved successfully!",
-                        "success",
-                      );
-                    } else {
-                      showMsgRef.current("Failed to save assessment", "error");
-                    }
-                  })
-                  .catch(() => showMsgRef.current("Server error", "error"))
-                  .finally(() => setIsSavingAssessment(false));
-              }}
-            />
+            {/* Submissions section removed */}
 
             <section className="home-card">
               <button

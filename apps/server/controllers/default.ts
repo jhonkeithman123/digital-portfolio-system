@@ -488,7 +488,37 @@ const listStudentsAdmin = async (req: AuthRequest, res: Response) => {
       .json({ success: false, message: "Admin access required" });
   }
 
-  return listStudents(req, res);
+  try {
+    // Fetch all users: students and teachers (and optionally admins)
+    const sql = `
+      SELECT
+        u.id,
+        u.username,
+        u.email,
+        COALESCE(NULLIF(u.section,''), NULL) AS section,
+        COALESCE(NULLIF(u.student_number,''), NULL) AS studentNumber,
+        u.role,
+        CASE
+          WHEN EXISTS (
+            SELECT 1
+            FROM session s
+            WHERE s.user_id = u.id
+              AND s.expires_at > NOW()
+          ) THEN 'online'
+          ELSE 'offline'
+        END AS onlineStatus
+      FROM users u
+      ORDER BY u.role DESC, u.username ASC
+    `;
+    const rows = await queryAsync<any>(sql, []);
+    // Log the SQL query result for debugging
+    console.log("[ADMIN USERS] SQL result:", rows);
+    res.json({ success: true, students: rows });
+  } catch (err) {
+    const error = err as Error;
+    console.error("Error fetching students/teachers:", error.message);
+    res.status(500).json({ success: false, message: "Internal server error" });
+  }
 };
 
 const editStudentNumberAdmin = async (req: AuthRequest, res: Response) => {

@@ -428,7 +428,43 @@ const listStudentsAdmin = async (req: AuthRequest, res: Response) => {
       .status(403)
       .json({ success: false, message: "Admin access required" });
   }
-  return listStudents(req, res);
+
+  try {
+    const supabase = getSupabaseClient();
+    // Select all users without filtering by role so admins see teachers and students
+    const { data, error } = await supabase
+      .from("users")
+      .select("id, username, email, section, student_number, role, grade")
+      .order("role", { ascending: false })
+      .order("username", { ascending: true });
+
+    if (error) throw error;
+
+    const users = (data || []).map((u: any) => ({
+      id: u.id,
+      username: u.username,
+      email: u.email,
+      section: u.section ?? null,
+      studentNumber: u.student_number ?? null,
+      role: u.role,
+      grade: u.grade ?? null,
+      onlineStatus: "unknown",
+    }));
+
+    // Log for debugging
+    console.log(
+      "[DEFAULT SUPABASE] listStudentsAdmin - users:",
+      users.map((x: any) => ({ id: x.id, role: x.role })),
+    );
+
+    return res.json({ success: true, students: users });
+  } catch (err) {
+    const error = err as Error;
+    console.error("[DEFAULT SUPABASE] listStudentsAdmin:", error.message);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
+  }
 };
 
 const editStudentNumberAdmin = async (req: AuthRequest, res: Response) => {

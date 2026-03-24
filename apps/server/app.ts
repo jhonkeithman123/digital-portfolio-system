@@ -93,7 +93,6 @@ if (supabaseOnly) {
   app.use("/classrooms", classrooms);
   app.use("/portfolio", portfolioRoute);
   app.use("/security", security);
-  app.use("/showcase", showcase);
   app.use("/", mainRoute);
 } else {
   app.use("/uploads", requireDb, uploadStatic);
@@ -105,7 +104,6 @@ if (supabaseOnly) {
   app.use("/classrooms", requireDb, classrooms);
   app.use("/portfolio", requireDb, portfolioRoute);
   app.use("/security", requireDb, security);
-  app.use("/showcase", requireDb, showcase);
 }
 app.use("/supabase", supabaseRoute);
 

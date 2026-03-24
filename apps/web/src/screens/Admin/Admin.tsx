@@ -46,7 +46,18 @@ const Admin: React.FC = (): React.ReactElement => {
         }
 
         const currentUser = data.user as User;
-        setUser(currentUser);
+        // Normalize user id property (some endpoints return `ID`)
+        const normalizedCurrentUser = {
+          ...currentUser,
+          id:
+            (currentUser as any).id ??
+            (currentUser as any).ID ??
+            (currentUser as any).Id ??
+            (currentUser as any).userId ??
+            (currentUser as any).user_id ??
+            null,
+        } as User;
+        setUser(normalizedCurrentUser);
 
         if (currentUser.role !== "teacher" || !currentUser.isAdmin) {
           showMsgRef.current?.(
@@ -60,7 +71,7 @@ const Admin: React.FC = (): React.ReactElement => {
         const studentsResp = await apiFetch<{
           success?: boolean;
           students?: Student[];
-        }>("/admin/students");
+        }>("/admin/users");
 
         if (!mounted) return;
 
@@ -68,12 +79,46 @@ const Admin: React.FC = (): React.ReactElement => {
           !studentsResp.data?.success ||
           !Array.isArray(studentsResp.data.students)
         ) {
-          showMsgRef.current?.("Failed to load students.", "error");
+          showMsgRef.current?.("Failed to load users.", "error");
           setStudents([]);
           return;
         }
 
-        const fetched = studentsResp.data.students;
+        // Log the API response for debugging
+        // eslint-disable-next-line no-console
+        console.log("API /admin/users response:", studentsResp.data.students);
+
+        let fetched = studentsResp.data.students;
+        // Extra debug: log all IDs and roles
+        // eslint-disable-next-line no-console
+        console.log(
+          "All user IDs and roles from API:",
+          fetched.map((u) => ({
+            id: u.id,
+            username: u.username,
+            role: u.role,
+          })),
+        );
+
+        if (
+          (normalizedCurrentUser as any) &&
+          !fetched.some(
+            (u: any) =>
+              String(u.id) === String((normalizedCurrentUser as any).id),
+          )
+        ) {
+          fetched = [normalizedCurrentUser as any, ...fetched];
+        }
+        // Extra debug: log after possible prepend
+        // eslint-disable-next-line no-console
+        console.log(
+          "Final user list for display:",
+          fetched.map((u) => ({
+            id: u.id,
+            username: u.username,
+            role: u.role,
+          })),
+        );
         setStudents(fetched);
 
         const drafts: EditableMap = {};
@@ -108,7 +153,8 @@ const Admin: React.FC = (): React.ReactElement => {
   const onlineCounts = useMemo(() => {
     const acc = { online: 0, offline: 0, unknown: 0 };
     students.forEach((s) => {
-      const status = s.onlineStatus ?? "unknown";
+      let status = s.onlineStatus;
+      if (status !== "online" && status !== "offline") status = "unknown";
       if (status === "online") acc.online += 1;
       else if (status === "offline") acc.offline += 1;
       else acc.unknown += 1;
@@ -310,10 +356,11 @@ const Admin: React.FC = (): React.ReactElement => {
 
         <main className="admin-main">
           <section className="admin-card admin-summary">
-            <h2>Student Monitoring</h2>
+            <h2>User Monitoring</h2>
             <p>
-              Track status and manage student email, section, and student
-              numbers from one page.
+              Track status and manage user email, section, and student numbers
+              (where applicable) from one page. Admins, teachers, and students
+              are all shown.
             </p>
             <div className="admin-stats">
               <div className="admin-stat">
@@ -332,7 +379,7 @@ const Admin: React.FC = (): React.ReactElement => {
           </section>
 
           <section className="admin-card">
-            <h3>Students</h3>
+            <h3>Users</h3>
             <div className="admin-table-wrap">
               <table className="admin-table">
                 <thead>
@@ -347,72 +394,120 @@ const Admin: React.FC = (): React.ReactElement => {
                 <tbody>
                   {students.map((student) => {
                     const id = String(student.id);
-                    const status = student.onlineStatus ?? "unknown";
+                    let status = student.onlineStatus;
+                    if (status !== "online" && status !== "offline")
+                      status = "unknown";
                     const savingEmail = !!saving[savingKey(id, "email")];
                     const savingSection = !!saving[savingKey(id, "section")];
                     const savingStudent = !!saving[savingKey(id, "student")];
+                    const isTeacher = student.role === "teacher";
                     return (
                       <tr key={id}>
                         <td>{student.username || "(No username)"}</td>
                         <td>
-                          <span className={`status-badge ${status}`}>
-                            {status}
+                          <span
+                            className={`status-badge ${status}`}
+                            title={
+                              status.charAt(0).toUpperCase() + status.slice(1)
+                            }
+                          >
+                            {status.charAt(0).toUpperCase() + status.slice(1)}
                           </span>
                         </td>
                         <td>
-                          <div className="admin-input-actions">
-                            <input
-                              className="student-email-input"
-                              placeholder="student@email.com"
-                              value={draftEmails[id] ?? ""}
-                              onChange={(e) =>
-                                updateEmailDraft(id, e.target.value)
-                              }
-                            />
-                            <button
-                              className="admin-save-btn"
-                              disabled={savingEmail}
-                              onClick={() => void saveStudentEmail(student)}
-                            >
-                              {savingEmail ? "Saving..." : "Save"}
-                            </button>
-                          </div>
+                          {isTeacher ? (
+                            <div className="admin-input-actions">
+                              <input
+                                className="student-email-input"
+                                placeholder="user@email.com"
+                                value={draftEmails[id] ?? ""}
+                                onChange={(e) =>
+                                  updateEmailDraft(id, e.target.value)
+                                }
+                              />
+                              <button
+                                className="admin-save-btn"
+                                disabled={savingEmail}
+                                onClick={() => void saveStudentEmail(student)}
+                              >
+                                {savingEmail ? "Saving..." : "Save"}
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="admin-input-actions">
+                              <input
+                                className="student-email-input"
+                                placeholder="user@email.com"
+                                value={draftEmails[id] ?? ""}
+                                onChange={(e) =>
+                                  updateEmailDraft(id, e.target.value)
+                                }
+                              />
+                              <button
+                                className="admin-save-btn"
+                                disabled={savingEmail}
+                                onClick={() => void saveStudentEmail(student)}
+                              >
+                                {savingEmail ? "Saving..." : "Save"}
+                              </button>
+                            </div>
+                          )}
                         </td>
                         <td>
-                          <div className="admin-input-actions">
-                            <input
-                              className="student-section-input"
-                              placeholder="e.g., ICT-A2"
-                              value={draftSections[id] ?? ""}
-                              onChange={(e) =>
-                                updateSectionDraft(id, e.target.value)
-                              }
-                            />
-                            <button
-                              className="admin-save-btn"
-                              disabled={savingSection}
-                              onClick={() => void saveStudentSection(student)}
+                          {isTeacher ? (
+                            <span
+                              className="admin-disabled-field"
+                              title="Teachers do not have sections"
                             >
-                              {savingSection ? "Saving..." : "Save"}
-                            </button>
-                          </div>
+                              —
+                            </span>
+                          ) : (
+                            <div className="admin-input-actions">
+                              <input
+                                className="student-section-input"
+                                placeholder="e.g., ICT-A2"
+                                value={draftSections[id] ?? ""}
+                                onChange={(e) =>
+                                  updateSectionDraft(id, e.target.value)
+                                }
+                              />
+                              <button
+                                className="admin-save-btn"
+                                disabled={savingSection}
+                                onClick={() => void saveStudentSection(student)}
+                              >
+                                {savingSection ? "Saving..." : "Save"}
+                              </button>
+                            </div>
+                          )}
                         </td>
                         <td>
-                          <div className="admin-input-actions">
-                            <input
-                              className="student-number-input"
-                              placeholder="e.g., 2026-001"
-                              value={draftStudentNumbers[id] ?? ""}
-                              onChange={(e) => updateDraft(id, e.target.value)}
-                            />
-                            <button
-                              className="admin-save-btn"
-                              disabled={savingStudent}
-                              onClick={() => void saveStudentNumber(student)}
+                          {isTeacher ? (
+                            <span
+                              className="admin-disabled-field"
+                              title="Teachers do not have student numbers"
                             >
-                              {savingStudent ? "Saving..." : "Save"}
-                            </button>
-                          </div>
+                              —
+                            </span>
+                          ) : (
+                            <div className="admin-input-actions">
+                              <input
+                                className="student-number-input"
+                                placeholder="e.g., 2026-001"
+                                value={draftStudentNumbers[id] ?? ""}
+                                onChange={(e) =>
+                                  updateDraft(id, e.target.value)
+                                }
+                              />
+                              <button
+                                className="admin-save-btn"
+                                disabled={savingStudent}
+                                onClick={() => void saveStudentNumber(student)}
+                              >
+                                {savingStudent ? "Saving..." : "Save"}
+                              </button>
+                            </div>
+                          )}
                         </td>
                       </tr>
                     );
