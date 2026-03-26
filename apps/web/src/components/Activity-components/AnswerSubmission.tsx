@@ -141,8 +141,11 @@ export default function AnswerSubmission({
       if (driveMode === "choose" && driveSelected) {
         try {
           // download binary via fetch (apiFetch expects JSON responses)
+          const apiBase = (
+            process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000"
+          ).replace(/\/$/, "");
           const dl = await fetch(
-            `/portfolio/drive/download?path=${encodeURIComponent(driveSelected)}`,
+            `${apiBase}/portfolio/drive/download?path=${encodeURIComponent(driveSelected)}`,
             { credentials: "include" },
           );
           if (!dl.ok) {
@@ -184,6 +187,12 @@ export default function AnswerSubmission({
         setText("");
         setFile(null);
         if (fileInputRef.current) fileInputRef.current.value = "";
+        // Refresh local submission state so UI reflects the new submission
+        try {
+          await loadSubmission();
+        } catch (e) {
+          // ignore - best effort
+        }
         onSubmitted?.();
         showMsgRef.current(
           existingSubmission
@@ -208,6 +217,7 @@ export default function AnswerSubmission({
     text,
     existingSubmission,
     confirm,
+    loadSubmission,
   ]);
 
   const unsubmit = useCallback(async (): Promise<void> => {
@@ -363,34 +373,36 @@ export default function AnswerSubmission({
               disabled={sending}
             />
 
-            <div style={{ marginTop: 8, marginBottom: 8 }}>
-              <label style={{ marginRight: 12 }}>
-                <input
-                  type="radio"
-                  name="driveMode"
-                  checked={driveMode === "direct"}
-                  onChange={() => setDriveMode("direct")}
-                />
+            <div
+              className="drive-options"
+              style={{ marginTop: 8, marginBottom: 8 }}
+            >
+              <button
+                type="button"
+                className={`drive-option ${driveMode === "direct" ? "active" : ""}`}
+                onClick={() => setDriveMode("direct")}
+                aria-pressed={driveMode === "direct"}
+              >
                 Direct upload
-              </label>
-              <label style={{ marginRight: 12 }}>
-                <input
-                  type="radio"
-                  name="driveMode"
-                  checked={driveMode === "choose"}
-                  onChange={() => setDriveMode("choose")}
-                />
+              </button>
+
+              <button
+                type="button"
+                className={`drive-option ${driveMode === "choose" ? "active" : ""}`}
+                onClick={() => setDriveMode("choose")}
+                aria-pressed={driveMode === "choose"}
+              >
                 Choose from Drive
-              </label>
-              <label>
-                <input
-                  type="radio"
-                  name="driveMode"
-                  checked={driveMode === "drive"}
-                  onChange={() => setDriveMode("drive")}
-                />
+              </button>
+
+              <button
+                type="button"
+                className={`drive-option ${driveMode === "drive" ? "active" : ""}`}
+                onClick={() => setDriveMode("drive")}
+                aria-pressed={driveMode === "drive"}
+              >
                 Upload to Drive
-              </label>
+              </button>
             </div>
 
             {driveMode === "choose" && (

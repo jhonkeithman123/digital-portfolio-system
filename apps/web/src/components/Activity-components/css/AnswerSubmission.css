@@ -42,7 +42,9 @@
   padding: 10px 12px;
   cursor: pointer;
   text-align: left;
-  transition: border-color 0.18s, background 0.18s;
+  transition:
+    border-color 0.18s,
+    background 0.18s;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -193,4 +195,40 @@
   font-size: 0.85rem;
   color: var(--text-muted, #9ca3af);
   font-style: italic;
+}
+
+/* Drive option buttons (replacement for simple radio inputs) */
+.drive-options {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+.drive-option {
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: transparent;
+  color: var(--text, #0b1220);
+  padding: 8px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    color 0.15s;
+}
+.drive-option:hover {
+  border-color: rgba(37, 99, 235, 0.4);
+}
+.drive-option.active {
+  background: linear-gradient(
+    90deg,
+    rgba(59, 130, 246, 0.12),
+    rgba(37, 99, 235, 0.08)
+  );
+  border-color: rgba(37, 99, 235, 0.6);
+  color: var(--accent, #2563eb);
+}
+
+.drive-option[aria-pressed="true"] {
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.08);
 }
