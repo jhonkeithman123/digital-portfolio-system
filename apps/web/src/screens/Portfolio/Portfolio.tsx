@@ -165,8 +165,9 @@ export default function Portfolio(): React.ReactElement {
           variant="authed"
           user={user}
           section={user?.role === "student" ? user?.section : null}
-          headerClass={`portfolio-header-main ${roleClass}`}
-          welcomeClass={`portfolio-welcome ${roleClass}`}
+          headerClass={`app-header`}
+          welcomeClass={`app-welcome`}
+          showDriveButton={false}
         />
         {messageComponent}
 
@@ -194,6 +195,15 @@ export default function Portfolio(): React.ReactElement {
                 ? "Manage and track all activities you've created"
                 : "Track all your activities and achievements"}
             </p>
+            <div style={{ marginTop: 12 }}>
+              <button
+                className="dashboard-button"
+                onClick={() => navigate("/drive")}
+                style={{ marginLeft: 8 }}
+              >
+                Open Drive
+              </button>
+            </div>
           </header>
 
           <section className="portfolio-stats-section">

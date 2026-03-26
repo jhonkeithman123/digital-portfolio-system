@@ -22,6 +22,9 @@ import CreateClassroom from "screens/classrooms/CreateClassroom";
 import ActivityView from "components/Activity-components/ActivityView";
 import NotFoundHandler from "./NotFoundHandler";
 import Portfolio from "screens/Portfolio/Portfolio";
+import PortfolioDocs from "screens/Portfolio/PortfolioDocs";
+import Drive from "screens/Drive/Drive";
+import { DrivePublic } from "screens/Drive/Drive";
 
 type ShowMessageFn = (
   text: string,
@@ -151,6 +154,24 @@ function App(): React.ReactElement {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/portfolio/docs"
+            element={
+              <ProtectedRoute showMessage={showMessage}>
+                <PortfolioDocs />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/drive"
+            element={
+              <ProtectedRoute showMessage={showMessage}>
+                <Drive />
+              </ProtectedRoute>
+            }
+          />
+          {/* Debug route: public access to Drive content (no auth) */}
+          <Route path="/drive-debug" element={<DrivePublic />} />
           <Route path="*" element={<NotFoundHandler />} />
         </Routes>
       </main>

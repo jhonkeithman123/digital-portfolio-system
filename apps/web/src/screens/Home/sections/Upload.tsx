@@ -280,7 +280,7 @@ const FileUpload: React.FC<FileUploadProps> = ({
       fd.append("title", title.trim());
       fd.append("instructions", instructions.trim());
       fd.append("classroomCode", String(classroomCode));
-      fd.append("maxScore", String(maxScore));
+      fd.append("max_score", String(maxScore));
       if (dueDate) fd.append("due_date", dueDate);
       if (file) fd.append("file", file);
 

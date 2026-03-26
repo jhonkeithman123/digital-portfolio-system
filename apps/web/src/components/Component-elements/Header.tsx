@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import useTheme from "hooks/useTheme";
 import "./css/Header.css";
 
@@ -24,6 +25,9 @@ interface HeaderProps {
   headerClass?: string;
   welcomeClass?: string;
   sticky?: boolean;
+  showDriveButton?: boolean;
+  showPortfolioButton?: boolean;
+  showPortfolioDocsButton?: boolean;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -37,6 +41,9 @@ const Header: React.FC<HeaderProps> = ({
   headerClass, // e.g., "dashboard-header" | "home-header"
   welcomeClass, // e.g., "dashboard-welcome" | "home-welcome"
   sticky = true,
+  showDriveButton = true,
+  showPortfolioButton = true,
+  showPortfolioDocsButton = true,
 }) => {
   const stickyClass = sticky ? "is-sticky" : "";
   const { theme, toggleTheme } = useTheme();
@@ -152,9 +159,55 @@ const Header: React.FC<HeaderProps> = ({
 
       <div className="header-actions">
         {rightActions}
+        {/* Portfolio/Docs/Drive shortcuts for authenticated users (can be disabled) */}
+        {showPortfolioButton !== false && <PortfolioButton />}
+        {showPortfolioDocsButton !== false && <PortfolioDocsButton />}
+        {showDriveButton !== false && <DriveButton />}
         <ThemeSwitch theme={theme} toggleTheme={toggleTheme} />
       </div>
     </header>
+  );
+};
+
+const PortfolioButton: React.FC = () => {
+  const navigate = useNavigate();
+  return (
+    <button
+      className="pill-btn"
+      onClick={() => navigate("/portfolio")}
+      title="Open Portfolio"
+      style={{ marginRight: 8 }}
+    >
+      Portfolio
+    </button>
+  );
+};
+
+const PortfolioDocsButton: React.FC = () => {
+  const navigate = useNavigate();
+  return (
+    <button
+      className="pill-btn"
+      onClick={() => navigate("/portfolio/docs")}
+      title="Open Portfolio Docs"
+      style={{ marginRight: 8 }}
+    >
+      Docs
+    </button>
+  );
+};
+
+const DriveButton: React.FC = () => {
+  const navigate = useNavigate();
+  return (
+    <button
+      className="pill-btn"
+      onClick={() => navigate("/drive")}
+      title="Open Drive"
+      style={{ marginRight: 8 }}
+    >
+      Drive
+    </button>
   );
 };
 

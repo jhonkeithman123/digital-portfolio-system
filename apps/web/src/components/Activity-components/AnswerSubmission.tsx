@@ -4,6 +4,7 @@ import useMessage from "hooks/useMessage";
 import useConfirm from "hooks/useConfirm";
 import type { AnswerSubmissionProps, ExistingSubmission } from "types/activity";
 import "./css/AnswerSubmission.css";
+import DrivePicker from "components/DrivePicker/DrivePicker";
 
 export default function AnswerSubmission({
   activityId,
@@ -11,6 +12,11 @@ export default function AnswerSubmission({
 }: AnswerSubmissionProps): React.ReactElement {
   const [text, setText] = useState<string>("");
   const [file, setFile] = useState<File | null>(null);
+  const [driveMode, setDriveMode] = useState<"direct" | "choose" | "drive">(
+    "direct",
+  );
+  const [drivePickerOpen, setDrivePickerOpen] = useState(false);
+  const [driveSelected, setDriveSelected] = useState<string | null>(null);
   const [sending, setSending] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [existingSubmission, setExistingSubmission] =
@@ -112,9 +118,52 @@ export default function AnswerSubmission({
     setSending(true);
 
     try {
+      // If user selected "Upload to Drive", upload to drive first (best-effort)
+      if (driveMode === "drive" && file) {
+        try {
+          const fdDrive = new FormData();
+          fdDrive.append("file", file);
+          await apiFetch("/portfolio/drive/upload", {
+            method: "POST",
+            body: fdDrive,
+            form: true as any,
+          } as any);
+        } catch (e) {
+          console.warn(
+            "Failed to upload to Drive, continuing with submission",
+            e,
+          );
+        }
+      }
+
+      // If choosing from Drive, download the selected drive file and prepare a File
+      let fileToSend: File | null = file;
+      if (driveMode === "choose" && driveSelected) {
+        try {
+          // download binary via fetch (apiFetch expects JSON responses)
+          const dl = await fetch(
+            `/portfolio/drive/download?path=${encodeURIComponent(driveSelected)}`,
+            { credentials: "include" },
+          );
+          if (!dl.ok) {
+            showMsgRef.current("Failed to retrieve Drive file", "error");
+            setSending(false);
+            return;
+          }
+          const blob = await dl.blob();
+          const name = driveSelected.split("/").pop() || driveSelected;
+          fileToSend = new File([blob], name, { type: blob.type });
+        } catch (e) {
+          console.error("Failed to fetch selected Drive file", e);
+          showMsgRef.current("Failed to retrieve Drive file", "error");
+          setSending(false);
+          return;
+        }
+      }
+
       const fd = new FormData();
       fd.append("text", text.trim());
-      if (file) fd.append("file", file);
+      if (fileToSend) fd.append("file", fileToSend);
 
       const { data, unauthorized } = await apiFetch<{
         success?: boolean;
@@ -224,6 +273,15 @@ export default function AnswerSubmission({
     <>
       {messageComponent}
       <ConfirmModal />
+      {drivePickerOpen && (
+        <DrivePicker
+          onClose={() => setDrivePickerOpen(false)}
+          onSelect={(p) => {
+            setDriveSelected(p);
+            setDrivePickerOpen(false);
+          }}
+        />
+      )}
       <section className="activity-section answer-submission">
         {existingSubmission ? (
           <div className="submission-status">
@@ -305,6 +363,62 @@ export default function AnswerSubmission({
               disabled={sending}
             />
 
+            <div style={{ marginTop: 8, marginBottom: 8 }}>
+              <label style={{ marginRight: 12 }}>
+                <input
+                  type="radio"
+                  name="driveMode"
+                  checked={driveMode === "direct"}
+                  onChange={() => setDriveMode("direct")}
+                />
+                Direct upload
+              </label>
+              <label style={{ marginRight: 12 }}>
+                <input
+                  type="radio"
+                  name="driveMode"
+                  checked={driveMode === "choose"}
+                  onChange={() => setDriveMode("choose")}
+                />
+                Choose from Drive
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  name="driveMode"
+                  checked={driveMode === "drive"}
+                  onChange={() => setDriveMode("drive")}
+                />
+                Upload to Drive
+              </label>
+            </div>
+
+            {driveMode === "choose" && (
+              <div style={{ marginBottom: 8 }}>
+                <button type="button" onClick={() => setDrivePickerOpen(true)}>
+                  Open Drive
+                </button>
+                {driveSelected && (
+                  <div
+                    className="answer-file-chip"
+                    style={{ display: "inline-block", marginLeft: 8 }}
+                  >
+                    <div>
+                      <strong>{driveSelected.split("/").pop()}</strong>
+                    </div>
+                    <button
+                      className="chip-remove"
+                      type="button"
+                      onClick={() => setDriveSelected(null)}
+                      disabled={sending}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
             <div
               className="answer-file-drop"
               onClick={() => !sending && fileInputRef.current?.click()}
@@ -348,7 +462,12 @@ export default function AnswerSubmission({
             <div className="actions">
               <button
                 onClick={submit}
-                disabled={sending || (!text.trim() && !file)}
+                disabled={
+                  sending ||
+                  (!text.trim() &&
+                    !file &&
+                    !(driveMode === "choose" && driveSelected))
+                }
               >
                 {sending ? "Submitting..." : "Submit"}
               </button>

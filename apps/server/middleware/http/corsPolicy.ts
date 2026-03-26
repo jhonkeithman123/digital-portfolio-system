@@ -70,6 +70,7 @@ function getAllowedOrigins(clientUrl: string): string[] {
 
 export function createCorsPolicy(clientUrl: string) {
   const allowedOrigins = getAllowedOrigins(clientUrl);
+  const IS_DEV = process.env.NODE_ENV !== "production";
 
   return (req: Request, res: Response, next: NextFunction): void | Response => {
     const origin = req.headers.origin;
@@ -78,14 +79,48 @@ export function createCorsPolicy(clientUrl: string) {
       `[CORS] ${req.method} ${req.originalUrl} from origin: ${origin || "none"}`,
     );
 
-    if (origin && allowedOrigins.includes(origin)) {
-      res.header("Access-Control-Allow-Origin", origin);
-      console.log(`[CORS] Allowing origin: ${origin}`);
-    } else if (!origin) {
-      res.header("Access-Control-Allow-Origin", clientUrl);
-      console.log(`[CORS] Allowing no-origin request, using: ${clientUrl}`);
+    // In development allow any localhost origin (any port) to ease local testing
+    if (IS_DEV && origin) {
+      try {
+        const parsed = new URL(origin);
+        if (
+          parsed.hostname === "localhost" ||
+          parsed.hostname === "127.0.0.1" ||
+          parsed.hostname === "::1"
+        ) {
+          res.header("Access-Control-Allow-Origin", origin);
+          console.log(`[CORS] Dev: Allowing localhost origin: ${origin}`);
+        } else if (allowedOrigins.includes(origin)) {
+          res.header("Access-Control-Allow-Origin", origin);
+          console.log(`[CORS] Allowing origin: ${origin}`);
+        } else if (!origin) {
+          res.header("Access-Control-Allow-Origin", clientUrl);
+          console.log(`[CORS] Allowing no-origin request, using: ${clientUrl}`);
+        } else {
+          console.log(`[CORS] Rejecting origin: ${origin}`);
+        }
+      } catch {
+        // If origin is malformed, fall back to configured behavior
+        if (origin && allowedOrigins.includes(origin)) {
+          res.header("Access-Control-Allow-Origin", origin);
+          console.log(`[CORS] Allowing origin: ${origin}`);
+        } else if (!origin) {
+          res.header("Access-Control-Allow-Origin", clientUrl);
+          console.log(`[CORS] Allowing no-origin request, using: ${clientUrl}`);
+        } else {
+          console.log(`[CORS] Rejecting origin: ${origin}`);
+        }
+      }
     } else {
-      console.log(`[CORS] Rejecting origin: ${origin}`);
+      if (origin && allowedOrigins.includes(origin)) {
+        res.header("Access-Control-Allow-Origin", origin);
+        console.log(`[CORS] Allowing origin: ${origin}`);
+      } else if (!origin) {
+        res.header("Access-Control-Allow-Origin", clientUrl);
+        console.log(`[CORS] Allowing no-origin request, using: ${clientUrl}`);
+      } else {
+        console.log(`[CORS] Rejecting origin: ${origin}`);
+      }
     }
 
     res.header("Access-Control-Allow-Credentials", "true");
