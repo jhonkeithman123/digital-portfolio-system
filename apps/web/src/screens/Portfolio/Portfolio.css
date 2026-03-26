@@ -233,6 +233,18 @@
   transition: all 0.3s ease;
 }
 
+/* add comfortable padding and subtle card surface for activities */
+.activity-card {
+  padding: 20px;
+  border-radius: 12px;
+  background: linear-gradient(
+    145deg,
+    rgba(11, 13, 20, 0.6),
+    rgba(18, 20, 28, 0.6)
+  );
+  border: 1px solid rgba(99, 102, 241, 0.06);
+}
+
 .activity-card:hover {
   transform: translateY(-8px);
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
@@ -459,4 +471,119 @@
   .portfolio-stats-section {
     grid-template-columns: 1fr;
   }
+}
+
+/* Markdown content styles for portfolio docs (GitHub-like preview) */
+.portfolio-markdown {
+  color: var(--text-color, #e5e7eb);
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.portfolio-markdown h1,
+.portfolio-markdown h2,
+.portfolio-markdown h3,
+.portfolio-markdown h4,
+.portfolio-markdown h5,
+.portfolio-markdown h6 {
+  color: var(--text-color, #e5e7eb);
+  margin: 1rem 0 0.5rem;
+}
+
+.portfolio-markdown p {
+  margin: 0 0 1rem;
+  color: var(--muted-text, #cbd5e1);
+}
+
+.portfolio-markdown a {
+  color: #60a5fa;
+  text-decoration: underline;
+}
+
+.portfolio-markdown pre {
+  background: rgba(17, 24, 39, 0.6);
+  padding: 12px;
+  border-radius: 8px;
+  overflow: auto;
+  margin: 0 0 1rem;
+}
+
+.portfolio-markdown code {
+  background: rgba(148, 163, 184, 0.08);
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Courier New",
+    monospace;
+  font-size: 0.95em;
+}
+
+.portfolio-markdown blockquote {
+  border-left: 4px solid rgba(99, 102, 241, 0.2);
+  padding: 8px 16px;
+  margin: 0 0 1rem;
+  color: var(--muted-text, #94a3b8);
+  background: rgba(99, 102, 241, 0.02);
+}
+
+/* Drive grid styles */
+.drive-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+.drive-item-card {
+  background: linear-gradient(
+    145deg,
+    rgba(11, 13, 20, 0.6),
+    rgba(18, 20, 28, 0.6)
+  );
+  border: 1px solid rgba(148, 163, 184, 0.06);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  min-height: 120px;
+}
+.drive-item-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+}
+.drive-icon {
+  font-size: 36px;
+}
+.drive-entry-name {
+  font-size: 0.9rem;
+  text-align: center;
+  word-break: break-word;
+  max-width: 100%;
+}
+
+.portfolio-markdown ul,
+.portfolio-markdown ol {
+  margin: 0 0 1rem 1.25rem;
+}
+
+.portfolio-markdown table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+}
+
+.portfolio-markdown th,
+.portfolio-markdown td {
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  padding: 8px 12px;
+}
+
+[data-theme="light"] .portfolio-markdown {
+  color: #0f172a;
+}
+
+[data-theme="light"] .portfolio-markdown pre {
+  background: #f8fafc;
 }

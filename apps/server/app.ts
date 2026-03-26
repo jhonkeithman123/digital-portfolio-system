@@ -13,7 +13,6 @@ import classrooms from "./routes/classrooms.js";
 import mainRoute from "./routes/default.js";
 import portfolioRoute from "./routes/portfolio.js";
 import security from "./routes/security.js";
-import showcase from "./routes/showcase.js";
 import supabaseRoute from "./routes/supabase.js";
 import uploadStatic from "./routes/uploads.js";
 

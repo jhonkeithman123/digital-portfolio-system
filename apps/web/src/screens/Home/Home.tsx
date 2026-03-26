@@ -131,6 +131,38 @@ const Home: React.FC = (): React.ReactElement => {
     };
   }, [user]);
 
+  // Teacher: fetch their classroom info so the Upload component can use the code
+  useEffect(() => {
+    if (!user || user.role !== "teacher") return;
+    let ignore = false;
+    setLoadingClassroom(true);
+
+    (async () => {
+      try {
+        const { data } = await apiFetch("/classrooms/teacher");
+        if (ignore) return;
+        if (data?.success && (data as any).created) {
+          setClassroomInfo({
+            id: (data as any).classroomId || null,
+            code: (data as any).code || null,
+            name: (data as any).name || null,
+          });
+          dbg("[Home] set classroomInfo for teacher:", data);
+        } else {
+          dbg("[Home] teacher has no classroom yet:", data);
+        }
+      } catch (e) {
+        dbg("[Home] teacher classroom fetch error:", e);
+      } finally {
+        if (!ignore) setLoadingClassroom(false);
+      }
+    })();
+
+    return () => {
+      ignore = true;
+    };
+  }, [user]);
+
   //* Will be enabled later
 
   if (!user) {
