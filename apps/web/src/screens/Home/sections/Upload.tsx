@@ -181,7 +181,9 @@ const FileUpload: React.FC<FileUploadProps> = ({
     void load();
     return () => {
       ignore = true;
-      ac.abort("Upload effect cleanup");
+      // Abort the pending fetch. Avoid passing a custom reason so the
+      // thrown error remains a standard AbortError across browsers.
+      ac.abort();
     };
   }, [classroomCode, role]);
 
